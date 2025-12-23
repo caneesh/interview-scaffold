@@ -514,6 +514,250 @@ function ConceptLens({ concepts, patternExplanations, keyTakeaways }) {
 }
 
 /**
+ * Pattern Recognition Quiz - Transfer Learning Component
+ * Helps users identify similar problems that use the same core patterns
+ */
+function PatternQuiz({ quiz }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [selections, setSelections] = useState({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  if (!quiz || !quiz.problems) return null;
+
+  const toggleSelection = (problemId) => {
+    if (isSubmitted) return;
+    setSelections(prev => ({
+      ...prev,
+      [problemId]: !prev[problemId]
+    }));
+  };
+
+  const handleSubmit = () => {
+    setIsSubmitted(true);
+  };
+
+  const handleReset = () => {
+    setSelections({});
+    setIsSubmitted(false);
+  };
+
+  // Calculate score
+  const calculateScore = () => {
+    let correct = 0;
+    quiz.problems.forEach(problem => {
+      const userSelected = selections[problem.id] || false;
+      if (userSelected === problem.usesSamePattern) {
+        correct++;
+      }
+    });
+    return correct;
+  };
+
+  const score = isSubmitted ? calculateScore() : 0;
+  const totalProblems = quiz.problems.length;
+
+  const difficultyColors = {
+    Easy: 'bg-green-100 text-green-700',
+    Medium: 'bg-yellow-100 text-yellow-700',
+    Hard: 'bg-red-100 text-red-700',
+  };
+
+  return (
+    <div className="mt-6 bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl border border-cyan-200 overflow-hidden">
+      {/* Header - Always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-cyan-100/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <h3 className="font-bold text-gray-900 text-lg">Pattern Recognition Quiz</h3>
+            <p className="text-sm text-cyan-600">Test your transfer learning skills</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {isSubmitted && (
+            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+              score === totalProblems ? 'bg-green-100 text-green-700' :
+              score >= totalProblems / 2 ? 'bg-yellow-100 text-yellow-700' :
+              'bg-red-100 text-red-700'
+            }`}>
+              {score}/{totalProblems}
+            </span>
+          )}
+          <svg
+            className={`w-6 h-6 text-cyan-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Expandable Content */}
+      {isExpanded && (
+        <div className="px-6 pb-6 animate-fadeIn">
+          {/* Question */}
+          <div className="bg-white rounded-xl p-4 mb-4 border border-cyan-100 shadow-sm">
+            <p className="text-gray-800 font-medium">{quiz.question}</p>
+            <p className="text-sm text-gray-500 mt-1">Select all problems that apply, then submit to check your answers.</p>
+          </div>
+
+          {/* Problem List */}
+          <div className="space-y-3 mb-4">
+            {quiz.problems.map((problem) => {
+              const isSelected = selections[problem.id] || false;
+              const isCorrect = isSubmitted && (isSelected === problem.usesSamePattern);
+              const isWrong = isSubmitted && (isSelected !== problem.usesSamePattern);
+
+              return (
+                <div
+                  key={problem.id}
+                  className={`
+                    rounded-xl border-2 transition-all duration-200 overflow-hidden
+                    ${isSubmitted
+                      ? isCorrect
+                        ? 'border-green-300 bg-green-50'
+                        : 'border-red-300 bg-red-50'
+                      : isSelected
+                        ? 'border-cyan-400 bg-cyan-50'
+                        : 'border-gray-200 bg-white hover:border-cyan-300'
+                    }
+                  `}
+                >
+                  {/* Problem Header - Clickable */}
+                  <button
+                    onClick={() => toggleSelection(problem.id)}
+                    disabled={isSubmitted}
+                    className={`w-full p-4 text-left flex items-start gap-3 ${isSubmitted ? 'cursor-default' : 'cursor-pointer'}`}
+                  >
+                    {/* Checkbox */}
+                    <div className={`
+                      flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center mt-0.5 transition-all
+                      ${isSubmitted
+                        ? isCorrect
+                          ? 'bg-green-500 border-green-500'
+                          : 'bg-red-500 border-red-500'
+                        : isSelected
+                          ? 'bg-cyan-500 border-cyan-500'
+                          : 'border-gray-300 bg-white'
+                      }
+                    `}>
+                      {isSelected && !isSubmitted && (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      {isSubmitted && isCorrect && (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                      {isSubmitted && isWrong && (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+
+                    {/* Problem Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-gray-900">{problem.title}</h4>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${difficultyColors[problem.difficulty]}`}>
+                          {problem.difficulty}
+                        </span>
+                        {isSubmitted && problem.usesSamePattern && (
+                          <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded text-xs font-medium">
+                            Same Pattern
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">{problem.description}</p>
+                    </div>
+                  </button>
+
+                  {/* Explanation - Only shown after submission */}
+                  {isSubmitted && (
+                    <div className={`px-4 pb-4 pt-0 ml-9 animate-fadeIn`}>
+                      <div className={`p-3 rounded-lg ${
+                        problem.usesSamePattern ? 'bg-cyan-100/50' : 'bg-gray-100'
+                      }`}>
+                        <div className="flex items-start gap-2">
+                          <svg className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                            problem.usesSamePattern ? 'text-cyan-600' : 'text-gray-500'
+                          }`} fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                          </svg>
+                          <p className={`text-sm ${
+                            problem.usesSamePattern ? 'text-cyan-800' : 'text-gray-700'
+                          }`}>
+                            {problem.explanation}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Submit/Reset Button */}
+          {!isSubmitted ? (
+            <button
+              onClick={handleSubmit}
+              className="w-full py-3 px-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold rounded-xl hover:from-cyan-600 hover:to-teal-600 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Check My Answers
+            </button>
+          ) : (
+            <div className="space-y-3">
+              {/* Score Summary */}
+              <div className={`p-4 rounded-xl text-center ${
+                score === totalProblems ? 'bg-green-100 border border-green-200' :
+                score >= totalProblems / 2 ? 'bg-yellow-100 border border-yellow-200' :
+                'bg-red-100 border border-red-200'
+              }`}>
+                <p className={`text-lg font-bold ${
+                  score === totalProblems ? 'text-green-700' :
+                  score >= totalProblems / 2 ? 'text-yellow-700' :
+                  'text-red-700'
+                }`}>
+                  {score === totalProblems ? '🎯 Perfect! You\'ve mastered this pattern!' :
+                   score >= totalProblems / 2 ? '👍 Good job! Review the explanations to solidify your understanding.' :
+                   '📚 Keep learning! Read the explanations carefully.'}
+                </p>
+              </div>
+
+              {/* Try Again Button */}
+              <button
+                onClick={handleReset}
+                className="w-full py-3 px-6 bg-white text-cyan-600 font-semibold rounded-xl border-2 border-cyan-200 hover:bg-cyan-50 transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+                Try Again
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Victory/Completion screen component with confetti celebration
  */
 function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
@@ -537,7 +781,7 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
   const rating = getPerformanceRating();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-start justify-center p-8 relative overflow-auto">
       {/* Confetti Animation */}
       {showConfetti && (
         <Confetti
@@ -547,11 +791,12 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
           numberOfPieces={300}
           gravity={0.2}
           colors={['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#ec4899']}
+          style={{ position: 'fixed', top: 0, left: 0 }}
         />
       )}
 
       {/* Success Card */}
-      <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-xl text-center relative z-10 animate-fadeIn">
+      <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-2xl w-full text-center relative z-10 animate-fadeIn my-8">
         {/* Trophy Icon */}
         <div className="relative mb-8">
           <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
@@ -600,6 +845,9 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
           patternExplanations={problem.patternExplanations}
           keyTakeaways={problem.keyTakeaways}
         />
+
+        {/* Pattern Recognition Quiz - Transfer Learning */}
+        <PatternQuiz quiz={problem.patternQuiz} />
 
         {/* Restart Button */}
         <button

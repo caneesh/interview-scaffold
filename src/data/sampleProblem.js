@@ -68,6 +68,53 @@ export const sampleProblem = {
     "O(1) space solutions often involve clever pointer manipulation instead of auxiliary data structures."
   ],
 
+  // Pattern Recognition Quiz - Transfer Learning
+  patternQuiz: {
+    question: "Which of these problems use the same core idea (cycle detection with two pointers at different speeds)?",
+    problems: [
+      {
+        id: 1,
+        title: "Happy Number",
+        difficulty: "Easy",
+        description: "Determine if a number is 'happy' by repeatedly summing squares of digits until you get 1 or loop forever.",
+        usesSamePattern: true,
+        explanation: "The sequence of digit-square sums either reaches 1 or cycles. Using slow/fast pointers on this sequence detects if we're in a cycle - identical to linked list cycle detection!"
+      },
+      {
+        id: 2,
+        title: "Find the Duplicate Number",
+        difficulty: "Medium",
+        description: "Given an array of n+1 integers where each integer is between 1 and n, find the duplicate.",
+        usesSamePattern: true,
+        explanation: "Treating array indices as 'next pointers' creates an implicit linked list. The duplicate creates a cycle! Floyd's algorithm finds exactly where the cycle begins."
+      },
+      {
+        id: 3,
+        title: "Merge Two Sorted Lists",
+        difficulty: "Easy",
+        description: "Merge two sorted linked lists into one sorted linked list.",
+        usesSamePattern: false,
+        explanation: "This uses two pointers, but they move through DIFFERENT lists at the SAME speed. There's no cycle detection - it's a linear merge operation."
+      },
+      {
+        id: 4,
+        title: "Linked List Cycle II",
+        difficulty: "Medium",
+        description: "Given a linked list, return the node where the cycle begins. If there is no cycle, return null.",
+        usesSamePattern: true,
+        explanation: "This is a direct extension! After detecting the cycle with Floyd's algorithm, reset one pointer to head and move both at same speed - they'll meet at cycle start."
+      },
+      {
+        id: 5,
+        title: "Reverse Linked List",
+        difficulty: "Easy",
+        description: "Reverse a singly linked list and return the new head.",
+        usesSamePattern: false,
+        explanation: "This uses pointer manipulation but NO cycle detection. It's about rewiring next pointers, not finding convergence of fast/slow pointers."
+      }
+    ]
+  },
+
   steps: [
     {
       stepId: 1,
