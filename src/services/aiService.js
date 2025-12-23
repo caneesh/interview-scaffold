@@ -1,20 +1,41 @@
 /**
  * AI Service - Integrates with Claude API for intelligent features
  *
- * NOTE: In production, API calls should go through a backend proxy
- * to protect your API key. This service supports both direct API calls
- * (for development) and proxy mode (for production).
+ * In production (Vercel), uses /api/claude serverless function.
+ * In development, can use direct API with user's own key.
  */
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const PROXY_URL = '/api/claude'; // Vercel serverless function
 
-// Configuration - set via environment variables or localStorage
-const getConfig = () => ({
-  apiKey: localStorage.getItem('anthropic_api_key') || import.meta.env.VITE_ANTHROPIC_API_KEY || '',
-  proxyUrl: localStorage.getItem('ai_proxy_url') || import.meta.env.VITE_AI_PROXY_URL || '',
-  model: 'claude-sonnet-4-20250514',
-  maxTokens: 1024,
-});
+// Check if we're in production (deployed to Vercel)
+const isProduction = import.meta.env.PROD;
+
+// Configuration - prioritizes proxy in production
+const getConfig = () => {
+  // In production, always use the proxy (API key is on server)
+  if (isProduction) {
+    return {
+      useProxy: true,
+      proxyUrl: PROXY_URL,
+      apiKey: '',
+      model: 'claude-sonnet-4-20250514',
+      maxTokens: 1024,
+    };
+  }
+
+  // In development, allow user's own API key or custom proxy
+  const userApiKey = localStorage.getItem('anthropic_api_key') || import.meta.env.VITE_ANTHROPIC_API_KEY || '';
+  const customProxy = localStorage.getItem('ai_proxy_url') || import.meta.env.VITE_AI_PROXY_URL || '';
+
+  return {
+    useProxy: !!customProxy,
+    proxyUrl: customProxy || PROXY_URL,
+    apiKey: userApiKey,
+    model: 'claude-sonnet-4-20250514',
+    maxTokens: 1024,
+  };
+};
 
 /**
  * Makes a request to Claude API
@@ -22,8 +43,10 @@ const getConfig = () => ({
 async function callClaude(systemPrompt, userMessage, options = {}) {
   const config = getConfig();
 
-  if (!config.apiKey && !config.proxyUrl) {
-    throw new Error('No API key or proxy URL configured. Please set your Anthropic API key.');
+  // In production, proxy is always available
+  // In development, need either API key or custom proxy
+  if (!isProduction && !config.apiKey && !config.useProxy) {
+    throw new Error('No API key configured. Please set your Anthropic API key.');
   }
 
   const requestBody = {
@@ -35,14 +58,18 @@ async function callClaude(systemPrompt, userMessage, options = {}) {
     ]
   };
 
-  const url = config.proxyUrl || ANTHROPIC_API_URL;
+  // Use proxy in production or if configured
+  const useProxy = isProduction || config.useProxy;
+  const url = useProxy ? config.proxyUrl : ANTHROPIC_API_URL;
+
   const headers = {
     'Content-Type': 'application/json',
-    ...(config.proxyUrl ? {} : {
+    // Only add auth headers for direct API calls (not proxy)
+    ...(!useProxy && config.apiKey ? {
       'x-api-key': config.apiKey,
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true'
-    })
+    } : {})
   };
 
   try {
@@ -54,7 +81,14 @@ async function callClaude(systemPrompt, userMessage, options = {}) {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.error?.message || `API request failed: ${response.status}`);
+
+      // Handle rate limiting
+      if (response.status === 429) {
+        const retryAfter = error.retryAfter || 60;
+        throw new Error(`Rate limit exceeded. Please try again in ${retryAfter} seconds.`);
+      }
+
+      throw new Error(error.error?.message || error.error || `API request failed: ${response.status}`);
     }
 
     const data = await response.json();
@@ -279,11 +313,18 @@ Create a new problem using the same pattern but with a different scenario.`;
 }
 
 /**
- * Check if AI features are available (API key configured)
+ * Check if AI features are available
+ * In production: always available (uses server-side API key)
+ * In development: requires user's API key
  */
 export function isAIAvailable() {
+  // Always available in production (API key is on server)
+  if (isProduction) {
+    return true;
+  }
+  // In development, check for user's API key
   const config = getConfig();
-  return !!(config.apiKey || config.proxyUrl);
+  return !!(config.apiKey || config.useProxy);
 }
 
 /**
