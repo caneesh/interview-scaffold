@@ -8,6 +8,66 @@ export const sampleProblem = {
   title: "Detect Cycle in Linked List",
   difficulty: "Medium",
   description: "Given a linked list, determine if it has a cycle in it. A cycle occurs when a node's next pointer points back to a previous node, creating a loop.",
+
+  // Concept tagging for pattern recognition training
+  concepts: [
+    {
+      name: "Two Pointers",
+      icon: "pointers",
+      color: "blue",
+      description: "Using two references that traverse the data structure at different speeds or from different positions."
+    },
+    {
+      name: "Floyd's Algorithm",
+      icon: "cycle",
+      color: "purple",
+      description: "The Tortoise and Hare algorithm - a pointer algorithm that uses two pointers moving at different speeds."
+    },
+    {
+      name: "Cycle Detection",
+      icon: "loop",
+      color: "green",
+      description: "Identifying whether a sequence or structure contains a repeating pattern or loop."
+    },
+    {
+      name: "Constant Space",
+      icon: "memory",
+      color: "amber",
+      description: "O(1) space complexity - solving without additional data structures proportional to input size."
+    }
+  ],
+
+  // Pattern recognition explanations - teaching WHY this approach works
+  patternExplanations: [
+    {
+      pattern: "Two Pointers",
+      reason: "We need to detect if paths converge → two pointers moving at different speeds will eventually meet if there's a cycle.",
+      insight: "If the fast pointer 'laps' the slow pointer, they must be in a cycle. Like two runners on a circular track."
+    },
+    {
+      pattern: "Different Speeds",
+      reason: "Fast pointer moves 2x speed → guarantees meeting in a cycle because the gap closes by 1 each iteration.",
+      insight: "The relative speed difference of 1 ensures they'll collide rather than pass each other."
+    },
+    {
+      pattern: "No Extra Memory",
+      reason: "We only track two pointers → O(1) space vs O(n) for hash set approach.",
+      insight: "Trading off simplicity (hash set is easier to understand) for space efficiency."
+    },
+    {
+      pattern: "Termination Guarantee",
+      reason: "Fast pointer reaches end OR meets slow → always terminates in O(n) time.",
+      insight: "The algorithm is guaranteed to finish because either the list ends or pointers meet within n iterations."
+    }
+  ],
+
+  // Key takeaways for learning reinforcement
+  keyTakeaways: [
+    "When detecting cycles, consider: Can two things moving at different speeds help?",
+    "Two pointers are powerful when you need to find convergence or intersection.",
+    "O(1) space solutions often involve clever pointer manipulation instead of auxiliary data structures."
+  ],
+
   steps: [
     {
       stepId: 1,

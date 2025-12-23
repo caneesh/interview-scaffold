@@ -317,6 +317,203 @@ function CodeEditor({ code, onChange, placeholder, readOnly = false }) {
 }
 
 /**
+ * Concept icon component - returns appropriate icon based on type
+ */
+function ConceptIcon({ icon, className = "w-5 h-5" }) {
+  const icons = {
+    pointers: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    ),
+    cycle: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+      </svg>
+    ),
+    loop: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+      </svg>
+    ),
+    memory: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M13 7H7v6h6V7z" />
+        <path fillRule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2zM5 5h10v10H5V5z" clipRule="evenodd" />
+      </svg>
+    ),
+    default: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+      </svg>
+    )
+  };
+  return icons[icon] || icons.default;
+}
+
+/**
+ * Concept Lens - Collapsible panel for pattern recognition training
+ * Shows concepts used and why this problem matches each pattern
+ */
+function ConceptLens({ concepts, patternExplanations, keyTakeaways }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState('concepts');
+
+  const colorClasses = {
+    blue: 'bg-blue-100 text-blue-700 border-blue-200',
+    purple: 'bg-purple-100 text-purple-700 border-purple-200',
+    green: 'bg-green-100 text-green-700 border-green-200',
+    amber: 'bg-amber-100 text-amber-700 border-amber-200',
+  };
+
+  return (
+    <div className="mt-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200 overflow-hidden">
+      {/* Header - Always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-indigo-100/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <h3 className="font-bold text-gray-900 text-lg">Concept Lens</h3>
+            <p className="text-sm text-indigo-600">Pattern recognition training</p>
+          </div>
+        </div>
+        <svg
+          className={`w-6 h-6 text-indigo-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {/* Expandable Content */}
+      {isExpanded && (
+        <div className="px-6 pb-6 animate-fadeIn">
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mb-4 border-b border-indigo-200 pb-3">
+            <button
+              onClick={() => setActiveTab('concepts')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeTab === 'concepts'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white text-indigo-600 hover:bg-indigo-100'
+              }`}
+            >
+              Concepts Used
+            </button>
+            <button
+              onClick={() => setActiveTab('why')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeTab === 'why'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white text-indigo-600 hover:bg-indigo-100'
+              }`}
+            >
+              Why This Pattern
+            </button>
+            <button
+              onClick={() => setActiveTab('takeaways')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeTab === 'takeaways'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white text-indigo-600 hover:bg-indigo-100'
+              }`}
+            >
+              Key Takeaways
+            </button>
+          </div>
+
+          {/* Concepts Tab */}
+          {activeTab === 'concepts' && (
+            <div className="space-y-3">
+              {concepts?.map((concept, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-xl border ${colorClasses[concept.color] || colorClasses.blue}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      concept.color === 'blue' ? 'bg-blue-200' :
+                      concept.color === 'purple' ? 'bg-purple-200' :
+                      concept.color === 'green' ? 'bg-green-200' :
+                      'bg-amber-200'
+                    }`}>
+                      <ConceptIcon icon={concept.icon} className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{concept.name}</h4>
+                      <p className="text-sm opacity-80 mt-1">{concept.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Why This Pattern Tab */}
+          {activeTab === 'why' && (
+            <div className="space-y-4">
+              {patternExplanations?.map((item, index) => (
+                <div key={index} className="bg-white rounded-xl p-4 border border-indigo-100 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md text-sm font-medium">
+                      {item.pattern}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 mb-2">
+                    <span className="font-medium text-gray-900">Why: </span>
+                    {item.reason}
+                  </p>
+                  <div className="flex items-start gap-2 bg-gradient-to-r from-yellow-50 to-amber-50 p-3 rounded-lg border border-amber-200">
+                    <svg className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+                    </svg>
+                    <p className="text-amber-800 text-sm">
+                      <span className="font-medium">Insight: </span>
+                      {item.insight}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Key Takeaways Tab */}
+          {activeTab === 'takeaways' && (
+            <div className="bg-white rounded-xl p-5 border border-indigo-100 shadow-sm">
+              <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
+                Remember for Future Problems
+              </h4>
+              <ul className="space-y-3">
+                {keyTakeaways?.map((takeaway, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
+                      {index + 1}
+                    </span>
+                    <p className="text-gray-700">{takeaway}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Victory/Completion screen component with confetti celebration
  */
 function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
@@ -397,35 +594,12 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
           </div>
         </div>
 
-        {/* What you learned */}
-        <div className="bg-gray-50 rounded-xl p-5 mb-8 text-left">
-          <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-            <svg className="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
-            </svg>
-            What you learned:
-          </h3>
-          <ul className="text-gray-600 space-y-2">
-            <li className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Floyd's Tortoise and Hare algorithm
-            </li>
-            <li className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Two-pointer technique
-            </li>
-            <li className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Cycle detection in linked lists
-            </li>
-          </ul>
-        </div>
+        {/* Concept Lens - Pattern Recognition Training */}
+        <ConceptLens
+          concepts={problem.concepts}
+          patternExplanations={problem.patternExplanations}
+          keyTakeaways={problem.keyTakeaways}
+        />
 
         {/* Restart Button */}
         <button
