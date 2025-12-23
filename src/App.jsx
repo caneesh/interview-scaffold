@@ -758,6 +758,335 @@ function PatternQuiz({ quiz }) {
 }
 
 /**
+ * Pattern Graph Node Icon - renders appropriate icon for each pattern type
+ */
+function PatternNodeIcon({ icon, className = "w-4 h-4" }) {
+  const icons = {
+    tree: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" />
+      </svg>
+    ),
+    pointers: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    ),
+    speed: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+      </svg>
+    ),
+    cycle: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+      </svg>
+    ),
+    target: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm0-2a4 4 0 100-8 4 4 0 000 8zm0-2a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+      </svg>
+    ),
+    lock: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+      </svg>
+    ),
+    check: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+      </svg>
+    ),
+    star: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ),
+    window: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm1 0v12h12V4H4z" clipRule="evenodd" />
+        <path d="M7 8h6v4H7V8z" />
+      </svg>
+    ),
+    search: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+      </svg>
+    ),
+    graph: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
+      </svg>
+    ),
+    table: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
+      </svg>
+    ),
+    stack: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M2 4.5A2.5 2.5 0 014.5 2h11A2.5 2.5 0 0118 4.5v.75H2v-.75zM2 7h16v2H2V7zm0 4h16v2H2v-2zm0 4h16v.5a2.5 2.5 0 01-2.5 2.5h-11A2.5 2.5 0 012 15.5V15z" />
+      </svg>
+    ),
+    default: (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+      </svg>
+    )
+  };
+  return icons[icon] || icons.default;
+}
+
+/**
+ * Pattern Graph - Visual DAG showing pattern hierarchy and progress
+ * Helps users understand where they are in the learning journey
+ */
+function PatternGraph({ patternGraph }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
+
+  if (!patternGraph || !patternGraph.nodes) return null;
+
+  const { nodes, currentPath, unlocks } = patternGraph;
+
+  const colorClasses = {
+    blue: { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-700', fill: 'bg-blue-500' },
+    purple: { bg: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-700', fill: 'bg-purple-500' },
+    green: { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-700', fill: 'bg-green-500' },
+    amber: { bg: 'bg-amber-100', border: 'border-amber-300', text: 'text-amber-700', fill: 'bg-amber-500' },
+    teal: { bg: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-700', fill: 'bg-teal-500' },
+    orange: { bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-700', fill: 'bg-orange-500' },
+    pink: { bg: 'bg-pink-100', border: 'border-pink-300', text: 'text-pink-700', fill: 'bg-pink-500' },
+    red: { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-700', fill: 'bg-red-500' },
+    indigo: { bg: 'bg-indigo-100', border: 'border-indigo-300', text: 'text-indigo-700', fill: 'bg-indigo-500' },
+  };
+
+  // Render a single node in the tree
+  const renderNode = (nodeId, depth = 0) => {
+    const node = nodes[nodeId];
+    if (!node) return null;
+
+    const isInPath = currentPath.includes(nodeId);
+    const isCurrent = node.isCurrent;
+    const willUnlock = unlocks?.includes(nodeId);
+    const colors = colorClasses[node.color] || colorClasses.blue;
+
+    return (
+      <div key={nodeId} className="relative">
+        {/* Node */}
+        <button
+          onClick={() => setSelectedNode(selectedNode === nodeId ? null : nodeId)}
+          className={`
+            w-full text-left p-3 rounded-xl border-2 transition-all duration-200 mb-2
+            ${node.isUnlocked
+              ? isCurrent
+                ? `${colors.bg} ${colors.border} ring-2 ring-offset-2 ring-purple-400`
+                : isInPath
+                  ? `${colors.bg} ${colors.border}`
+                  : 'bg-white border-gray-200 hover:border-gray-300'
+              : 'bg-gray-50 border-gray-200 opacity-60'
+            }
+            ${willUnlock ? 'ring-2 ring-green-300 ring-offset-1' : ''}
+          `}
+        >
+          <div className="flex items-center gap-3">
+            {/* Status Icon */}
+            <div className={`
+              w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
+              ${node.isUnlocked
+                ? isCurrent
+                  ? colors.fill + ' text-white'
+                  : isInPath
+                    ? colors.fill + ' text-white'
+                    : 'bg-gray-200 text-gray-500'
+                : 'bg-gray-200 text-gray-400'
+              }
+              ${willUnlock ? 'bg-green-500 text-white' : ''}
+            `}>
+              {!node.isUnlocked && !willUnlock ? (
+                <PatternNodeIcon icon="lock" className="w-4 h-4" />
+              ) : isCurrent ? (
+                <PatternNodeIcon icon="star" className="w-4 h-4" />
+              ) : isInPath || willUnlock ? (
+                <PatternNodeIcon icon="check" className="w-4 h-4" />
+              ) : (
+                <PatternNodeIcon icon={node.icon} className="w-4 h-4" />
+              )}
+            </div>
+
+            {/* Node Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h4 className={`font-semibold text-sm ${node.isUnlocked ? 'text-gray-900' : 'text-gray-500'}`}>
+                  {node.name}
+                </h4>
+                {isCurrent && (
+                  <span className="px-2 py-0.5 bg-purple-500 text-white text-xs font-bold rounded-full">
+                    CURRENT
+                  </span>
+                )}
+                {willUnlock && (
+                  <span className="px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full animate-pulse">
+                    UNLOCKED!
+                  </span>
+                )}
+              </div>
+              {selectedNode === nodeId && (
+                <p className={`text-xs mt-1 ${node.isUnlocked ? 'text-gray-600' : 'text-gray-400'}`}>
+                  {node.description}
+                </p>
+              )}
+            </div>
+
+            {/* Expand indicator if has children */}
+            {node.children && node.children.length > 0 && (
+              <svg className={`w-4 h-4 text-gray-400 transition-transform ${selectedNode === nodeId ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            )}
+          </div>
+        </button>
+
+        {/* Children */}
+        {node.children && node.children.length > 0 && (selectedNode === nodeId || currentPath.includes(nodeId) || node.children.some(c => currentPath.includes(c))) && (
+          <div className="ml-6 pl-4 border-l-2 border-gray-200">
+            {node.children.map(childId => renderNode(childId, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Get the top-level patterns (children of root)
+  const topLevelPatterns = nodes.root?.children || [];
+
+  return (
+    <div className="mt-6 bg-gradient-to-br from-slate-50 to-gray-100 rounded-2xl border border-slate-200 overflow-hidden">
+      {/* Header - Always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-100/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl flex items-center justify-center shadow-md">
+            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <h3 className="font-bold text-gray-900 text-lg">Pattern Map</h3>
+            <p className="text-sm text-slate-600">Your structured learning path</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Progress indicator */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-600">{currentPath.length} patterns mastered</span>
+            <div className="flex -space-x-1">
+              {currentPath.slice(0, 3).map((pathNode, i) => (
+                <div
+                  key={pathNode}
+                  className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-white text-xs ${colorClasses[nodes[pathNode]?.color]?.fill || 'bg-gray-400'}`}
+                >
+                  <PatternNodeIcon icon="check" className="w-3 h-3" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <svg
+            className={`w-6 h-6 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Expandable Content */}
+      {isExpanded && (
+        <div className="px-6 pb-6 animate-fadeIn">
+          {/* Current Path Breadcrumb */}
+          <div className="bg-white rounded-xl p-4 mb-4 border border-slate-200">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Current Learning Path</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentPath.map((nodeId, index) => (
+                <div key={nodeId} className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-lg text-sm font-medium ${colorClasses[nodes[nodeId]?.color]?.bg} ${colorClasses[nodes[nodeId]?.color]?.text}`}>
+                    {nodes[nodeId]?.name}
+                  </span>
+                  {index < currentPath.length - 1 && (
+                    <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Unlocked Patterns */}
+          {unlocks && unlocks.length > 0 && (
+            <div className="bg-green-50 rounded-xl p-4 mb-4 border border-green-200">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                </svg>
+                <p className="text-green-800 font-semibold">New Patterns Unlocked!</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {unlocks.map(nodeId => (
+                  <span key={nodeId} className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                    {nodes[nodeId]?.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pattern Tree */}
+          <div className="space-y-2">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">All Patterns</p>
+            {topLevelPatterns.map(patternId => renderNode(patternId))}
+          </div>
+
+          {/* Legend */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-2">Legend</p>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-purple-500 rounded flex items-center justify-center">
+                  <PatternNodeIcon icon="star" className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-gray-600">Current</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-blue-500 rounded flex items-center justify-center">
+                  <PatternNodeIcon icon="check" className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-gray-600">Mastered</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-green-500 rounded flex items-center justify-center">
+                  <PatternNodeIcon icon="check" className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-gray-600">Just Unlocked</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-200 rounded flex items-center justify-center">
+                  <PatternNodeIcon icon="lock" className="w-3 h-3 text-gray-400" />
+                </div>
+                <span className="text-gray-600">Locked</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Victory/Completion screen component with confetti celebration
  */
 function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
@@ -848,6 +1177,9 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
 
         {/* Pattern Recognition Quiz - Transfer Learning */}
         <PatternQuiz quiz={problem.patternQuiz} />
+
+        {/* Pattern Map - Global DAG */}
+        <PatternGraph patternGraph={problem.patternGraph} />
 
         {/* Restart Button */}
         <button

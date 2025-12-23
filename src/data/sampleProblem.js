@@ -115,6 +115,327 @@ export const sampleProblem = {
     ]
   },
 
+  // Pattern Graph - Global DAG for structured learning
+  // Shows where this problem fits in the pattern landscape
+  patternGraph: {
+    // The path this problem follows in the pattern tree
+    currentPath: ['two-pointers', 'fast-slow', 'cycle-detection'],
+
+    // Full pattern tree structure
+    nodes: {
+      'root': {
+        id: 'root',
+        name: 'Algorithm Patterns',
+        description: 'Master these core patterns to solve any coding interview',
+        children: ['two-pointers', 'sliding-window', 'binary-search', 'dfs-bfs', 'dynamic-programming', 'monotonic-stack'],
+        isUnlocked: true,
+        icon: 'tree'
+      },
+      'two-pointers': {
+        id: 'two-pointers',
+        name: 'Two Pointers',
+        description: 'Use two references to traverse data structures efficiently',
+        children: ['fast-slow', 'left-right', 'multiple-arrays'],
+        isUnlocked: true,
+        icon: 'pointers',
+        color: 'blue'
+      },
+      'fast-slow': {
+        id: 'fast-slow',
+        name: 'Fast & Slow Pointers',
+        description: 'Pointers moving at different speeds to detect patterns',
+        children: ['cycle-detection', 'middle-finding', 'happy-number'],
+        isUnlocked: true,
+        icon: 'speed',
+        color: 'blue'
+      },
+      'cycle-detection': {
+        id: 'cycle-detection',
+        name: 'Cycle Detection',
+        description: "Floyd's algorithm - detect if a sequence loops back",
+        children: ['cycle-start', 'cycle-length'],
+        isUnlocked: true,
+        isCurrent: true,
+        icon: 'cycle',
+        color: 'purple'
+      },
+      'cycle-start': {
+        id: 'cycle-start',
+        name: 'Find Cycle Start',
+        description: 'After detecting cycle, find where it begins',
+        children: [],
+        isUnlocked: false,
+        icon: 'target',
+        color: 'purple'
+      },
+      'cycle-length': {
+        id: 'cycle-length',
+        name: 'Cycle Length',
+        description: 'Count the number of nodes in the cycle',
+        children: [],
+        isUnlocked: false,
+        icon: 'ruler',
+        color: 'purple'
+      },
+      'middle-finding': {
+        id: 'middle-finding',
+        name: 'Find Middle',
+        description: 'Find middle element in one pass using fast/slow',
+        children: [],
+        isUnlocked: false,
+        icon: 'center',
+        color: 'blue'
+      },
+      'happy-number': {
+        id: 'happy-number',
+        name: 'Sequence Cycles',
+        description: 'Detect cycles in number sequences',
+        children: [],
+        isUnlocked: false,
+        icon: 'number',
+        color: 'blue'
+      },
+      'left-right': {
+        id: 'left-right',
+        name: 'Left & Right Pointers',
+        description: 'Pointers converging from both ends',
+        children: ['two-sum-sorted', 'container-water', 'palindrome'],
+        isUnlocked: false,
+        icon: 'arrows',
+        color: 'green'
+      },
+      'two-sum-sorted': {
+        id: 'two-sum-sorted',
+        name: 'Two Sum (Sorted)',
+        description: 'Find pair summing to target in sorted array',
+        children: [],
+        isUnlocked: false,
+        icon: 'plus',
+        color: 'green'
+      },
+      'container-water': {
+        id: 'container-water',
+        name: 'Container Problems',
+        description: 'Maximize area between vertical lines',
+        children: [],
+        isUnlocked: false,
+        icon: 'container',
+        color: 'green'
+      },
+      'palindrome': {
+        id: 'palindrome',
+        name: 'Palindrome Check',
+        description: 'Verify symmetry from both ends',
+        children: [],
+        isUnlocked: false,
+        icon: 'mirror',
+        color: 'green'
+      },
+      'multiple-arrays': {
+        id: 'multiple-arrays',
+        name: 'Multiple Arrays',
+        description: 'Traverse multiple sorted structures',
+        children: ['merge-sorted', 'intersection'],
+        isUnlocked: false,
+        icon: 'layers',
+        color: 'amber'
+      },
+      'merge-sorted': {
+        id: 'merge-sorted',
+        name: 'Merge Sorted',
+        description: 'Combine sorted arrays/lists efficiently',
+        children: [],
+        isUnlocked: false,
+        icon: 'merge',
+        color: 'amber'
+      },
+      'intersection': {
+        id: 'intersection',
+        name: 'Find Intersection',
+        description: 'Find common elements or meeting points',
+        children: [],
+        isUnlocked: false,
+        icon: 'intersect',
+        color: 'amber'
+      },
+      'sliding-window': {
+        id: 'sliding-window',
+        name: 'Sliding Window',
+        description: 'Maintain a window over sequential data',
+        children: ['fixed-window', 'variable-window'],
+        isUnlocked: false,
+        icon: 'window',
+        color: 'teal'
+      },
+      'fixed-window': {
+        id: 'fixed-window',
+        name: 'Fixed Window',
+        description: 'Window of constant size k',
+        children: [],
+        isUnlocked: false,
+        icon: 'fixed',
+        color: 'teal'
+      },
+      'variable-window': {
+        id: 'variable-window',
+        name: 'Variable Window',
+        description: 'Window that grows and shrinks',
+        children: ['max-length', 'min-length'],
+        isUnlocked: false,
+        icon: 'expand',
+        color: 'teal'
+      },
+      'max-length': {
+        id: 'max-length',
+        name: 'Max Length',
+        description: 'Find longest valid window',
+        children: [],
+        isUnlocked: false,
+        icon: 'maximize',
+        color: 'teal'
+      },
+      'min-length': {
+        id: 'min-length',
+        name: 'Min Length',
+        description: 'Find shortest valid window',
+        children: [],
+        isUnlocked: false,
+        icon: 'minimize',
+        color: 'teal'
+      },
+      'binary-search': {
+        id: 'binary-search',
+        name: 'Binary Search',
+        description: 'Divide and conquer on sorted/monotonic data',
+        children: ['search-sorted', 'search-answer'],
+        isUnlocked: false,
+        icon: 'search',
+        color: 'orange'
+      },
+      'search-sorted': {
+        id: 'search-sorted',
+        name: 'Search in Sorted',
+        description: 'Find element in sorted array',
+        children: [],
+        isUnlocked: false,
+        icon: 'sort',
+        color: 'orange'
+      },
+      'search-answer': {
+        id: 'search-answer',
+        name: 'Binary Search on Answer',
+        description: 'Search the solution space directly',
+        children: [],
+        isUnlocked: false,
+        icon: 'target',
+        color: 'orange'
+      },
+      'dfs-bfs': {
+        id: 'dfs-bfs',
+        name: 'DFS / BFS',
+        description: 'Graph and tree traversal patterns',
+        children: ['dfs-state', 'bfs-shortest'],
+        isUnlocked: false,
+        icon: 'graph',
+        color: 'pink'
+      },
+      'dfs-state': {
+        id: 'dfs-state',
+        name: 'DFS with State',
+        description: 'Track state during depth-first exploration',
+        children: [],
+        isUnlocked: false,
+        icon: 'depth',
+        color: 'pink'
+      },
+      'bfs-shortest': {
+        id: 'bfs-shortest',
+        name: 'BFS Shortest Path',
+        description: 'Find shortest path in unweighted graphs',
+        children: [],
+        isUnlocked: false,
+        icon: 'path',
+        color: 'pink'
+      },
+      'dynamic-programming': {
+        id: 'dynamic-programming',
+        name: 'Dynamic Programming',
+        description: 'Break problems into overlapping subproblems',
+        children: ['dp-subsequence', 'dp-grid'],
+        isUnlocked: false,
+        icon: 'table',
+        color: 'red'
+      },
+      'dp-subsequence': {
+        id: 'dp-subsequence',
+        name: 'DP on Subsequences',
+        description: 'LIS, LCS, and substring problems',
+        children: [],
+        isUnlocked: false,
+        icon: 'sequence',
+        color: 'red'
+      },
+      'dp-grid': {
+        id: 'dp-grid',
+        name: 'DP on Grids',
+        description: 'Path counting and optimization on 2D grids',
+        children: [],
+        isUnlocked: false,
+        icon: 'grid',
+        color: 'red'
+      },
+      'monotonic-stack': {
+        id: 'monotonic-stack',
+        name: 'Monotonic Stack',
+        description: 'Stack maintaining sorted order for range queries',
+        children: ['next-greater', 'histogram'],
+        isUnlocked: false,
+        icon: 'stack',
+        color: 'indigo'
+      },
+      'next-greater': {
+        id: 'next-greater',
+        name: 'Next Greater Element',
+        description: 'Find next larger element for each position',
+        children: [],
+        isUnlocked: false,
+        icon: 'arrow-up',
+        color: 'indigo'
+      },
+      'histogram': {
+        id: 'histogram',
+        name: 'Histogram Problems',
+        description: 'Max rectangle, trapping water variants',
+        children: [],
+        isUnlocked: false,
+        icon: 'chart',
+        color: 'indigo'
+      }
+    },
+
+    // Diagnostic messages when user struggles with specific sub-patterns
+    diagnostics: {
+      'cycle-detection': {
+        stepMapping: {
+          1: "Pointer initialization is the foundation - both must start at the same point",
+          2: "The loop condition prevents null pointer errors - always check fast AND fast.next",
+          3: "Different speeds are KEY - fast moves 2x, closing the gap by 1 each iteration",
+          4: "The meeting point check - if they're equal, you've found a cycle",
+          5: "No cycle means fast reached the end - return False"
+        },
+        failureMessage: "Cycle Detection requires understanding that two pointers at different speeds will eventually meet in a cycle.",
+        prerequisiteGaps: ["fast-slow"]
+      },
+      'fast-slow': {
+        failureMessage: "Fast & Slow pointer technique wasn't fully recalled. Remember: different speeds create predictable convergence.",
+        prerequisiteGaps: ["two-pointers"]
+      }
+    },
+
+    // Problems that unlock after completing this one
+    unlocks: ['cycle-start', 'cycle-length', 'happy-number']
+  },
+
   steps: [
     {
       stepId: 1,
