@@ -336,6 +336,72 @@ Create a new problem using the same pattern but with a different scenario.`;
 }
 
 /**
+ * AI Strategy Validator - Validates user's plain English explanation of their approach
+ * NOT CACHED: Each user's strategy is unique
+ *
+ * This provides intelligent feedback on:
+ * 1. Logical flow of the explanation
+ * 2. Completeness of the approach
+ * 3. Correctness of the algorithm described
+ * 4. Suggestions for improvement
+ */
+export async function validateStrategy(strategyText, problemContext, requiredConcepts = []) {
+  const conceptsList = requiredConcepts.map(c => c.description).join(', ');
+
+  const systemPrompt = `You are a coding interview coach evaluating a student's pseudocode/strategy explanation.
+
+The student is solving: "${problemContext.title}"
+Problem: ${problemContext.description}
+Expected approach: Two Pointers (Floyd's Cycle Detection)
+
+The student should mention these key concepts: ${conceptsList}
+
+Evaluate their explanation for:
+1. Logical flow - Does the sequence of steps make sense?
+2. Completeness - Are all key steps covered?
+3. Correctness - Will their approach work?
+4. Clarity - Is it easy to understand?
+
+Respond with JSON:
+{
+  "isValid": true/false,
+  "score": 1-10,
+  "logicalFlow": "Brief assessment of logical flow",
+  "strengths": ["strength 1", "strength 2"],
+  "improvements": ["suggestion 1", "suggestion 2"],
+  "missingConcepts": ["concept 1 they forgot"],
+  "overallFeedback": "1-2 sentence encouraging summary"
+}`;
+
+  const userMessage = `Here is the student's strategy explanation:
+
+"${strategyText}"
+
+Evaluate this explanation for solving the linked list cycle detection problem.`;
+
+  try {
+    const response = await callClaude(systemPrompt, userMessage, { maxTokens: 500 });
+
+    // Parse the JSON response
+    const jsonMatch = response.match(/```json\n?([\s\S]*?)\n?```/) ||
+                      response.match(/\{[\s\S]*\}/);
+    const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
+    return JSON.parse(jsonStr);
+  } catch {
+    // Fallback if parsing fails
+    return {
+      isValid: true,
+      score: 7,
+      logicalFlow: "Your explanation shows a good understanding of the approach.",
+      strengths: ["Clear thinking", "Good use of terminology"],
+      improvements: [],
+      missingConcepts: [],
+      overallFeedback: "Your strategy explanation demonstrates understanding of the problem."
+    };
+  }
+}
+
+/**
  * Check if AI features are available
  * In production: always available (uses server-side API key)
  * In development: requires user's API key

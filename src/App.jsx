@@ -2255,6 +2255,272 @@ function PatternSelector({
 }
 
 /**
+ * Strategy Planner - "Reasoning Out Loud" Sandbox
+ * Forces users to articulate their approach in plain English before coding
+ */
+function StrategyPlanner({
+  problem,
+  strategyStep,
+  strategyText,
+  strategySubmitted,
+  strategyValidation,
+  strategyHintLevel,
+  strategyHints,
+  hasMoreStrategyHints,
+  onUpdateText,
+  onSubmit,
+  onRetry,
+  onProceed,
+  onRevealHint
+}) {
+  if (!strategyStep) return null;
+
+  const isValid = strategyValidation?.isValid;
+  const feedback = strategyValidation?.feedback;
+  const matchedConcepts = strategyValidation?.matched || [];
+  const missingConcepts = strategyValidation?.missing || [];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 flex items-center justify-center p-8">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-emerald-700 to-teal-700 px-8 py-6 text-white">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{strategyStep.title}</h1>
+              <p className="text-emerald-200 text-sm">Think before you code - explain your approach</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Problem Context */}
+        <div className="px-8 py-4 border-b border-gray-100 bg-gray-50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded">
+              {problem.difficulty}
+            </span>
+            <h2 className="font-semibold text-gray-900">{problem.title}</h2>
+          </div>
+        </div>
+
+        {/* Instruction */}
+        <div className="px-8 py-6">
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-5 mb-6 border border-emerald-200">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-emerald-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-5 h-5 text-emerald-700" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-800 whitespace-pre-line">{strategyStep.instruction}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Text Area for Strategy */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Your Strategy (in plain English):
+            </label>
+            <textarea
+              value={strategyText}
+              onChange={(e) => onUpdateText(e.target.value)}
+              disabled={strategySubmitted}
+              placeholder={strategyStep.placeholder}
+              rows={6}
+              className={`
+                w-full px-4 py-3 rounded-xl border-2 text-gray-800 placeholder-gray-400
+                focus:outline-none focus:ring-2 focus:ring-emerald-300 transition-all
+                ${strategySubmitted
+                  ? 'bg-gray-50 border-gray-200 cursor-not-allowed'
+                  : 'border-gray-200 focus:border-emerald-400'
+                }
+              `}
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              Tip: Use simple words like "pointer", "move", "compare", "loop", "check"
+            </p>
+          </div>
+
+          {/* Concept Indicators (before submission) */}
+          {!strategySubmitted && strategyText.length > 20 && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+              <p className="text-sm font-medium text-gray-600 mb-3">Concepts detected in your explanation:</p>
+              <div className="flex flex-wrap gap-2">
+                {strategyStep.requiredConcepts.map(concept => {
+                  const isMatched = concept.keywords.some(kw =>
+                    strategyText.toLowerCase().includes(kw.toLowerCase())
+                  );
+                  return (
+                    <span
+                      key={concept.id}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
+                        isMatched
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                          : 'bg-gray-100 text-gray-400 border border-gray-200'
+                      }`}
+                    >
+                      {isMatched ? '✓' : '○'} {concept.description}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Hints Section */}
+          {strategyHintLevel > 0 && (
+            <div className="mb-6 space-y-2">
+              {strategyHints.slice(0, strategyHintLevel).map((hint, index) => (
+                <div key={index} className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                  <span className="w-5 h-5 bg-amber-200 text-amber-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  <p className="text-amber-800 text-sm">{hint}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Hint Button (before submission) */}
+          {!strategySubmitted && hasMoreStrategyHints && (
+            <button
+              onClick={onRevealHint}
+              className="mb-6 text-amber-600 hover:text-amber-700 text-sm font-medium flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+              Need a hint? ({strategyHints.length - strategyHintLevel} remaining)
+            </button>
+          )}
+
+          {/* Submit Button (before submission) */}
+          {!strategySubmitted && (
+            <button
+              onClick={onSubmit}
+              disabled={strategyText.trim().length < 30}
+              className={`
+                w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200
+                flex items-center justify-center gap-2
+                ${strategyText.trim().length >= 30
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700 shadow-lg hover:shadow-xl'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }
+              `}
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Check My Strategy
+            </button>
+          )}
+
+          {/* Feedback (after submission) */}
+          {strategySubmitted && feedback && (
+            <div className={`rounded-xl p-6 mb-4 ${
+              feedback.type === 'excellent' ? 'bg-emerald-50 border border-emerald-200' :
+              feedback.type === 'good' ? 'bg-blue-50 border border-blue-200' :
+              'bg-amber-50 border border-amber-200'
+            }`}>
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  feedback.type === 'excellent' ? 'bg-emerald-200' :
+                  feedback.type === 'good' ? 'bg-blue-200' : 'bg-amber-200'
+                }`}>
+                  {feedback.type === 'excellent' || feedback.type === 'good' ? (
+                    <svg className={`w-6 h-6 ${feedback.type === 'excellent' ? 'text-emerald-700' : 'text-blue-700'}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6 text-amber-700" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className={`font-bold text-lg mb-2 ${
+                    feedback.type === 'excellent' ? 'text-emerald-800' :
+                    feedback.type === 'good' ? 'text-blue-800' : 'text-amber-800'
+                  }`}>
+                    {feedback.title}
+                  </h3>
+                  <p className={`mb-3 ${
+                    feedback.type === 'excellent' ? 'text-emerald-700' :
+                    feedback.type === 'good' ? 'text-blue-700' : 'text-amber-700'
+                  }`}>
+                    {feedback.message}
+                    {feedback.missing && feedback.missing.length > 0 && (
+                      <span className="block mt-2">
+                        {feedback.missing.slice(0, 2).join(', ')}
+                      </span>
+                    )}
+                  </p>
+
+                  {/* Matched Concepts */}
+                  {matchedConcepts.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {matchedConcepts.map(c => (
+                        <span key={c.id} className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
+                          ✓ {c.description}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Score Display */}
+          {strategySubmitted && strategyValidation && (
+            <div className="mb-4 text-center">
+              <span className="text-sm text-gray-600">
+                Score: <span className="font-bold text-emerald-600">{strategyValidation.score}</span> / {strategyValidation.totalPossible}
+                {isValid && ' — Ready to code!'}
+              </span>
+            </div>
+          )}
+
+          {/* Action Buttons (after submission) */}
+          {strategySubmitted && (
+            <div className="flex gap-3">
+              {isValid ? (
+                <button
+                  onClick={onProceed}
+                  className="flex-1 py-3 px-6 rounded-xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+                  </svg>
+                  Start Coding
+                </button>
+              ) : (
+                <button
+                  onClick={onRetry}
+                  className="flex-1 py-3 px-6 rounded-xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                  </svg>
+                  Revise My Strategy
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Interview Simulation - "What Would You Try First?" Mode
  * Forces users to think about approach before coding
  */
@@ -2865,6 +3131,22 @@ function App() {
     selectApproach,
     submitInterview,
     proceedToCoding,
+    // Strategy planning state (Reasoning Out Loud)
+    hasStrategyStep,
+    isStrategyComplete,
+    strategyText,
+    strategySubmitted,
+    strategyValidation,
+    strategyStep,
+    strategyHintLevel,
+    strategyHints,
+    hasMoreStrategyHints,
+    // Strategy planning actions
+    updateStrategyText,
+    submitStrategy,
+    retryStrategy,
+    proceedFromStrategy,
+    revealStrategyHint,
     // Coding state
     currentStepIndex,
     viewingStepIndex,
@@ -2951,6 +3233,27 @@ function App() {
         onSelectApproach={selectApproach}
         onSubmit={submitInterview}
         onProceed={proceedToCoding}
+      />
+    );
+  }
+
+  // Show strategy planner - "Reasoning Out Loud" (after interview, before coding)
+  if (hasStrategyStep && !isStrategyComplete) {
+    return (
+      <StrategyPlanner
+        problem={sampleProblem}
+        strategyStep={strategyStep}
+        strategyText={strategyText}
+        strategySubmitted={strategySubmitted}
+        strategyValidation={strategyValidation}
+        strategyHintLevel={strategyHintLevel}
+        strategyHints={strategyHints}
+        hasMoreStrategyHints={hasMoreStrategyHints}
+        onUpdateText={updateStrategyText}
+        onSubmit={submitStrategy}
+        onRetry={retryStrategy}
+        onProceed={proceedFromStrategy}
+        onRevealHint={revealStrategyHint}
       />
     );
   }

@@ -197,6 +197,74 @@ export const sampleProblem = {
     }
   },
 
+  // Reasoning Out Loud - Strategy Step (pseudocode planning before coding)
+  strategyStep: {
+    title: "Plan Your Approach",
+    instruction: "Don't write code yet. In plain English, describe step-by-step how you will solve this problem. Think about:\n• What variables/pointers will you use?\n• How will they move through the data?\n• What condition tells you to stop?\n• How do you know if you found a cycle?",
+    placeholder: "Example: I will use two pointers starting at the head. The slow pointer moves one step at a time, while the fast pointer moves two steps. If they ever point to the same node, there's a cycle. If fast reaches the end (null), there's no cycle.",
+    // Key concepts that should appear in a good strategy explanation
+    requiredConcepts: [
+      {
+        id: 'pointers',
+        keywords: ['pointer', 'pointers', 'slow', 'fast', 'tortoise', 'hare', 'reference', 'variable'],
+        description: 'Mention the pointers/variables you will use',
+        weight: 2
+      },
+      {
+        id: 'movement',
+        keywords: ['move', 'moves', 'step', 'steps', 'increment', 'advance', 'traverse', 'next', 'one step', 'two steps', 'speed'],
+        description: 'Describe how pointers will move',
+        weight: 2
+      },
+      {
+        id: 'loop',
+        keywords: ['while', 'loop', 'iterate', 'repeat', 'until', 'keep going', 'continue'],
+        description: 'Mention the looping/iteration strategy',
+        weight: 1
+      },
+      {
+        id: 'comparison',
+        keywords: ['compare', 'equal', 'same', 'meet', 'catch up', 'collide', 'match', 'check if'],
+        description: 'Explain how you detect the cycle',
+        weight: 2
+      },
+      {
+        id: 'termination',
+        keywords: ['end', 'null', 'none', 'stop', 'finish', 'terminate', 'exit', 'no cycle', 'reach the end'],
+        description: 'Describe when/how the algorithm stops',
+        weight: 1
+      }
+    ],
+    minScore: 5, // Minimum weighted score to pass (out of 8 total)
+    hints: [
+      "Start by naming your pointers. What will you call them and where do they start?",
+      "Think about speed - how fast does each pointer move per iteration?",
+      "What condition would prove there IS a cycle? What would prove there ISN'T one?",
+      "Imagine you're explaining this to a friend who doesn't know programming. Use simple verbs like 'move', 'check', 'compare'."
+    ],
+    feedback: {
+      excellent: {
+        title: "Excellent Strategy!",
+        message: "Your explanation covers all the key concepts. You have a clear mental model - now let's implement it!"
+      },
+      good: {
+        title: "Good Start!",
+        message: "You've got the main idea. Consider adding more detail about: "
+      },
+      needsWork: {
+        title: "Let's Think Deeper",
+        message: "Your strategy is missing some key elements. Try to explain: "
+      }
+    },
+    // AI enhancement options
+    aiValidation: {
+      enabled: true,
+      checkLogicalFlow: true, // Does the explanation make logical sense?
+      checkCompleteness: true, // Are all steps covered?
+      suggestImprovements: true // Provide specific feedback
+    }
+  },
+
   // Concept tagging for pattern recognition training
   concepts: [
     {

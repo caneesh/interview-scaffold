@@ -19,6 +19,13 @@ export function useScaffoldedLearning(problem) {
   const [selectedApproach, setSelectedApproach] = useState(null);
   const [interviewSubmitted, setInterviewSubmitted] = useState(false);
 
+  // Strategy planning state - "Reasoning Out Loud" (must complete before coding)
+  const [isStrategyComplete, setIsStrategyComplete] = useState(false);
+  const [strategyText, setStrategyText] = useState('');
+  const [strategySubmitted, setStrategySubmitted] = useState(false);
+  const [strategyValidation, setStrategyValidation] = useState(null);
+  const [strategyHintLevel, setStrategyHintLevel] = useState(0);
+
   // Current step index (0-based) - represents actual progress
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
@@ -111,6 +118,59 @@ export function useScaffoldedLearning(problem) {
     return selectedPattern === patternSelection.correctAnswer;
   }, [selectedPattern, patternSelection]);
 
+  // Strategy step derived state
+  const strategyStep = problem.strategyStep;
+  const hasStrategyStep = !!strategyStep;
+  const strategyHints = strategyStep?.hints || [];
+  const hasMoreStrategyHints = strategyHintLevel < strategyHints.length;
+
+  // Validate strategy text against required concepts
+  const validateStrategyText = useCallback((text) => {
+    if (!strategyStep || !text.trim()) {
+      return { isValid: false, score: 0, matched: [], missing: [], feedback: null };
+    }
+
+    const lowerText = text.toLowerCase();
+    const matched = [];
+    const missing = [];
+    let score = 0;
+
+    strategyStep.requiredConcepts.forEach(concept => {
+      const hasKeyword = concept.keywords.some(keyword =>
+        lowerText.includes(keyword.toLowerCase())
+      );
+      if (hasKeyword) {
+        matched.push(concept);
+        score += concept.weight;
+      } else {
+        missing.push(concept);
+      }
+    });
+
+    const minScore = strategyStep.minScore || 5;
+    const isValid = score >= minScore;
+    const totalPossible = strategyStep.requiredConcepts.reduce((sum, c) => sum + c.weight, 0);
+
+    let feedback;
+    if (score >= totalPossible * 0.9) {
+      feedback = { ...strategyStep.feedback.excellent, type: 'excellent' };
+    } else if (isValid) {
+      feedback = {
+        ...strategyStep.feedback.good,
+        type: 'good',
+        missing: missing.map(m => m.description)
+      };
+    } else {
+      feedback = {
+        ...strategyStep.feedback.needsWork,
+        type: 'needsWork',
+        missing: missing.map(m => m.description)
+      };
+    }
+
+    return { isValid, score, totalPossible, matched, missing, feedback };
+  }, [strategyStep]);
+
   // Interview question derived state
   const interviewQuestion = problem.interviewQuestion;
   const hasInterviewQuestion = !!interviewQuestion;
@@ -160,6 +220,45 @@ export function useScaffoldedLearning(problem) {
   const proceedFromPattern = useCallback(() => {
     setIsPatternComplete(true);
   }, []);
+
+  // Update strategy text (Reasoning Out Loud)
+  const updateStrategyText = useCallback((text) => {
+    if (!strategySubmitted) {
+      setStrategyText(text);
+      // Clear validation when user types
+      if (strategyValidation) {
+        setStrategyValidation(null);
+      }
+    }
+  }, [strategySubmitted, strategyValidation]);
+
+  // Submit strategy for validation
+  const submitStrategy = useCallback(() => {
+    if (strategyText.trim() && strategyStep) {
+      const validation = validateStrategyText(strategyText);
+      setStrategyValidation(validation);
+      setStrategySubmitted(true);
+    }
+  }, [strategyText, strategyStep, validateStrategyText]);
+
+  // Retry strategy after feedback
+  const retryStrategy = useCallback(() => {
+    setStrategySubmitted(false);
+    setStrategyValidation(null);
+    // Keep the text so they can edit it
+  }, []);
+
+  // Proceed to coding after valid strategy
+  const proceedFromStrategy = useCallback(() => {
+    setIsStrategyComplete(true);
+  }, []);
+
+  // Reveal next strategy hint
+  const revealStrategyHint = useCallback(() => {
+    if (strategyHintLevel < strategyHints.length) {
+      setStrategyHintLevel(prev => prev + 1);
+    }
+  }, [strategyHintLevel, strategyHints.length]);
 
   // Select an approach (before submitting)
   const selectApproach = useCallback((approachId) => {
@@ -300,6 +399,13 @@ export function useScaffoldedLearning(problem) {
     setSelectedApproach(null);
     setInterviewSubmitted(false);
 
+    // Reset strategy state
+    setIsStrategyComplete(false);
+    setStrategyText('');
+    setStrategySubmitted(false);
+    setStrategyValidation(null);
+    setStrategyHintLevel(0);
+
     // Reset coding state
     setCurrentStepIndex(0);
     setViewingStepIndex(0); // Also reset viewing step
@@ -344,6 +450,17 @@ export function useScaffoldedLearning(problem) {
     isInterviewPartiallyCorrect,
     interviewQuestion,
 
+    // Strategy planning state (Reasoning Out Loud)
+    hasStrategyStep,
+    isStrategyComplete,
+    strategyText,
+    strategySubmitted,
+    strategyValidation,
+    strategyStep,
+    strategyHintLevel,
+    strategyHints,
+    hasMoreStrategyHints,
+
     // Coding state
     currentStepIndex,
     viewingStepIndex,
@@ -367,6 +484,13 @@ export function useScaffoldedLearning(problem) {
     submitPattern,
     retryPattern,
     proceedFromPattern,
+
+    // Strategy planning actions
+    updateStrategyText,
+    submitStrategy,
+    retryStrategy,
+    proceedFromStrategy,
+    revealStrategyHint,
 
     // Interview actions
     selectApproach,
