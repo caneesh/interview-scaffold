@@ -3,7 +3,13 @@
  *
  * In production (Vercel), uses /api/claude serverless function.
  * In development, can use direct API with user's own key.
+ *
+ * Caching: Reusable responses (explanations, patterns) are cached
+ * in Supabase to reduce API costs. User-specific requests (code review)
+ * are always fresh.
  */
+
+import { withCache, CacheKeys } from './cacheService';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const PROXY_URL = '/api/claude'; // Vercel serverless function
@@ -161,45 +167,50 @@ Please review this solution.`;
 
 /**
  * AI Hint Generator - Creates personalized hints based on user's progress
+ * CACHED: Same hints for same problem/step/level combination
  */
 export async function generateHint(problemContext, currentCode, hintLevel, previousHints = []) {
-  const systemPrompt = `You are a supportive coding tutor. Generate a helpful hint for a student stuck on a coding problem.
+  // Cache key based on problem, step, and hint level (not user's code for cacheability)
+  const stepId = problemContext.currentStep?.id || 0;
+  const cacheKey = CacheKeys.hint(problemContext.id || 'default', stepId, hintLevel);
+
+  return withCache(cacheKey, async () => {
+    const systemPrompt = `You are a supportive coding tutor. Generate a helpful hint for a student stuck on a coding problem.
 
 Guidelines:
 - Hint level ${hintLevel}: ${
-  hintLevel === 1 ? 'Very subtle - just point them in the right direction' :
-  hintLevel === 2 ? 'Medium - give a conceptual hint about the approach' :
-  hintLevel === 3 ? 'Detailed - explain the key insight needed' :
-  'Very detailed - almost give away the answer but let them code it'
-}
+    hintLevel === 1 ? 'Very subtle - just point them in the right direction' :
+    hintLevel === 2 ? 'Medium - give a conceptual hint about the approach' :
+    hintLevel === 3 ? 'Detailed - explain the key insight needed' :
+    'Very detailed - almost give away the answer but let them code it'
+  }
 - Don't give away the full solution
 - Be encouraging and supportive
-- Reference their current code if relevant
 - Build on previous hints if provided
 
 Respond with just the hint text, no JSON or formatting.`;
 
-  const userMessage = `Problem: ${problemContext.title}
+    const userMessage = `Problem: ${problemContext.title}
 Description: ${problemContext.description}
 Current step: ${problemContext.currentStep?.instruction || 'Working on solution'}
 
-Student's current code:
-\`\`\`
-${currentCode || '# No code yet'}
-\`\`\`
-
-${previousHints.length > 0 ? `Previous hints given:\n${previousHints.map((h, i) => `${i + 1}. ${h}`).join('\n')}` : ''}
-
 Generate a level ${hintLevel} hint.`;
 
-  return await callClaude(systemPrompt, userMessage, { maxTokens: 300 });
+    return await callClaude(systemPrompt, userMessage, { maxTokens: 300 });
+  }, { type: 'hint', problemId: problemContext.id });
 }
 
 /**
  * AI Explanation - Explains concepts, patterns, or code in detail
+ * CACHED: Same explanations for same topics (context-free version)
  */
 export async function explainConcept(topic, context = {}) {
-  const systemPrompt = `You are an expert computer science educator specializing in coding interviews.
+  // Only cache if no user-specific context (code) is provided
+  const isCacheable = !context.code && !context.specificQuestion;
+  const cacheKey = isCacheable ? CacheKeys.explanation(topic) : null;
+
+  const fetchExplanation = async () => {
+    const systemPrompt = `You are an expert computer science educator specializing in coding interviews.
 
 Explain concepts clearly with:
 1. Simple analogy or real-world comparison
@@ -210,13 +221,20 @@ Explain concepts clearly with:
 
 Keep explanations concise but insightful. Use markdown formatting.`;
 
-  const userMessage = `Explain: ${topic}
+    const userMessage = `Explain: ${topic}
 
 ${context.problemTitle ? `In the context of: ${context.problemTitle}` : ''}
 ${context.code ? `Related to this code:\n\`\`\`\n${context.code}\n\`\`\`` : ''}
 ${context.specificQuestion ? `Specific question: ${context.specificQuestion}` : ''}`;
 
-  return await callClaude(systemPrompt, userMessage, { maxTokens: 800 });
+    return await callClaude(systemPrompt, userMessage, { maxTokens: 800 });
+  };
+
+  // Use cache for generic explanations, direct call for user-specific ones
+  if (cacheKey) {
+    return withCache(cacheKey, fetchExplanation, { type: 'explanation' });
+  }
+  return fetchExplanation();
 }
 
 /**
@@ -272,9 +290,13 @@ What's the bug?`;
 
 /**
  * AI Problem Generator - Creates new similar problems
+ * CACHED: Same generated problems for same base problem + difficulty
  */
 export async function generateSimilarProblem(baseProblem, difficulty = 'same') {
-  const systemPrompt = `You are a coding interview problem designer. Create a new problem that uses the same core pattern/technique as the given problem.
+  const cacheKey = CacheKeys.similarProblem(baseProblem.id || baseProblem.title, difficulty);
+
+  return withCache(cacheKey, async () => {
+    const systemPrompt = `You are a coding interview problem designer. Create a new problem that uses the same core pattern/technique as the given problem.
 
 The new problem should:
 1. Use the same algorithmic pattern
@@ -294,22 +316,23 @@ Format as JSON:
   "whySamePattern": "Brief explanation of how this uses the same pattern"
 }`;
 
-  const userMessage = `Base problem: ${baseProblem.title}
+    const userMessage = `Base problem: ${baseProblem.title}
 Pattern: ${baseProblem.pattern || 'Two pointers / cycle detection'}
 Description: ${baseProblem.description}
 
 Create a new problem using the same pattern but with a different scenario.`;
 
-  const response = await callClaude(systemPrompt, userMessage, { maxTokens: 1000 });
+    const response = await callClaude(systemPrompt, userMessage, { maxTokens: 1000 });
 
-  try {
-    const jsonMatch = response.match(/```json\n?([\s\S]*?)\n?```/) ||
-                      response.match(/\{[\s\S]*\}/);
-    const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
-    return JSON.parse(jsonStr);
-  } catch {
-    return null;
-  }
+    try {
+      const jsonMatch = response.match(/```json\n?([\s\S]*?)\n?```/) ||
+                        response.match(/\{[\s\S]*\}/);
+      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : response;
+      return JSON.parse(jsonStr);
+    } catch {
+      return null;
+    }
+  }, { type: 'similarProblem', problemId: baseProblem.id });
 }
 
 /**
