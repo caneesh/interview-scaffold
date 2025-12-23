@@ -20,11 +20,9 @@ export function useScaffoldedLearning(problem) {
     return initial;
   });
 
-  // Hint visibility state
-  const [isHintVisible, setIsHintVisible] = useState(false);
-
-  // Current hint index (for multi-hint steps)
-  const [currentHintIndex, setCurrentHintIndex] = useState(0);
+  // Hint level state (progressive hints)
+  // 0 = No hints shown, 1 = First hint shown, 2 = Second hint shown, etc.
+  const [hintLevel, setHintLevel] = useState(0);
 
   // Validation feedback
   const [validationMessage, setValidationMessage] = useState(null);
@@ -64,20 +62,19 @@ export function useScaffoldedLearning(problem) {
     }
   }, [currentStep, validationMessage]);
 
-  // Toggle hint visibility
-  const toggleHint = useCallback(() => {
-    setIsHintVisible(prev => !prev);
-  }, []);
+  // Derived hint state
+  const maxHints = currentStep?.hints?.length || 0;
+  const hasMoreHints = hintLevel < maxHints;
 
-  // Show next hint
-  const showNextHint = useCallback(() => {
+  // Reveal next hint (increments hint level)
+  const revealNextHint = useCallback(() => {
     if (!currentStep) return;
 
     const maxHints = currentStep.hints?.length || 0;
-    if (currentHintIndex < maxHints - 1) {
-      setCurrentHintIndex(prev => prev + 1);
+    if (hintLevel < maxHints) {
+      setHintLevel(prev => prev + 1);
     }
-  }, [currentStep, currentHintIndex]);
+  }, [currentStep, hintLevel]);
 
   // Validate current step's code against the validation rule
   const validateStep = useCallback(() => {
@@ -116,8 +113,7 @@ export function useScaffoldedLearning(problem) {
         setCurrentStepIndex(prev => prev + 1);
         setValidationMessage('Correct! Moving to the next step...');
         setIsValidationError(false);
-        setIsHintVisible(false);
-        setCurrentHintIndex(0);
+        setHintLevel(0); // Reset hint level for next step
 
         // Clear success message after a delay
         setTimeout(() => {
@@ -136,8 +132,7 @@ export function useScaffoldedLearning(problem) {
   const goToStep = useCallback((stepIndex) => {
     if (stepIndex >= 0 && stepIndex <= currentStepIndex) {
       setCurrentStepIndex(stepIndex);
-      setIsHintVisible(false);
-      setCurrentHintIndex(0);
+      setHintLevel(0); // Reset hint level when navigating
       setValidationMessage(null);
       setIsValidationError(false);
     }
@@ -153,8 +148,7 @@ export function useScaffoldedLearning(problem) {
       });
       return initial;
     });
-    setIsHintVisible(false);
-    setCurrentHintIndex(0);
+    setHintLevel(0); // Reset hint level
     setValidationMessage(null);
     setIsValidationError(false);
     setIsCompleted(false);
@@ -165,8 +159,9 @@ export function useScaffoldedLearning(problem) {
     currentStepIndex,
     currentStep,
     userCode,
-    isHintVisible,
-    currentHintIndex,
+    hintLevel,
+    maxHints,
+    hasMoreHints,
     validationMessage,
     isValidationError,
     isCompleted,
@@ -176,8 +171,7 @@ export function useScaffoldedLearning(problem) {
 
     // Actions
     updateCode,
-    toggleHint,
-    showNextHint,
+    revealNextHint,
     submitStep,
     goToStep,
     resetProblem,
