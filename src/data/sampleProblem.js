@@ -539,6 +539,226 @@ export const sampleProblem = {
     unlocks: ['cycle-start', 'cycle-length', 'happy-number']
   },
 
+  // Mistake-Centered Learning - Critique buggy solutions and wrong approaches
+  mistakeAnalysis: {
+    challenges: [
+      {
+        id: 'buggy-1',
+        type: 'buggy-code',
+        title: "Candidate A's Solution",
+        scenario: "Here is a solution from another candidate. Can you identify the flaw?",
+        code: `def hasCycle(head):
+    slow = head
+    fast = head
+
+    while fast.next:  # Bug: should check fast AND fast.next
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            return True
+
+    return False`,
+        language: 'python',
+        options: [
+          {
+            id: 'a',
+            text: "The pointers are initialized incorrectly",
+            isCorrect: false,
+            feedback: "Actually, both pointers starting at head is correct for Floyd's algorithm."
+          },
+          {
+            id: 'b',
+            text: "The while loop condition will cause a NullPointerError",
+            isCorrect: true,
+            feedback: "Correct! The loop only checks `fast.next`, but `fast` itself could be None after moving. If the list has no cycle and odd length, `fast` becomes None, then `fast.next` crashes."
+          },
+          {
+            id: 'c',
+            text: "The slow pointer should move two steps",
+            isCorrect: false,
+            feedback: "No, slow moving one step and fast moving two steps is the correct approach for cycle detection."
+          },
+          {
+            id: 'd',
+            text: "The comparison should use 'is' instead of '=='",
+            isCorrect: false,
+            feedback: "While 'is' checks identity and '==' checks equality, both work for node comparison in Python. This isn't the critical bug."
+          }
+        ],
+        correctAnswer: 'b',
+        detailedExplanation: {
+          whatWentWrong: "The loop condition only checks `fast.next` but not `fast` itself. When `fast` moves two steps and the list has no cycle, `fast` can become None.",
+          testCase: "Consider list: 1 → 2 → 3 → None. After first iteration: slow=2, fast=3. After second iteration: slow=3, fast=None. Now `fast.next` crashes!",
+          correctFix: "Change `while fast.next:` to `while fast and fast.next:`",
+          lesson: "Always think about edge cases: What happens when the list ends? What happens with odd vs even length lists?"
+        }
+      },
+      {
+        id: 'buggy-2',
+        type: 'buggy-code',
+        title: "Candidate B's Solution",
+        scenario: "This solution passes most test cases but fails on one edge case. What's wrong?",
+        code: `def hasCycle(head):
+    if not head:
+        return False
+
+    slow = head
+    fast = head.next  # Bug: Different starting positions
+
+    while fast and fast.next:
+        if slow == fast:
+            return True
+        slow = slow.next
+        fast = fast.next.next
+
+    return False`,
+        language: 'python',
+        options: [
+          {
+            id: 'a',
+            text: "Missing null check for head",
+            isCorrect: false,
+            feedback: "The code does check `if not head` at the start, so this isn't the issue."
+          },
+          {
+            id: 'b',
+            text: "Fast and slow should start at the same position",
+            isCorrect: true,
+            feedback: "Correct! Starting fast at head.next means they compare BEFORE moving on first iteration. This works but is error-prone and fails for single-node cycles!"
+          },
+          {
+            id: 'c',
+            text: "The return False should be inside the loop",
+            isCorrect: false,
+            feedback: "No, returning False after the loop exits is correct - it means we reached the end without finding a cycle."
+          },
+          {
+            id: 'd',
+            text: "The loop should use 'or' instead of 'and'",
+            isCorrect: false,
+            feedback: "Using 'or' would be wrong - we need BOTH conditions to be true to safely access fast.next.next."
+          }
+        ],
+        correctAnswer: 'b',
+        detailedExplanation: {
+          whatWentWrong: "By starting fast at head.next, the algorithm compares pointers BEFORE moving them. This changes the logic and can fail for a single node pointing to itself.",
+          testCase: "Consider: head → head (single node cycle). With standard algorithm: slow=head, fast=head. After moving: slow=head, fast=head. They meet! But with this code: slow=head, fast=head. They're equal immediately before the check inside the loop runs, so comparison happens correctly. However, the code is fragile and confusing.",
+          correctFix: "Start both at head: `fast = head`. The comparison should happen AFTER moving, not before.",
+          lesson: "Consistency matters. The standard Floyd's algorithm has both pointers start together and compare after moving. Deviating creates subtle bugs."
+        }
+      },
+      {
+        id: 'wrong-approach-1',
+        type: 'wrong-approach',
+        title: "Tempting but Inefficient",
+        scenario: "A candidate proposes this approach. Why might the interviewer push back?",
+        code: `def hasCycle(head):
+    visited = set()
+    current = head
+
+    while current:
+        if current in visited:
+            return True
+        visited.add(current)
+        current = current.next
+
+    return False`,
+        language: 'python',
+        options: [
+          {
+            id: 'a',
+            text: "The logic is incorrect - it won't detect cycles",
+            isCorrect: false,
+            feedback: "The logic is actually correct! It properly detects cycles by tracking visited nodes."
+          },
+          {
+            id: 'b',
+            text: "It uses O(n) extra space instead of O(1)",
+            isCorrect: true,
+            feedback: "Correct! While this solution works, it uses O(n) space for the hash set. The interviewer will likely ask: 'Can you do it in O(1) space?' - which leads to the two-pointer approach."
+          },
+          {
+            id: 'c',
+            text: "The time complexity is O(n²)",
+            isCorrect: false,
+            feedback: "Actually, the time complexity is O(n) because hash set operations are O(1) average. Space is the issue here."
+          },
+          {
+            id: 'd',
+            text: "It will infinite loop on cyclic lists",
+            isCorrect: false,
+            feedback: "No, it correctly returns True when it encounters a visited node, preventing infinite loops."
+          }
+        ],
+        correctAnswer: 'b',
+        detailedExplanation: {
+          whatWentWrong: "Nothing is 'wrong' per se - this is a valid O(n) time solution. The issue is space complexity.",
+          whyNotOptimal: "Using a hash set requires O(n) extra memory to store all visited nodes. In an interview, this is often the first answer candidates give, but there's a follow-up.",
+          optimalAlternative: "Floyd's Cycle Detection achieves O(n) time with O(1) space by using two pointers at different speeds instead of storing history.",
+          lesson: "In interviews, always consider space complexity. 'Can you do it without extra memory?' is a common follow-up. Two pointers often eliminate the need for auxiliary data structures."
+        }
+      },
+      {
+        id: 'subtle-bug-1',
+        type: 'subtle-bug',
+        title: "Off-By-One Error",
+        scenario: "This solution has a subtle bug that causes incorrect results. Can you spot it?",
+        code: `def hasCycle(head):
+    slow = head
+    fast = head
+
+    while fast and fast.next:
+        if slow == fast:  # Bug: Checking BEFORE moving
+            return True
+        slow = slow.next
+        fast = fast.next.next
+
+    return False`,
+        language: 'python',
+        options: [
+          {
+            id: 'a',
+            text: "The comparison happens before moving the pointers",
+            isCorrect: true,
+            feedback: "Correct! Since both start at head, `slow == fast` is True on the first check, causing false positives. The comparison should happen AFTER moving the pointers."
+          },
+          {
+            id: 'b',
+            text: "The fast pointer should move three steps",
+            isCorrect: false,
+            feedback: "No, two steps is correct. The speed difference of 1 ensures they'll meet in a cycle."
+          },
+          {
+            id: 'c',
+            text: "The loop condition is wrong",
+            isCorrect: false,
+            feedback: "The loop condition `fast and fast.next` is correct - it ensures safe access to fast.next.next."
+          },
+          {
+            id: 'd',
+            text: "Missing base case for empty list",
+            isCorrect: false,
+            feedback: "The code handles empty lists fine - the while condition will be false immediately."
+          }
+        ],
+        correctAnswer: 'a',
+        detailedExplanation: {
+          whatWentWrong: "The check `slow == fast` happens at the start of each iteration, including the first one. Since both start at head, they're equal before any movement, causing every list to be reported as cyclic!",
+          testCase: "For list 1 → 2 → 3 → None: slow=head, fast=head. First check: slow == fast is True! Returns True incorrectly.",
+          correctFix: "Move pointers FIRST, then compare:\n```python\nwhile fast and fast.next:\n    slow = slow.next\n    fast = fast.next.next\n    if slow == fast:\n        return True\n```",
+          lesson: "Order of operations matters! In Floyd's algorithm, you move then compare, not compare then move."
+        }
+      }
+    ],
+    // Summary statistics and learning outcomes
+    learningOutcomes: [
+      "Recognize the importance of null checks in pointer algorithms",
+      "Understand why pointer initialization order matters",
+      "Distinguish between correct-but-suboptimal and incorrect solutions",
+      "Identify off-by-one errors in iterative algorithms"
+    ]
+  },
+
   steps: [
     {
       stepId: 1,

@@ -1087,6 +1087,365 @@ function PatternGraph({ patternGraph }) {
 }
 
 /**
+ * MistakeChallenge - Mistake-Centered Learning component
+ * Shows buggy code or wrong approaches for users to critique and debug
+ */
+function MistakeChallenge({ mistakeAnalysis }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [currentChallengeIndex, setCurrentChallengeIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [completedChallenges, setCompletedChallenges] = useState([]);
+  const [showExplanation, setShowExplanation] = useState(false);
+
+  if (!mistakeAnalysis || !mistakeAnalysis.challenges || mistakeAnalysis.challenges.length === 0) {
+    return null;
+  }
+
+  const { challenges, learningOutcomes } = mistakeAnalysis;
+  const currentChallenge = challenges[currentChallengeIndex];
+  const isCorrect = selectedAnswer === currentChallenge.correctAnswer;
+  const selectedOption = currentChallenge.options.find(opt => opt.id === selectedAnswer);
+
+  const handleSubmit = () => {
+    if (selectedAnswer) {
+      setHasSubmitted(true);
+      if (!completedChallenges.includes(currentChallengeIndex)) {
+        setCompletedChallenges([...completedChallenges, currentChallengeIndex]);
+      }
+    }
+  };
+
+  const handleNextChallenge = () => {
+    if (currentChallengeIndex < challenges.length - 1) {
+      setCurrentChallengeIndex(currentChallengeIndex + 1);
+      setSelectedAnswer(null);
+      setHasSubmitted(false);
+      setShowExplanation(false);
+    }
+  };
+
+  const handlePrevChallenge = () => {
+    if (currentChallengeIndex > 0) {
+      setCurrentChallengeIndex(currentChallengeIndex - 1);
+      setSelectedAnswer(null);
+      setHasSubmitted(false);
+      setShowExplanation(false);
+    }
+  };
+
+  // Get the badge color based on challenge type
+  const getTypeBadge = (type) => {
+    switch (type) {
+      case 'buggy-code':
+        return { text: 'Buggy Code', bg: 'bg-red-100', color: 'text-red-700', border: 'border-red-200' };
+      case 'wrong-approach':
+        return { text: 'Wrong Approach', bg: 'bg-amber-100', color: 'text-amber-700', border: 'border-amber-200' };
+      case 'subtle-bug':
+        return { text: 'Subtle Bug', bg: 'bg-purple-100', color: 'text-purple-700', border: 'border-purple-200' };
+      default:
+        return { text: 'Challenge', bg: 'bg-gray-100', color: 'text-gray-700', border: 'border-gray-200' };
+    }
+  };
+
+  const typeBadge = getTypeBadge(currentChallenge.type);
+
+  return (
+    <div className="mt-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl border border-red-200 overflow-hidden">
+      {/* Header - Always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-red-100/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
+            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <h3 className="font-bold text-gray-900 text-lg">Debug Challenge</h3>
+            <p className="text-sm text-red-600">Find the bugs in other candidates' solutions</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="px-3 py-1 bg-red-100 text-red-700 text-sm font-medium rounded-full">
+            {completedChallenges.length}/{challenges.length} completed
+          </span>
+          <svg
+            className={`w-6 h-6 text-red-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Expandable Content */}
+      {isExpanded && (
+        <div className="px-6 pb-6 animate-fadeIn">
+          {/* Challenge Navigation */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={handlePrevChallenge}
+              disabled={currentChallengeIndex === 0}
+              className={`px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-1 ${
+                currentChallengeIndex === 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              Previous
+            </button>
+            <span className="text-sm text-gray-600 font-medium">
+              Challenge {currentChallengeIndex + 1} of {challenges.length}
+            </span>
+            <button
+              onClick={handleNextChallenge}
+              disabled={currentChallengeIndex === challenges.length - 1}
+              className={`px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-1 ${
+                currentChallengeIndex === challenges.length - 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              Next
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Challenge Card */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {/* Challenge Header */}
+            <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-bold text-gray-900">{currentChallenge.title}</h4>
+                <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${typeBadge.bg} ${typeBadge.color} ${typeBadge.border} border`}>
+                  {typeBadge.text}
+                </span>
+              </div>
+              <p className="text-gray-600 text-sm">{currentChallenge.scenario}</p>
+            </div>
+
+            {/* Code Display */}
+            <div className="bg-slate-900 rounded-lg m-4 overflow-hidden">
+              <div className="px-4 py-2 bg-slate-800 border-b border-slate-700">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                  <span className="ml-3 text-slate-400 text-sm">candidate_solution.py</span>
+                </div>
+              </div>
+              <pre className="p-4 text-sm font-mono text-green-400 overflow-x-auto">
+                <code>{currentChallenge.code}</code>
+              </pre>
+            </div>
+
+            {/* Options */}
+            <div className="p-4 space-y-3">
+              <p className="text-sm font-medium text-gray-700 mb-3">What is the flaw in this code?</p>
+              {currentChallenge.options.map((option) => {
+                const isSelected = selectedAnswer === option.id;
+                const showResult = hasSubmitted && isSelected;
+                const isOptionCorrect = option.isCorrect;
+
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => !hasSubmitted && setSelectedAnswer(option.id)}
+                    disabled={hasSubmitted}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                      hasSubmitted
+                        ? isSelected
+                          ? isOptionCorrect
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-red-500 bg-red-50'
+                          : option.isCorrect
+                            ? 'border-green-300 bg-green-50/50'
+                            : 'border-gray-200 bg-gray-50 opacity-60'
+                        : isSelected
+                          ? 'border-red-400 bg-red-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        hasSubmitted
+                          ? isSelected
+                            ? isOptionCorrect
+                              ? 'border-green-500 bg-green-500'
+                              : 'border-red-500 bg-red-500'
+                            : option.isCorrect
+                              ? 'border-green-400 bg-green-400'
+                              : 'border-gray-300'
+                          : isSelected
+                            ? 'border-red-400 bg-red-400'
+                            : 'border-gray-300'
+                      }`}>
+                        {hasSubmitted && (isSelected || option.isCorrect) && (
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            {(isSelected && isOptionCorrect) || (!isSelected && option.isCorrect) ? (
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            ) : (
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            )}
+                          </svg>
+                        )}
+                        {!hasSubmitted && isSelected && (
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`font-medium ${hasSubmitted && isSelected && !isOptionCorrect ? 'text-red-700' : 'text-gray-800'}`}>
+                          {option.text}
+                        </p>
+                        {/* Show feedback after submission */}
+                        {hasSubmitted && isSelected && (
+                          <p className={`mt-2 text-sm ${isOptionCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                            {option.feedback}
+                          </p>
+                        )}
+                        {hasSubmitted && !isSelected && option.isCorrect && (
+                          <p className="mt-2 text-sm text-green-600">
+                            {option.feedback}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Submit / Continue Button */}
+            <div className="p-4 border-t border-gray-100 bg-gray-50">
+              {!hasSubmitted ? (
+                <button
+                  onClick={handleSubmit}
+                  disabled={!selectedAnswer}
+                  className={`w-full py-3 rounded-xl font-semibold transition-colors ${
+                    selectedAnswer
+                      ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Submit Answer
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  {/* Toggle detailed explanation */}
+                  <button
+                    onClick={() => setShowExplanation(!showExplanation)}
+                    className="w-full py-3 rounded-xl font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    {showExplanation ? 'Hide' : 'Show'} Detailed Explanation
+                  </button>
+
+                  {/* Next challenge button */}
+                  {currentChallengeIndex < challenges.length - 1 && (
+                    <button
+                      onClick={handleNextChallenge}
+                      className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      Next Challenge
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Detailed Explanation */}
+            {showExplanation && currentChallenge.detailedExplanation && (
+              <div className="p-4 border-t border-gray-100 bg-amber-50 animate-fadeIn">
+                <h5 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  Deep Dive
+                </h5>
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <p className="font-semibold text-red-700 mb-1">What Went Wrong:</p>
+                    <p className="text-gray-700">{currentChallenge.detailedExplanation.whatWentWrong}</p>
+                  </div>
+                  {currentChallenge.detailedExplanation.testCase && (
+                    <div>
+                      <p className="font-semibold text-blue-700 mb-1">Test Case:</p>
+                      <p className="text-gray-700 font-mono text-xs bg-white p-2 rounded border border-gray-200">
+                        {currentChallenge.detailedExplanation.testCase}
+                      </p>
+                    </div>
+                  )}
+                  {currentChallenge.detailedExplanation.correctFix && (
+                    <div>
+                      <p className="font-semibold text-green-700 mb-1">Correct Fix:</p>
+                      <p className="text-gray-700 font-mono text-xs bg-white p-2 rounded border border-gray-200">
+                        {currentChallenge.detailedExplanation.correctFix}
+                      </p>
+                    </div>
+                  )}
+                  {currentChallenge.detailedExplanation.whyNotOptimal && (
+                    <div>
+                      <p className="font-semibold text-amber-700 mb-1">Why It's Not Optimal:</p>
+                      <p className="text-gray-700">{currentChallenge.detailedExplanation.whyNotOptimal}</p>
+                    </div>
+                  )}
+                  {currentChallenge.detailedExplanation.optimalAlternative && (
+                    <div>
+                      <p className="font-semibold text-green-700 mb-1">Optimal Alternative:</p>
+                      <p className="text-gray-700">{currentChallenge.detailedExplanation.optimalAlternative}</p>
+                    </div>
+                  )}
+                  <div className="bg-indigo-100 rounded-lg p-3 border border-indigo-200">
+                    <p className="font-semibold text-indigo-700 mb-1">Key Lesson:</p>
+                    <p className="text-indigo-900">{currentChallenge.detailedExplanation.lesson}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Learning Outcomes Summary (shown after all challenges completed) */}
+          {completedChallenges.length === challenges.length && learningOutcomes && (
+            <div className="mt-4 bg-white rounded-xl border border-green-200 p-4 animate-fadeIn">
+              <h5 className="font-bold text-green-700 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                What You Learned
+              </h5>
+              <ul className="space-y-2">
+                {learningOutcomes.map((outcome, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                    <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    {outcome}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Approach Icon - renders icon for each interview approach option
  */
 function ApproachIcon({ icon, className = "w-6 h-6" }) {
@@ -1505,6 +1864,9 @@ function CompletionScreen({ problem, totalSteps, totalHintsUsed, onReset }) {
 
         {/* Pattern Map - Global DAG */}
         <PatternGraph patternGraph={problem.patternGraph} />
+
+        {/* Mistake-Centered Learning - Debug Challenge */}
+        <MistakeChallenge mistakeAnalysis={problem.mistakeAnalysis} />
 
         {/* Restart Button */}
         <button
