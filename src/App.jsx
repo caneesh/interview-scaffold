@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Confetti from 'react-confetti';
 import { useScaffoldedLearning } from './hooks/useScaffoldedLearning';
 import { sampleProblem } from './data/sampleProblem';
+import {
+  reviewCode,
+  generateHint,
+  explainConcept,
+  isAIAvailable,
+  configureAI,
+  clearAIConfig
+} from './services/aiService';
 
 /**
  * Custom hook to get window dimensions for confetti
@@ -1446,6 +1454,500 @@ function MistakeChallenge({ mistakeAnalysis }) {
 }
 
 /**
+ * AI Settings Modal - Configure Anthropic API key
+ */
+function AISettingsModal({ isOpen, onClose }) {
+  const [apiKey, setApiKey] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const existingKey = localStorage.getItem('anthropic_api_key') || '';
+      setApiKey(existingKey ? '••••••••' + existingKey.slice(-8) : '');
+      setSaved(false);
+    }
+  }, [isOpen]);
+
+  const handleSave = () => {
+    if (apiKey && !apiKey.startsWith('••••')) {
+      configureAI(apiKey);
+      setSaved(true);
+      setTimeout(() => onClose(), 1500);
+    }
+  };
+
+  const handleClear = () => {
+    clearAIConfig();
+    setApiKey('');
+    setSaved(false);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+            </svg>
+            AI Settings
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <p className="text-gray-600 text-sm mb-4">
+          Enter your Anthropic API key to enable AI-powered features like code review, personalized hints, and concept explanations.
+        </p>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Anthropic API Key
+          </label>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder="sk-ant-..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Get your API key from{' '}
+            <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">
+              console.anthropic.com
+            </a>
+          </p>
+        </div>
+
+        {saved && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            API key saved! AI features are now enabled.
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={handleSave}
+            disabled={!apiKey || apiKey.startsWith('••••')}
+            className={`flex-1 py-2 rounded-lg font-semibold transition-colors ${
+              apiKey && !apiKey.startsWith('••••')
+                ? 'bg-purple-600 text-white hover:bg-purple-700'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            Save Key
+          </button>
+          <button
+            onClick={handleClear}
+            className="px-4 py-2 rounded-lg font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * AI Code Review Panel - Reviews user's code with Claude
+ */
+function AICodeReview({ code, problem, isVisible, onClose }) {
+  const [review, setReview] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleReview = useCallback(async () => {
+    if (!code.trim()) {
+      setError('Please write some code first');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await reviewCode(code, {
+        title: problem.title,
+        description: problem.description,
+        expectedApproach: 'Two pointers / Floyd\'s cycle detection'
+      });
+      setReview(result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [code, problem]);
+
+  useEffect(() => {
+    if (isVisible && !review && !isLoading) {
+      handleReview();
+    }
+  }, [isVisible, review, isLoading, handleReview]);
+
+  if (!isVisible) return null;
+
+  const getScoreColor = (score) => {
+    if (score >= 8) return 'text-green-600';
+    if (score >= 6) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getVerdictBadge = (verdict) => {
+    switch (verdict) {
+      case 'Correct':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'Partially Correct':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      default:
+        return 'bg-red-100 text-red-700 border-red-200';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-purple-50 to-indigo-50">
+          <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+            </svg>
+            AI Code Review
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-4" />
+              <p className="text-gray-600">Claude is reviewing your code...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+              <p className="font-semibold">Error</p>
+              <p className="text-sm">{error}</p>
+              <button
+                onClick={handleReview}
+                className="mt-3 px-4 py-2 bg-red-100 hover:bg-red-200 rounded-lg text-sm font-medium transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {review && !isLoading && (
+            <div className="space-y-6">
+              {/* Score and Verdict */}
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className={`text-5xl font-bold ${getScoreColor(review.overallScore)}`}>
+                    {review.overallScore}/10
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">Overall Score</p>
+                </div>
+                <div>
+                  <span className={`px-4 py-2 rounded-full text-lg font-semibold border ${getVerdictBadge(review.verdict)}`}>
+                    {review.verdict}
+                  </span>
+                </div>
+              </div>
+
+              {/* Strengths */}
+              {review.strengths?.length > 0 && (
+                <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                  <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Strengths
+                  </h4>
+                  <ul className="space-y-1">
+                    {review.strengths.map((s, i) => (
+                      <li key={i} className="text-green-700 text-sm flex items-start gap-2">
+                        <span className="text-green-500">•</span> {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Improvements */}
+              {review.improvements?.length > 0 && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <h4 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    Areas for Improvement
+                  </h4>
+                  <ul className="space-y-1">
+                    {review.improvements.map((s, i) => (
+                      <li key={i} className="text-amber-700 text-sm flex items-start gap-2">
+                        <span className="text-amber-500">•</span> {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Complexity Analysis */}
+              {review.complexityAnalysis && (
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
+                    Complexity Analysis
+                  </h4>
+                  <div className="flex gap-4 mb-2">
+                    <div className="px-3 py-1 bg-blue-100 rounded-lg">
+                      <span className="text-xs text-blue-600">Time:</span>
+                      <span className="ml-1 font-mono font-semibold text-blue-800">{review.complexityAnalysis.time}</span>
+                    </div>
+                    <div className="px-3 py-1 bg-blue-100 rounded-lg">
+                      <span className="text-xs text-blue-600">Space:</span>
+                      <span className="ml-1 font-mono font-semibold text-blue-800">{review.complexityAnalysis.space}</span>
+                    </div>
+                  </div>
+                  <p className="text-blue-700 text-sm">{review.complexityAnalysis.explanation}</p>
+                </div>
+              )}
+
+              {/* Interview Tip */}
+              {review.interviewTip && (
+                <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                  <h4 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    Interview Tip
+                  </h4>
+                  <p className="text-purple-700 text-sm">{review.interviewTip}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={handleReview}
+            disabled={isLoading}
+            className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Reviewing...
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+                Re-analyze Code
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * AI Explainer Modal - Explains concepts on demand
+ */
+function AIExplainerModal({ isOpen, onClose, topic, context }) {
+  const [explanation, setExplanation] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isOpen && topic) {
+      setIsLoading(true);
+      setError(null);
+      setExplanation('');
+
+      explainConcept(topic, context)
+        .then(result => setExplanation(result))
+        .catch(err => setError(err.message))
+        .finally(() => setIsLoading(false));
+    }
+  }, [isOpen, topic, context]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-cyan-50">
+          <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+            </svg>
+            {topic || 'Concept Explanation'}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
+              <p className="text-gray-600">Claude is preparing an explanation...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+              <p className="font-semibold">Error</p>
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
+
+          {explanation && !isLoading && (
+            <div className="prose prose-sm max-w-none">
+              <div className="whitespace-pre-wrap text-gray-700">{explanation}</div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * AI Floating Button - Shows AI options
+ */
+function AIFloatingButton({ onOpenSettings, onOpenReview, onExplain, code, hasApiKey }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="fixed bottom-6 right-6 z-40">
+      {/* Menu */}
+      {isOpen && (
+        <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl border border-gray-200 p-2 min-w-[200px] animate-fadeIn">
+          {!hasApiKey ? (
+            <button
+              onClick={() => { onOpenSettings(); setIsOpen(false); }}
+              className="w-full px-4 py-3 text-left rounded-xl hover:bg-purple-50 transition-colors flex items-center gap-3"
+            >
+              <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-medium text-gray-900">Configure AI</p>
+                <p className="text-xs text-gray-500">Add your API key</p>
+              </div>
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => { onOpenReview(); setIsOpen(false); }}
+                disabled={!code?.trim()}
+                className={`w-full px-4 py-3 text-left rounded-xl transition-colors flex items-center gap-3 ${
+                  code?.trim() ? 'hover:bg-purple-50' : 'opacity-50 cursor-not-allowed'
+                }`}
+              >
+                <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="font-medium text-gray-900">Review My Code</p>
+                  <p className="text-xs text-gray-500">Get AI feedback</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => { onExplain('Two Pointers Pattern'); setIsOpen(false); }}
+                className="w-full px-4 py-3 text-left rounded-xl hover:bg-blue-50 transition-colors flex items-center gap-3"
+              >
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                </svg>
+                <div>
+                  <p className="font-medium text-gray-900">Explain Concept</p>
+                  <p className="text-xs text-gray-500">Learn the pattern</p>
+                </div>
+              </button>
+
+              <div className="border-t border-gray-100 my-2" />
+
+              <button
+                onClick={() => { onOpenSettings(); setIsOpen(false); }}
+                className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-3"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="font-medium text-gray-900">AI Settings</p>
+                  <p className="text-xs text-gray-500">Manage API key</p>
+                </div>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Main Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+          hasApiKey
+            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
+            : 'bg-gray-400 hover:bg-gray-500'
+        } ${isOpen ? 'rotate-45' : ''}`}
+      >
+        {isOpen ? (
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
+}
+
+/**
  * Approach Icon - renders icon for each interview approach option
  */
 function ApproachIcon({ icon, className = "w-6 h-6" }) {
@@ -2110,6 +2612,23 @@ function App() {
     resetProblem,
   } = useScaffoldedLearning(sampleProblem);
 
+  // AI feature state
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [showAIReview, setShowAIReview] = useState(false);
+  const [showExplainer, setShowExplainer] = useState(false);
+  const [explainTopic, setExplainTopic] = useState('');
+  const [hasApiKey, setHasApiKey] = useState(isAIAvailable());
+
+  // Check API key status on mount and after settings change
+  useEffect(() => {
+    setHasApiKey(isAIAvailable());
+  }, [showAISettings]);
+
+  const handleExplain = (topic) => {
+    setExplainTopic(topic);
+    setShowExplainer(true);
+  };
+
   // Show completion screen when problem is completed
   if (isCompleted) {
     return (
@@ -2207,6 +2726,34 @@ function App() {
           />
         </div>
       </div>
+
+      {/* AI Features */}
+      <AIFloatingButton
+        onOpenSettings={() => setShowAISettings(true)}
+        onOpenReview={() => setShowAIReview(true)}
+        onExplain={handleExplain}
+        code={userCode}
+        hasApiKey={hasApiKey}
+      />
+
+      <AISettingsModal
+        isOpen={showAISettings}
+        onClose={() => setShowAISettings(false)}
+      />
+
+      <AICodeReview
+        code={userCode}
+        problem={sampleProblem}
+        isVisible={showAIReview}
+        onClose={() => setShowAIReview(false)}
+      />
+
+      <AIExplainerModal
+        isOpen={showExplainer}
+        onClose={() => setShowExplainer(false)}
+        topic={explainTopic}
+        context={{ problemTitle: sampleProblem.title }}
+      />
     </div>
   );
 }
