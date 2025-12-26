@@ -1,34 +1,55 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 
 /**
  * Custom hook for managing scaffolded learning state.
  * Handles step progression, code input, hint visibility, and validation.
  *
  * @param {Object} problem - The problem data following the scaffolded learning data model
+ * @param {Object} options - Optional configuration
+ * @param {Object} options.initialProgress - Restored progress state from database
+ * @param {Function} options.onProgressChange - Callback when progress changes (for auto-save)
  * @returns {Object} State and handlers for the scaffolded learning component
  */
-export function useScaffoldedLearning(problem) {
+export function useScaffoldedLearning(problem, options = {}) {
+  const { initialProgress = null, onProgressChange = null } = options;
+
   // Step Zero - Pattern selection state (must complete before interview)
-  const [isPatternComplete, setIsPatternComplete] = useState(false);
-  const [selectedPattern, setSelectedPattern] = useState(null);
+  const [isPatternComplete, setIsPatternComplete] = useState(
+    initialProgress?.isPatternComplete ?? false
+  );
+  const [selectedPattern, setSelectedPattern] = useState(
+    initialProgress?.selectedPattern ?? null
+  );
   const [patternSubmitted, setPatternSubmitted] = useState(false);
-  const [patternAttempts, setPatternAttempts] = useState(0);
+  const [patternAttempts, setPatternAttempts] = useState(
+    initialProgress?.patternAttempts ?? 0
+  );
 
   // Interview simulation state - must complete before coding
-  const [isInterviewComplete, setIsInterviewComplete] = useState(false);
-  const [selectedApproach, setSelectedApproach] = useState(null);
+  const [isInterviewComplete, setIsInterviewComplete] = useState(
+    initialProgress?.isInterviewComplete ?? false
+  );
+  const [selectedApproach, setSelectedApproach] = useState(
+    initialProgress?.selectedApproach ?? null
+  );
   const [interviewSubmitted, setInterviewSubmitted] = useState(false);
 
   // Strategy planning state - "Reasoning Out Loud" (must complete before coding)
-  const [isStrategyComplete, setIsStrategyComplete] = useState(false);
-  const [strategyText, setStrategyText] = useState('');
+  const [isStrategyComplete, setIsStrategyComplete] = useState(
+    initialProgress?.isStrategyComplete ?? false
+  );
+  const [strategyText, setStrategyText] = useState(
+    initialProgress?.strategyText ?? ''
+  );
   const [strategySubmitted, setStrategySubmitted] = useState(false);
   const [strategyValidation, setStrategyValidation] = useState(null);
-  const [strategyHintLevel, setStrategyHintLevel] = useState(0);
+  const [strategyHintLevel, setStrategyHintLevel] = useState(
+    initialProgress?.strategyHintLevel ?? 0
+  );
 
   // Language selection state
   const [selectedLanguage, setSelectedLanguage] = useState(
-    problem.defaultLanguage || 'python'
+    initialProgress?.selectedLanguage ?? problem.defaultLanguage ?? 'python'
   );
   const supportedLanguages = problem.supportedLanguages || ['python'];
 
@@ -51,16 +72,25 @@ export function useScaffoldedLearning(problem) {
   }, []);
 
   // Current step index (0-based) - represents actual progress
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(
+    initialProgress?.currentStepIndex ?? 0
+  );
 
   // Viewing step index - which step is currently being viewed (can differ from currentStepIndex in review mode)
-  const [viewingStepIndex, setViewingStepIndex] = useState(0);
+  const [viewingStepIndex, setViewingStepIndex] = useState(
+    initialProgress?.currentStepIndex ?? 0
+  );
 
   // User's code input for each step (keyed by stepId and language)
   // Format: { stepId: { python: 'code', javascript: 'code', java: 'code' } }
   const [userCodeByStep, setUserCodeByStep] = useState(() => {
+    // Use restored progress if available
+    if (initialProgress?.userCodeByStep && Object.keys(initialProgress.userCodeByStep).length > 0) {
+      return initialProgress.userCodeByStep;
+    }
+
+    // Otherwise initialize with placeholder code
     const initial = {};
-    const defaultLang = problem.defaultLanguage || 'python';
     const langs = problem.supportedLanguages || ['python'];
 
     problem.steps.forEach(step => {
@@ -83,6 +113,12 @@ export function useScaffoldedLearning(problem) {
 
   // Track hints used per step (for victory stats)
   const [hintsUsedByStep, setHintsUsedByStep] = useState(() => {
+    // Use restored progress if available
+    if (initialProgress?.hintsUsedByStep && Object.keys(initialProgress.hintsUsedByStep).length > 0) {
+      return initialProgress.hintsUsedByStep;
+    }
+
+    // Otherwise initialize to zero
     const initial = {};
     problem.steps.forEach(step => {
       initial[step.stepId] = 0;
@@ -95,7 +131,9 @@ export function useScaffoldedLearning(problem) {
   const [isValidationError, setIsValidationError] = useState(false);
 
   // Completion state
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(
+    initialProgress?.isCompleted ?? false
+  );
 
   // Derived state
   const currentStep = useMemo(() =>
@@ -480,6 +518,44 @@ export function useScaffoldedLearning(problem) {
     setIsCompleted(false);
   }, [problem.steps]);
 
+  // Get a snapshot of current progress for persistence
+  const getProgressSnapshot = useCallback(() => ({
+    isPatternComplete,
+    isInterviewComplete,
+    isStrategyComplete,
+    isCompleted,
+    patternAttempts,
+    selectedPattern,
+    selectedApproach,
+    strategyText,
+    strategyHintLevel,
+    currentStepIndex,
+    selectedLanguage,
+    userCodeByStep,
+    hintsUsedByStep,
+  }), [
+    isPatternComplete,
+    isInterviewComplete,
+    isStrategyComplete,
+    isCompleted,
+    patternAttempts,
+    selectedPattern,
+    selectedApproach,
+    strategyText,
+    strategyHintLevel,
+    currentStepIndex,
+    selectedLanguage,
+    userCodeByStep,
+    hintsUsedByStep,
+  ]);
+
+  // Notify parent of progress changes for auto-save
+  useEffect(() => {
+    if (onProgressChange) {
+      onProgressChange(getProgressSnapshot());
+    }
+  }, [getProgressSnapshot, onProgressChange]);
+
   return {
     // Pattern selection state (Step Zero)
     hasPatternSelection,
@@ -560,6 +636,9 @@ export function useScaffoldedLearning(problem) {
     viewStep,
     returnToCurrentStep,
     resetProblem,
+
+    // Progress persistence
+    getProgressSnapshot,
   };
 }
 
