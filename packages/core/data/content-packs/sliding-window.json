@@ -1,0 +1,993 @@
+{
+  "$schema": "./content-pack.schema.json",
+  "packId": "sliding-window",
+  "pattern": "SLIDING_WINDOW",
+  "version": "1.0.0",
+  "rungs": {
+    "1": {
+      "level": 1,
+      "name": "Fixed Window",
+      "description": "Fixed-size sliding window problems where window size is predetermined",
+      "canonical": {
+        "problemId": "sw-r1-canonical",
+        "title": "Maximum Sum Subarray of Size K",
+        "statement": "Given an array of integers `nums` and an integer `k`, find the maximum sum of any contiguous subarray of size `k`.\n\n**Example 1:**\n```\nInput: nums = [2, 1, 5, 1, 3, 2], k = 3\nOutput: 9\nExplanation: Subarray [5, 1, 3] has the maximum sum of 9.\n```\n\n**Example 2:**\n```\nInput: nums = [2, 3, 4, 1, 5], k = 2\nOutput: 7\nExplanation: Subarray [3, 4] has the maximum sum of 7.\n```\n\n**Constraints:**\n- 1 <= k <= nums.length <= 10^5\n- -10^4 <= nums[i] <= 10^4",
+        "targetComplexity": "O(n)",
+        "testCases": [
+          {
+            "input": "[2, 1, 5, 1, 3, 2], 3",
+            "expectedOutput": "9",
+            "isHidden": false,
+            "explanation": "Window [5, 1, 3] gives maximum sum"
+          },
+          {
+            "input": "[2, 3, 4, 1, 5], 2",
+            "expectedOutput": "7",
+            "isHidden": false,
+            "explanation": "Window [3, 4] gives maximum sum"
+          },
+          {
+            "input": "[1, 1, 1, 1, 1], 3",
+            "expectedOutput": "3",
+            "isHidden": true,
+            "explanation": "All windows have same sum"
+          },
+          {
+            "input": "[-1, -2, -3, -4], 2",
+            "expectedOutput": "-3",
+            "isHidden": true,
+            "explanation": "Handles negative numbers"
+          },
+          {
+            "input": "[100], 1",
+            "expectedOutput": "100",
+            "isHidden": true,
+            "explanation": "Single element window"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "SLIDING_WINDOW",
+                "acceptableVariants": ["fixed window", "sliding window fixed size"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Maintain sum of exactly k elements; slide by subtracting left and adding right",
+                "keywords": ["sum", "k elements", "slide", "subtract", "add"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n)",
+                "acceptableVariants": ["O(n) time, O(1) space", "linear"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Handles edge cases"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n) time complexity", "O(1) space complexity", "Single pass through array"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear variable names", "No redundant operations"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "We use a fixed window because k is constant and we need contiguous elements",
+                "isCorrect": true,
+                "feedback": "Correct! The fixed window size k directly maps to the problem constraint."
+              },
+              {
+                "id": "opt-b",
+                "text": "We could also solve this with two pointers moving at different speeds",
+                "isCorrect": false,
+                "feedback": "Two pointers with different speeds is for cycle detection, not fixed-size windows."
+              },
+              {
+                "id": "opt-c",
+                "text": "A variable window would be more efficient here",
+                "isCorrect": false,
+                "feedback": "Variable windows are for when the window size depends on a condition, not a fixed k."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "nested.*loop|O\\(n\\*k\\)|O\\(nk\\)",
+            "errorType": "INEFFICIENT_SOLUTION",
+            "microLessonRef": "ml-sw-001",
+            "feedback": "You're recalculating the sum for each window from scratch. Use the sliding window technique to maintain a running sum."
+          },
+          {
+            "pattern": "index.*out.*bound|IndexError|ArrayIndexOutOfBounds",
+            "errorType": "BOUNDARY_ERROR",
+            "microLessonRef": "ml-sw-002",
+            "feedback": "Check your loop bounds. The window starts at index 0 and the last valid starting position is n-k."
+          },
+          {
+            "pattern": "wrong.*answer.*negative|negative.*numbers",
+            "errorType": "EDGE_CASE_NEGATIVE",
+            "microLessonRef": "ml-sw-003",
+            "feedback": "Remember to initialize maxSum with the first window's sum, not 0 or negative infinity, and ensure comparison works with negative values."
+          }
+        ],
+        "microLessonRefs": ["ml-sw-001", "ml-sw-002", "ml-sw-003", "ml-sw-fixed-intro"],
+        "hints": [
+          "Think about what information you need to track as you move through the array.",
+          "When sliding the window by one position, which element leaves and which enters?",
+          "You only need to compute the sum of the first k elements initially, then update it incrementally.",
+          "windowSum = windowSum - nums[i-1] + nums[i+k-1] as you slide",
+          "Initialize maxSum with the sum of the first window, then compare as you slide."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "sw-r1-sibling-1",
+          "title": "Average of Subarrays of Size K",
+          "statement": "Given an array of integers `nums` and an integer `k`, find the averages of all contiguous subarrays of size `k`.\n\n**Example:**\n```\nInput: nums = [1, 3, 2, 6, -1, 4, 1, 8, 2], k = 5\nOutput: [2.2, 2.8, 2.4, 3.6, 2.8]\nExplanation: \n- Average of [1, 3, 2, 6, -1] = 11/5 = 2.2\n- Average of [3, 2, 6, -1, 4] = 14/5 = 2.8\n- And so on...\n```\n\n**Constraints:**\n- 1 <= k <= nums.length <= 10^5\n- -10^4 <= nums[i] <= 10^4",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[1, 3, 2, 6, -1, 4, 1, 8, 2], 5",
+              "expectedOutput": "[2.2, 2.8, 2.4, 3.6, 2.8]",
+              "isHidden": false,
+              "explanation": "Calculate average for each window of size 5"
+            },
+            {
+              "input": "[1, 2, 3, 4, 5], 2",
+              "expectedOutput": "[1.5, 2.5, 3.5, 4.5]",
+              "isHidden": false,
+              "explanation": "Simple consecutive averages"
+            },
+            {
+              "input": "[5], 1",
+              "expectedOutput": "[5.0]",
+              "isHidden": true,
+              "explanation": "Single element"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "SLIDING_WINDOW",
+                  "acceptableVariants": ["fixed window"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Maintain sum of k elements, divide by k for average, slide window",
+                  "keywords": ["sum", "average", "k", "slide"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["linear"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correct floating point handling"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Single pass"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear variable names"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "This is a direct application of fixed sliding window, computing average instead of max",
+                  "isCorrect": true,
+                  "feedback": "Correct! Same pattern, different aggregation function."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need a different approach since we're computing averages",
+                  "isCorrect": false,
+                  "feedback": "The aggregation function doesn't change the sliding window pattern."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "integer.*division|floor.*division",
+              "errorType": "FLOATING_POINT_ERROR",
+              "microLessonRef": "ml-sw-004",
+              "feedback": "Use floating point division to get accurate averages."
+            }
+          ],
+          "microLessonRefs": ["ml-sw-001", "ml-sw-004"],
+          "hints": [
+            "This is very similar to maximum sum - what changes?",
+            "Maintain a running sum and divide by k to get the average.",
+            "Be careful with integer vs floating point division."
+          ]
+        },
+        {
+          "problemId": "sw-r1-sibling-2",
+          "title": "First Negative in Every Window of Size K",
+          "statement": "Given an array of integers `nums` and an integer `k`, find the first negative number in every contiguous subarray of size `k`. If a window has no negative number, output 0 for that window.\n\n**Example:**\n```\nInput: nums = [12, -1, -7, 8, -15, 30, 16, 28], k = 3\nOutput: [-1, -1, -7, -15, -15, 0]\nExplanation:\n- Window [12, -1, -7]: first negative is -1\n- Window [-1, -7, 8]: first negative is -1\n- Window [-7, 8, -15]: first negative is -7\n- Window [8, -15, 30]: first negative is -15\n- Window [-15, 30, 16]: first negative is -15\n- Window [30, 16, 28]: no negative, output 0\n```\n\n**Constraints:**\n- 1 <= k <= nums.length <= 10^5\n- -10^4 <= nums[i] <= 10^4",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[12, -1, -7, 8, -15, 30, 16, 28], 3",
+              "expectedOutput": "[-1, -1, -7, -15, -15, 0]",
+              "isHidden": false,
+              "explanation": "Find first negative in each window"
+            },
+            {
+              "input": "[1, 2, 3, 4, 5], 2",
+              "expectedOutput": "[0, 0, 0, 0]",
+              "isHidden": false,
+              "explanation": "No negatives in any window"
+            },
+            {
+              "input": "[-1, -2, -3], 2",
+              "expectedOutput": "[-1, -2]",
+              "isHidden": true,
+              "explanation": "All elements negative"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "SLIDING_WINDOW",
+                  "acceptableVariants": ["fixed window", "sliding window with queue"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Track negative numbers in window using queue/deque, remove when out of window",
+                  "keywords": ["queue", "negative", "window", "track"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["linear", "amortized O(n)"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles no-negative case"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Uses queue/deque appropriately"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear logic for tracking negatives"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A queue helps track negatives in order, allowing O(1) access to the first one",
+                  "isCorrect": true,
+                  "feedback": "Correct! The queue maintains order and allows efficient removal when elements leave the window."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should scan the entire window each time to find the first negative",
+                  "isCorrect": false,
+                  "feedback": "That would be O(n*k). Using a queue gives us O(n) amortized time."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "empty.*queue|queue.*empty|IndexError",
+              "errorType": "EMPTY_QUEUE_ACCESS",
+              "microLessonRef": "ml-sw-005",
+              "feedback": "Check if the queue is empty before accessing the front element."
+            }
+          ],
+          "microLessonRefs": ["ml-sw-001", "ml-sw-005"],
+          "hints": [
+            "Can you use a queue to track negative numbers?",
+            "When sliding, remove negatives that are no longer in the window.",
+            "If the queue is empty, there's no negative in the current window."
+          ]
+        },
+        {
+          "problemId": "sw-r1-sibling-3",
+          "title": "Count Distinct Elements in Windows of Size K",
+          "statement": "Given an array of integers `nums` and an integer `k`, count the number of distinct elements in every contiguous subarray of size `k`.\n\n**Example:**\n```\nInput: nums = [1, 2, 1, 3, 4, 2, 3], k = 4\nOutput: [3, 4, 4, 3]\nExplanation:\n- Window [1, 2, 1, 3]: 3 distinct (1, 2, 3)\n- Window [2, 1, 3, 4]: 4 distinct (1, 2, 3, 4)\n- Window [1, 3, 4, 2]: 4 distinct (1, 2, 3, 4)\n- Window [3, 4, 2, 3]: 3 distinct (2, 3, 4)\n```\n\n**Constraints:**\n- 1 <= k <= nums.length <= 10^5\n- 1 <= nums[i] <= 10^5",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[1, 2, 1, 3, 4, 2, 3], 4",
+              "expectedOutput": "[3, 4, 4, 3]",
+              "isHidden": false,
+              "explanation": "Count unique elements in each window"
+            },
+            {
+              "input": "[1, 1, 1, 1], 2",
+              "expectedOutput": "[1, 1, 1]",
+              "isHidden": false,
+              "explanation": "All same elements"
+            },
+            {
+              "input": "[1, 2, 3, 4], 4",
+              "expectedOutput": "[4]",
+              "isHidden": true,
+              "explanation": "Window equals array"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "SLIDING_WINDOW",
+                  "acceptableVariants": ["fixed window with hash map"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Use hash map to track element frequencies in window; update count when frequency goes to/from zero",
+                  "keywords": ["hash map", "frequency", "distinct", "count"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["linear", "O(n) average"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correctly handles duplicates"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Uses hash map efficiently"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clean frequency tracking logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "The hash map tracks frequencies, and we adjust distinct count when frequencies change to/from zero",
+                  "isCorrect": true,
+                  "feedback": "Correct! This gives us O(1) updates to the distinct count as we slide."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should use a set and rebuild it for each window",
+                  "isCorrect": false,
+                  "feedback": "Rebuilding a set each time is O(n*k). Use a frequency map for O(n) total."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "set.*rebuild|new.*Set.*loop",
+              "errorType": "INEFFICIENT_REBUILD",
+              "microLessonRef": "ml-sw-006",
+              "feedback": "Don't rebuild the set for each window. Use a frequency map and track when counts reach zero."
+            },
+            {
+              "pattern": "count.*negative|distinctCount.*<.*0",
+              "errorType": "NEGATIVE_COUNT",
+              "microLessonRef": "ml-sw-006",
+              "feedback": "Check your logic for decrementing counts - you may be removing elements that aren't in the window."
+            }
+          ],
+          "microLessonRefs": ["ml-sw-001", "ml-sw-006"],
+          "hints": [
+            "Use a hash map to track the frequency of each element in the window.",
+            "When an element's frequency becomes 0, decrement the distinct count.",
+            "When adding an element with frequency 0, increment the distinct count.",
+            "Be careful to update frequencies in the right order when sliding."
+          ]
+        }
+      ]
+    },
+    "2": {
+      "level": 2,
+      "name": "Variable Window",
+      "description": "Variable-size sliding window problems where window size is determined by a condition",
+      "canonical": {
+        "problemId": "sw-r2-canonical",
+        "title": "Longest Substring Without Repeating Characters",
+        "statement": "Given a string `s`, find the length of the longest substring without repeating characters.\n\n**Example 1:**\n```\nInput: s = \"abcabcbb\"\nOutput: 3\nExplanation: The longest substring is \"abc\" with length 3.\n```\n\n**Example 2:**\n```\nInput: s = \"bbbbb\"\nOutput: 1\nExplanation: The longest substring is \"b\" with length 1.\n```\n\n**Example 3:**\n```\nInput: s = \"pwwkew\"\nOutput: 3\nExplanation: The longest substring is \"wke\" with length 3.\n```\n\n**Constraints:**\n- 0 <= s.length <= 5 * 10^4\n- s consists of English letters, digits, symbols and spaces",
+        "targetComplexity": "O(n)",
+        "testCases": [
+          {
+            "input": "\"abcabcbb\"",
+            "expectedOutput": "3",
+            "isHidden": false,
+            "explanation": "Longest is 'abc'"
+          },
+          {
+            "input": "\"bbbbb\"",
+            "expectedOutput": "1",
+            "isHidden": false,
+            "explanation": "All same characters"
+          },
+          {
+            "input": "\"pwwkew\"",
+            "expectedOutput": "3",
+            "isHidden": false,
+            "explanation": "Longest is 'wke'"
+          },
+          {
+            "input": "\"\"",
+            "expectedOutput": "0",
+            "isHidden": true,
+            "explanation": "Empty string"
+          },
+          {
+            "input": "\"abcdefg\"",
+            "expectedOutput": "7",
+            "isHidden": true,
+            "explanation": "All unique characters"
+          },
+          {
+            "input": "\" \"",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "Single space"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "SLIDING_WINDOW",
+                "acceptableVariants": ["variable window", "sliding window variable size", "two pointers"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Expand right to add characters; shrink left when duplicate found; track max length",
+                "keywords": ["expand", "shrink", "duplicate", "hash set", "max length"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n)",
+                "acceptableVariants": ["O(n) time, O(min(n,m)) space", "linear"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Handles empty string", "Handles all same chars"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n) time", "Uses hash set/map efficiently"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear expand/shrink logic", "Readable variable names"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "Variable window because we don't know the size upfront - it depends on when we hit a repeat",
+                "isCorrect": true,
+                "feedback": "Correct! The window expands until a constraint is violated, then shrinks."
+              },
+              {
+                "id": "opt-b",
+                "text": "This is a fixed window problem with window size equal to alphabet size",
+                "isCorrect": false,
+                "feedback": "The window size varies based on the input, not the alphabet size."
+              },
+              {
+                "id": "opt-c",
+                "text": "We should try all possible substrings and check each for uniqueness",
+                "isCorrect": false,
+                "feedback": "That's O(n^3). The sliding window approach is O(n)."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "O\\(n\\^2\\)|O\\(n\\^3\\)|nested.*loop.*nested",
+            "errorType": "INEFFICIENT_SOLUTION",
+            "microLessonRef": "ml-sw-101",
+            "feedback": "You're checking all substrings. Use a variable sliding window to achieve O(n)."
+          },
+          {
+            "pattern": "not.*shrink|never.*move.*left|left.*never",
+            "errorType": "MISSING_SHRINK",
+            "microLessonRef": "ml-sw-102",
+            "feedback": "The left pointer must move when you find a duplicate. Shrink until the window is valid again."
+          },
+          {
+            "pattern": "off.*by.*one|length.*-1|index.*error",
+            "errorType": "OFF_BY_ONE",
+            "microLessonRef": "ml-sw-103",
+            "feedback": "Check your window length calculation: it should be right - left + 1 or similar."
+          },
+          {
+            "pattern": "empty.*string|s\\.length.*==.*0",
+            "errorType": "EMPTY_INPUT",
+            "microLessonRef": "ml-sw-104",
+            "feedback": "Handle the empty string case - it should return 0."
+          }
+        ],
+        "microLessonRefs": ["ml-sw-101", "ml-sw-102", "ml-sw-103", "ml-sw-104", "ml-sw-variable-intro"],
+        "hints": [
+          "Use two pointers: left and right to define the window.",
+          "Expand right to include new characters.",
+          "When you find a duplicate, shrink from left until the window is valid.",
+          "Use a hash set to track characters in the current window.",
+          "Update max length whenever the window is valid."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "sw-r2-sibling-1",
+          "title": "Minimum Window Substring",
+          "statement": "Given two strings `s` and `t`, return the minimum window substring of `s` that contains all characters of `t` (including duplicates). If no such substring exists, return an empty string.\n\n**Example 1:**\n```\nInput: s = \"ADOBECODEBANC\", t = \"ABC\"\nOutput: \"BANC\"\nExplanation: \"BANC\" is the smallest window containing 'A', 'B', and 'C'.\n```\n\n**Example 2:**\n```\nInput: s = \"a\", t = \"a\"\nOutput: \"a\"\n```\n\n**Example 3:**\n```\nInput: s = \"a\", t = \"aa\"\nOutput: \"\"\nExplanation: Both 'a's from t must be in the window, but s only has one 'a'.\n```\n\n**Constraints:**\n- 1 <= s.length, t.length <= 10^5\n- s and t consist of uppercase and lowercase English letters",
+          "targetComplexity": "O(n + m)",
+          "testCases": [
+            {
+              "input": "\"ADOBECODEBANC\", \"ABC\"",
+              "expectedOutput": "\"BANC\"",
+              "isHidden": false,
+              "explanation": "Minimum window containing A, B, C"
+            },
+            {
+              "input": "\"a\", \"a\"",
+              "expectedOutput": "\"a\"",
+              "isHidden": false,
+              "explanation": "Exact match"
+            },
+            {
+              "input": "\"a\", \"aa\"",
+              "expectedOutput": "\"\"",
+              "isHidden": false,
+              "explanation": "Not enough characters"
+            },
+            {
+              "input": "\"abc\", \"cba\"",
+              "expectedOutput": "\"abc\"",
+              "isHidden": true,
+              "explanation": "Order doesn't matter"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "SLIDING_WINDOW",
+                  "acceptableVariants": ["variable window", "minimum window"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Expand right until all chars found; shrink left to minimize; track minimum valid window",
+                  "keywords": ["expand", "shrink", "frequency", "minimum", "valid window"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n + m)",
+                  "acceptableVariants": ["O(n)", "linear"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles duplicates in t", "Returns empty when impossible"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n+m) time", "Efficient frequency tracking"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear valid window check", "Readable logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "We expand to satisfy the constraint, then shrink to find the minimum while still satisfying it",
+                  "isCorrect": true,
+                  "feedback": "Correct! This expand-then-shrink pattern finds the minimum valid window."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should find all valid windows first, then pick the minimum",
+                  "isCorrect": false,
+                  "feedback": "That's less efficient. We can find the minimum in one pass by shrinking when valid."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "duplicate.*count|frequency.*wrong",
+              "errorType": "FREQUENCY_TRACKING",
+              "microLessonRef": "ml-sw-105",
+              "feedback": "Use a frequency map for t and track how many characters are satisfied as you slide."
+            },
+            {
+              "pattern": "case.*sensitive|uppercase.*lowercase",
+              "errorType": "CASE_SENSITIVITY",
+              "microLessonRef": "ml-sw-106",
+              "feedback": "The problem is case-sensitive. 'A' and 'a' are different characters."
+            }
+          ],
+          "microLessonRefs": ["ml-sw-101", "ml-sw-105", "ml-sw-106"],
+          "hints": [
+            "Use a frequency map to track required characters from t.",
+            "Expand right until all required characters are in the window.",
+            "Then shrink left to find the minimum while maintaining validity.",
+            "Track how many required characters are satisfied to check validity in O(1)."
+          ]
+        },
+        {
+          "problemId": "sw-r2-sibling-2",
+          "title": "Longest Substring with At Most K Distinct Characters",
+          "statement": "Given a string `s` and an integer `k`, return the length of the longest substring that contains at most `k` distinct characters.\n\n**Example 1:**\n```\nInput: s = \"eceba\", k = 2\nOutput: 3\nExplanation: The longest substring is \"ece\" with 2 distinct characters.\n```\n\n**Example 2:**\n```\nInput: s = \"aa\", k = 1\nOutput: 2\nExplanation: The longest substring is \"aa\" with 1 distinct character.\n```\n\n**Constraints:**\n- 1 <= s.length <= 5 * 10^4\n- 0 <= k <= 50\n- s consists of lowercase English letters",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "\"eceba\", 2",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "Longest is 'ece' with 2 distinct"
+            },
+            {
+              "input": "\"aa\", 1",
+              "expectedOutput": "2",
+              "isHidden": false,
+              "explanation": "All same character"
+            },
+            {
+              "input": "\"abcdef\", 3",
+              "expectedOutput": "3",
+              "isHidden": true,
+              "explanation": "Any 3 consecutive"
+            },
+            {
+              "input": "\"a\", 0",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "k=0 means no characters allowed"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "SLIDING_WINDOW",
+                  "acceptableVariants": ["variable window", "at most k pattern"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Expand right; shrink left when distinct count exceeds k; track max length",
+                  "keywords": ["expand", "shrink", "distinct", "k", "max"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["linear"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles k=0"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Efficient distinct tracking"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear constraint check"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "This is similar to longest substring without repeating, but with a threshold k instead of 0",
+                  "isCorrect": true,
+                  "feedback": "Correct! The constraint changes from 'no duplicates' to 'at most k distinct'."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "This requires a fundamentally different approach than the canonical problem",
+                  "isCorrect": false,
+                  "feedback": "It's the same expand/shrink pattern, just with a different validity condition."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "k.*0|zero.*distinct",
+              "errorType": "EDGE_CASE_K_ZERO",
+              "microLessonRef": "ml-sw-107",
+              "feedback": "When k=0, no characters are allowed, so the answer is 0."
+            }
+          ],
+          "microLessonRefs": ["ml-sw-101", "ml-sw-107"],
+          "hints": [
+            "Use a hash map to track frequency of characters in the window.",
+            "Shrink when the number of distinct characters exceeds k.",
+            "Update max length when the window is valid."
+          ]
+        },
+        {
+          "problemId": "sw-r2-sibling-3",
+          "title": "Smallest Subarray with Sum >= Target",
+          "statement": "Given an array of positive integers `nums` and a positive integer `target`, return the minimal length of a contiguous subarray whose sum is greater than or equal to `target`. If no such subarray exists, return 0.\n\n**Example 1:**\n```\nInput: target = 7, nums = [2, 3, 1, 2, 4, 3]\nOutput: 2\nExplanation: The subarray [4, 3] has sum 7 and is the smallest.\n```\n\n**Example 2:**\n```\nInput: target = 4, nums = [1, 4, 4]\nOutput: 1\nExplanation: The subarray [4] has sum >= 4.\n```\n\n**Example 3:**\n```\nInput: target = 11, nums = [1, 1, 1, 1, 1, 1, 1, 1]\nOutput: 0\nExplanation: No subarray sums to 11.\n```\n\n**Constraints:**\n- 1 <= target <= 10^9\n- 1 <= nums.length <= 10^5\n- 1 <= nums[i] <= 10^4",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "7, [2, 3, 1, 2, 4, 3]",
+              "expectedOutput": "2",
+              "isHidden": false,
+              "explanation": "[4,3] is smallest with sum >= 7"
+            },
+            {
+              "input": "4, [1, 4, 4]",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "Single element [4] works"
+            },
+            {
+              "input": "11, [1, 1, 1, 1, 1, 1, 1, 1]",
+              "expectedOutput": "0",
+              "isHidden": false,
+              "explanation": "Total sum is 8 < 11"
+            },
+            {
+              "input": "15, [1, 2, 3, 4, 5]",
+              "expectedOutput": "5",
+              "isHidden": true,
+              "explanation": "Need entire array"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "SLIDING_WINDOW",
+                  "acceptableVariants": ["variable window", "minimum window"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Expand right to increase sum; shrink left when sum >= target to find minimum; track min length",
+                  "keywords": ["expand", "shrink", "sum", "target", "minimum length"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["linear"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Returns 0 when impossible"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Single pass with two pointers"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear shrink logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Since we want minimum length, we shrink as much as possible when the constraint is satisfied",
+                  "isCorrect": true,
+                  "feedback": "Correct! Shrinking when valid helps find the minimum length."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should stop as soon as we find any valid window",
+                  "isCorrect": false,
+                  "feedback": "The first valid window isn't necessarily the smallest. Keep shrinking and checking."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "never.*found|infinity|INT_MAX.*return",
+              "errorType": "NO_SOLUTION_HANDLING",
+              "microLessonRef": "ml-sw-108",
+              "feedback": "If no valid window is found, return 0, not infinity or -1."
+            },
+            {
+              "pattern": "prefix.*sum|binary.*search",
+              "errorType": "OVERCOMPLEX_SOLUTION",
+              "microLessonRef": "ml-sw-109",
+              "feedback": "While prefix sum + binary search works, the sliding window approach is simpler and achieves the same O(n) complexity."
+            }
+          ],
+          "microLessonRefs": ["ml-sw-101", "ml-sw-108", "ml-sw-109"],
+          "hints": [
+            "Use two pointers for the window.",
+            "Expand right to increase the sum.",
+            "When sum >= target, try shrinking from left to minimize length.",
+            "Keep shrinking as long as sum >= target.",
+            "Track the minimum length seen."
+          ]
+        }
+      ]
+    }
+  },
+  "microLessons": {
+    "ml-sw-001": {
+      "id": "ml-sw-001",
+      "title": "Fixed Window Sliding Technique",
+      "content": "In a fixed window problem, instead of recalculating from scratch for each window, maintain a running aggregate (sum, count, etc.) and update it incrementally:\n\n1. Initialize with the first k elements\n2. Slide: subtract the leaving element, add the entering element\n3. This reduces O(n*k) to O(n)\n\n```\nwindowSum = sum(arr[0:k])  // Initial window\nfor i in range(k, n):\n    windowSum = windowSum - arr[i-k] + arr[i]\n```"
+    },
+    "ml-sw-002": {
+      "id": "ml-sw-002",
+      "title": "Window Boundary Management",
+      "content": "Common boundary errors in sliding window:\n\n1. **Loop bounds**: Last valid starting index is n-k\n2. **Index arithmetic**: When sliding from position i, leaving element is at i-k, entering is at i\n3. **Result array size**: For array of size n with window k, result has n-k+1 elements\n\nAlways trace through with a small example to verify indices."
+    },
+    "ml-sw-003": {
+      "id": "ml-sw-003",
+      "title": "Handling Negative Numbers",
+      "content": "When arrays can contain negative numbers:\n\n1. Don't initialize max/min with 0 - use the first window's actual value\n2. Don't assume positive sums - track actual computed values\n3. For 'maximum' problems, even negative answers can be valid\n\n```\nmaxSum = sum(arr[0:k])  // Not maxSum = 0\n```"
+    },
+    "ml-sw-004": {
+      "id": "ml-sw-004",
+      "title": "Floating Point Division",
+      "content": "When computing averages:\n\n```python\n# Integer division (wrong for averages)\navg = windowSum // k  # Truncates decimal\n\n# Floating point division (correct)\navg = windowSum / k  # Preserves decimal\n\n# In statically typed languages, cast to float\navg = (double)windowSum / k\n```"
+    },
+    "ml-sw-005": {
+      "id": "ml-sw-005",
+      "title": "Queue-Based Window Tracking",
+      "content": "When you need to track specific elements (like negatives) in order:\n\n1. Use a queue to store elements/indices\n2. Add elements to queue as they enter the window\n3. Remove from front when element leaves the window\n4. Always check if queue is empty before accessing front\n\n```\nif queue and queue[0] is outside window:\n    queue.popleft()\nif queue:  // Check before access!\n    result = queue[0]\n```"
+    },
+    "ml-sw-006": {
+      "id": "ml-sw-006",
+      "title": "Frequency Map for Distinct Counting",
+      "content": "To count distinct elements efficiently:\n\n1. Maintain a frequency map for the current window\n2. Track distinctCount separately\n3. When adding: if freq becomes 1, increment distinctCount\n4. When removing: if freq becomes 0, decrement distinctCount\n\n```\nfreq[entering] += 1\nif freq[entering] == 1:\n    distinctCount += 1\n\nfreq[leaving] -= 1\nif freq[leaving] == 0:\n    distinctCount -= 1\n```"
+    },
+    "ml-sw-101": {
+      "id": "ml-sw-101",
+      "title": "Variable Window Pattern",
+      "content": "Variable sliding window expands and shrinks based on a condition:\n\n```\nleft = 0\nfor right in range(n):\n    // Expand: add arr[right] to window state\n    \n    while window_invalid():\n        // Shrink: remove arr[left] from window state\n        left += 1\n    \n    // Window is now valid, update result\n```\n\nKey insight: Both pointers only move forward, giving O(n) total."
+    },
+    "ml-sw-102": {
+      "id": "ml-sw-102",
+      "title": "The Shrink Step",
+      "content": "Forgetting to shrink is a common bug:\n\n1. **When to shrink**: When the window violates the constraint\n2. **How to shrink**: Move left pointer and update state\n3. **How much to shrink**: Until the constraint is satisfied again\n\n```\nwhile constraint_violated():\n    remove arr[left] from window state\n    left += 1\n```\n\nWithout shrinking, you're not using the sliding window technique."
+    },
+    "ml-sw-103": {
+      "id": "ml-sw-103",
+      "title": "Window Length Calculation",
+      "content": "Window length with inclusive indices [left, right]:\n\n```\nlength = right - left + 1\n```\n\nCommon errors:\n- Using `right - left` (off by one)\n- Using `right - left - 1` (off by two)\n\nVerify: if left=0 and right=2, window contains indices 0,1,2 = 3 elements.\n2 - 0 + 1 = 3 ✓"
+    },
+    "ml-sw-104": {
+      "id": "ml-sw-104",
+      "title": "Edge Case: Empty Input",
+      "content": "Always handle empty input explicitly:\n\n```\nif not s or len(s) == 0:\n    return 0  // or appropriate default\n```\n\nFor sliding window problems:\n- Empty string → length 0\n- Empty array → depends on problem (often 0 or -1)"
+    },
+    "ml-sw-105": {
+      "id": "ml-sw-105",
+      "title": "Character Frequency Matching",
+      "content": "For 'contains all characters' problems:\n\n1. Build frequency map of required characters\n2. Track how many characters are 'satisfied' (have enough in window)\n3. Update satisfied count only when crossing threshold\n\n```\nrequired = Counter(t)\nformed = 0  // Characters fully satisfied\n\nif windowFreq[c] == required[c]:\n    formed += 1\n\n// Window is valid when formed == len(required)\n```"
+    },
+    "ml-sw-106": {
+      "id": "ml-sw-106",
+      "title": "Case Sensitivity",
+      "content": "Check problem constraints for case sensitivity:\n\n- 'A' (65) and 'a' (97) are different ASCII values\n- If case-insensitive needed, normalize: `s.lower()` or `s.upper()`\n- Frequency maps treat them as different keys by default\n\nAlways read constraints carefully regarding character set."
+    },
+    "ml-sw-107": {
+      "id": "ml-sw-107",
+      "title": "k=0 Edge Case",
+      "content": "For 'at most k distinct' problems:\n\n```\nif k == 0:\n    return 0  // No characters allowed means empty window\n```\n\nSimilarly for other threshold problems:\n- k=0 often means the constraint cannot be satisfied\n- Handle explicitly to avoid division by zero or empty results"
+    },
+    "ml-sw-108": {
+      "id": "ml-sw-108",
+      "title": "No Solution Handling",
+      "content": "When no valid window exists:\n\n1. Initialize minLength to infinity (or n+1)\n2. After processing, check if minLength was updated\n3. Return appropriate value (often 0 or -1)\n\n```\nminLength = float('inf')\n// ... sliding window logic ...\nreturn minLength if minLength != float('inf') else 0\n```"
+    },
+    "ml-sw-109": {
+      "id": "ml-sw-109",
+      "title": "Sliding Window vs Prefix Sum",
+      "content": "Both can solve subarray sum problems:\n\n**Prefix Sum + Binary Search**: O(n log n)\n- Works for any integers (including negatives)\n- More complex implementation\n\n**Sliding Window**: O(n)\n- Only works for positive integers (sum increases when expanding)\n- Simpler implementation\n\nFor positive integers, prefer sliding window for simplicity."
+    },
+    "ml-sw-fixed-intro": {
+      "id": "ml-sw-fixed-intro",
+      "title": "Introduction to Fixed Window",
+      "content": "Fixed window problems have:\n- A predetermined window size k\n- Need to compute something for every window of size k\n\nPattern:\n1. Compute initial window (first k elements)\n2. Slide: remove leftmost, add rightmost\n3. Update result for each position\n\nKey insight: Each element enters and leaves the window exactly once → O(n)"
+    },
+    "ml-sw-variable-intro": {
+      "id": "ml-sw-variable-intro",
+      "title": "Introduction to Variable Window",
+      "content": "Variable window problems have:\n- Window size determined by a condition (constraint)\n- Goal to find longest/shortest window satisfying the constraint\n\nTwo approaches:\n1. **Longest**: Expand as much as possible, shrink when invalid\n2. **Shortest**: Expand until valid, shrink as much as possible while still valid\n\nBoth are O(n) because each element is visited at most twice (once by each pointer)."
+    }
+  }
+}

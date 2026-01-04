@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: scaffold-db
+    environment:
+      POSTGRES_USER: scaffold
+      POSTGRES_PASSWORD: scaffold
+      POSTGRES_DB: scaffold
+    ports:
+      - '5432:5432'
+    volumes:
+      - scaffold_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U scaffold']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  scaffold_data:

@@ -1,0 +1,33 @@
+{
+  "name": "@scaffold/web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@scaffold/contracts": "workspace:*",
+    "@scaffold/core": "workspace:*",
+    "@scaffold/adapter-db": "workspace:*",
+    "@scaffold/adapter-auth": "workspace:*",
+    "@scaffold/adapter-analytics": "workspace:*",
+    "drizzle-orm": "^0.30.0",
+    "postgres": "^3.4.0",
+    "next": "^14.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}

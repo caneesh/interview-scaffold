@@ -1,0 +1,8 @@
+// Core package - pure TypeScript, no framework dependencies
+// All business logic lives here
+
+export * from './entities/index.js';
+export * from './ports/index.js';
+export * from './use-cases/index.js';
+export * from './data/index.js';
+export * from './validation/index.js';

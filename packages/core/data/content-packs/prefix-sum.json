@@ -1,0 +1,1051 @@
+{
+  "$schema": "./content-pack.schema.json",
+  "packId": "prefix-sum",
+  "pattern": "PREFIX_SUM",
+  "version": "1.0.0",
+  "rungs": {
+    "1": {
+      "level": 1,
+      "name": "Basic Prefix Sum",
+      "description": "Building and querying prefix sums for range queries and cumulative calculations",
+      "canonical": {
+        "problemId": "ps-r1-canonical",
+        "title": "Range Sum Query - Immutable",
+        "statement": "Given an integer array `nums`, handle multiple queries of the following type:\n\nCalculate the sum of the elements of `nums` between indices `left` and `right` inclusive where `left <= right`.\n\nImplement the `NumArray` class:\n- `NumArray(int[] nums)` Initializes the object with the integer array `nums`.\n- `int sumRange(int left, int right)` Returns the sum of the elements of `nums` between indices `left` and `right` inclusive.\n\n**Example:**\n```\nInput:\n[\"NumArray\", \"sumRange\", \"sumRange\", \"sumRange\"]\n[[[-2, 0, 3, -5, 2, -1]], [0, 2], [2, 5], [0, 5]]\n\nOutput:\n[null, 1, -1, -3]\n\nExplanation:\nNumArray numArray = new NumArray([-2, 0, 3, -5, 2, -1]);\nnumArray.sumRange(0, 2); // return 1 ((-2) + 0 + 3)\nnumArray.sumRange(2, 5); // return -1 (3 + (-5) + 2 + (-1))\nnumArray.sumRange(0, 5); // return -3\n```\n\n**Constraints:**\n- 1 <= nums.length <= 10^4\n- -10^5 <= nums[i] <= 10^5\n- 0 <= left <= right < nums.length\n- At most 10^4 calls will be made to `sumRange`",
+        "targetComplexity": "O(1) per query",
+        "testCases": [
+          {
+            "input": "[-2, 0, 3, -5, 2, -1], queries: [[0,2], [2,5], [0,5]]",
+            "expectedOutput": "[1, -1, -3]",
+            "isHidden": false,
+            "explanation": "Standard range sum queries"
+          },
+          {
+            "input": "[1, 2, 3, 4, 5], queries: [[0,4], [1,3], [2,2]]",
+            "expectedOutput": "[15, 9, 3]",
+            "isHidden": false,
+            "explanation": "All positive numbers"
+          },
+          {
+            "input": "[5], queries: [[0,0]]",
+            "expectedOutput": "[5]",
+            "isHidden": true,
+            "explanation": "Single element"
+          },
+          {
+            "input": "[1, -1, 1, -1], queries: [[0,3], [0,1], [1,2]]",
+            "expectedOutput": "[0, 0, 0]",
+            "isHidden": true,
+            "explanation": "Alternating signs"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "PREFIX_SUM",
+                "acceptableVariants": ["prefix sum", "cumulative sum", "running sum"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "prefix[i] stores sum of nums[0..i-1]; range sum = prefix[right+1] - prefix[left]",
+                "keywords": ["prefix", "cumulative", "subtract", "range"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n) preprocessing, O(1) per query",
+                "acceptableVariants": ["O(n) build, O(1) query", "constant time query"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Handles single element", "Handles negative numbers"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n) preprocessing", "O(1) per query", "No recalculation"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear prefix array construction", "Clean query formula"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "Prefix sums allow O(1) range queries by computing sum(left, right) = prefix[right+1] - prefix[left]",
+                "isCorrect": true,
+                "feedback": "Correct! The difference of two prefix sums gives any range sum in O(1)."
+              },
+              {
+                "id": "opt-b",
+                "text": "We should compute the sum from left to right for each query",
+                "isCorrect": false,
+                "feedback": "That's O(n) per query. With many queries, prefix sums are much more efficient."
+              },
+              {
+                "id": "opt-c",
+                "text": "Prefix sums only work for positive numbers",
+                "isCorrect": false,
+                "feedback": "Prefix sums work for any numbers. The subtraction formula handles negatives correctly."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "for.*loop.*sumRange|O\\(n\\).*query|recalculate",
+            "errorType": "INEFFICIENT_QUERY",
+            "microLessonRef": "ml-ps-001",
+            "feedback": "Don't recalculate the sum for each query. Build prefix sums once, then use subtraction."
+          },
+          {
+            "pattern": "off.*by.*one|index.*error|out.*of.*bounds",
+            "errorType": "INDEX_ERROR",
+            "microLessonRef": "ml-ps-002",
+            "feedback": "Check your prefix array indexing. Common convention: prefix[i] = sum of nums[0..i-1], prefix[0] = 0."
+          },
+          {
+            "pattern": "prefix\\[right\\].*-.*prefix\\[left\\]|wrong.*formula",
+            "errorType": "WRONG_FORMULA",
+            "microLessonRef": "ml-ps-003",
+            "feedback": "The formula is prefix[right+1] - prefix[left], not prefix[right] - prefix[left]."
+          }
+        ],
+        "microLessonRefs": ["ml-ps-001", "ml-ps-002", "ml-ps-003", "ml-ps-basic-intro"],
+        "hints": [
+          "Think about how to avoid recalculating sums for each query.",
+          "If you know the sum from 0 to right and from 0 to left-1, can you get the sum from left to right?",
+          "Build a prefix sum array where prefix[i] = nums[0] + nums[1] + ... + nums[i-1].",
+          "Then sumRange(left, right) = prefix[right+1] - prefix[left].",
+          "Using prefix[0] = 0 simplifies the formula and handles edge cases."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "ps-r1-sibling-1",
+          "title": "Running Sum of 1d Array",
+          "statement": "Given an array `nums`, return the running sum of `nums`.\n\nThe running sum at index `i` is defined as `runningSum[i] = sum(nums[0]...nums[i])`.\n\n**Example 1:**\n```\nInput: nums = [1, 2, 3, 4]\nOutput: [1, 3, 6, 10]\nExplanation: Running sum is [1, 1+2, 1+2+3, 1+2+3+4] = [1, 3, 6, 10]\n```\n\n**Example 2:**\n```\nInput: nums = [1, 1, 1, 1, 1]\nOutput: [1, 2, 3, 4, 5]\n```\n\n**Example 3:**\n```\nInput: nums = [3, 1, 2, 10, 1]\nOutput: [3, 4, 6, 16, 17]\n```\n\n**Constraints:**\n- 1 <= nums.length <= 1000\n- -10^6 <= nums[i] <= 10^6",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[1, 2, 3, 4]",
+              "expectedOutput": "[1, 3, 6, 10]",
+              "isHidden": false,
+              "explanation": "Standard running sum"
+            },
+            {
+              "input": "[1, 1, 1, 1, 1]",
+              "expectedOutput": "[1, 2, 3, 4, 5]",
+              "isHidden": false,
+              "explanation": "All ones"
+            },
+            {
+              "input": "[3, 1, 2, 10, 1]",
+              "expectedOutput": "[3, 4, 6, 16, 17]",
+              "isHidden": false,
+              "explanation": "Mixed values"
+            },
+            {
+              "input": "[-1, 2, -3, 4]",
+              "expectedOutput": "[-1, 1, -2, 2]",
+              "isHidden": true,
+              "explanation": "Negative numbers"
+            },
+            {
+              "input": "[5]",
+              "expectedOutput": "[5]",
+              "isHidden": true,
+              "explanation": "Single element"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "PREFIX_SUM",
+                  "acceptableVariants": ["running sum", "cumulative sum"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Each element becomes sum of all previous elements plus itself; result[i] = result[i-1] + nums[i]",
+                  "keywords": ["cumulative", "previous", "sum", "running"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(1) extra space if in-place"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles negatives"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Single pass"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear accumulation logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "This is the most basic form of prefix sum - just building the cumulative sum array",
+                  "isCorrect": true,
+                  "feedback": "Correct! Running sum is the prefix sum itself, which is the foundation for range queries."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need nested loops to compute each running sum",
+                  "isCorrect": false,
+                  "feedback": "Nested loops would be O(n²). Each element only depends on the previous result."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "nested.*loop|O\\(n\\^2\\)",
+              "errorType": "INEFFICIENT_SOLUTION",
+              "microLessonRef": "ml-ps-004",
+              "feedback": "You don't need to sum from the start each time. Use the previous running sum."
+            }
+          ],
+          "microLessonRefs": ["ml-ps-001", "ml-ps-004"],
+          "hints": [
+            "Each running sum depends only on the previous running sum.",
+            "result[i] = result[i-1] + nums[i]",
+            "You can modify the input array in-place if allowed."
+          ]
+        },
+        {
+          "problemId": "ps-r1-sibling-2",
+          "title": "Find Pivot Index",
+          "statement": "Given an array of integers `nums`, calculate the pivot index of this array.\n\nThe pivot index is the index where the sum of all the numbers strictly to the left of the index is equal to the sum of all the numbers strictly to the right of the index.\n\nIf the index is on the left edge of the array, then the left sum is 0 because there are no elements to the left. This also applies to the right edge.\n\nReturn the leftmost pivot index. If no such index exists, return -1.\n\n**Example 1:**\n```\nInput: nums = [1, 7, 3, 6, 5, 6]\nOutput: 3\nExplanation:\nThe pivot index is 3.\nLeft sum = nums[0] + nums[1] + nums[2] = 1 + 7 + 3 = 11\nRight sum = nums[4] + nums[5] = 5 + 6 = 11\n```\n\n**Example 2:**\n```\nInput: nums = [1, 2, 3]\nOutput: -1\nExplanation: No index satisfies the conditions.\n```\n\n**Example 3:**\n```\nInput: nums = [2, 1, -1]\nOutput: 0\nExplanation:\nLeft sum = 0 (no elements to left of index 0)\nRight sum = 1 + (-1) = 0\n```\n\n**Constraints:**\n- 1 <= nums.length <= 10^4\n- -1000 <= nums[i] <= 1000",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[1, 7, 3, 6, 5, 6]",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "Left sum = Right sum = 11"
+            },
+            {
+              "input": "[1, 2, 3]",
+              "expectedOutput": "-1",
+              "isHidden": false,
+              "explanation": "No pivot exists"
+            },
+            {
+              "input": "[2, 1, -1]",
+              "expectedOutput": "0",
+              "isHidden": false,
+              "explanation": "Pivot at index 0"
+            },
+            {
+              "input": "[-1, -1, -1, -1, -1, 0]",
+              "expectedOutput": "2",
+              "isHidden": true,
+              "explanation": "Negative numbers with zero"
+            },
+            {
+              "input": "[1]",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "Single element is always pivot"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "PREFIX_SUM",
+                  "acceptableVariants": ["prefix sum", "total sum"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "leftSum + nums[i] + rightSum = total; if leftSum == rightSum, i is pivot; track leftSum as we iterate",
+                  "keywords": ["left sum", "right sum", "total", "balance"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(1) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles edge indices", "Handles negatives"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "O(1) space"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear balance check logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "We use total sum minus left sum minus current element to get right sum, avoiding O(n) recalculation",
+                  "isCorrect": true,
+                  "feedback": "Correct! rightSum = total - leftSum - nums[i] gives O(1) per index check."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need to calculate left and right sums separately for each index",
+                  "isCorrect": false,
+                  "feedback": "That's O(n²). Use the relationship: leftSum + nums[i] + rightSum = total."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "include.*pivot|nums\\[i\\].*in.*sum",
+              "errorType": "PIVOT_INCLUSION",
+              "microLessonRef": "ml-ps-005",
+              "feedback": "The pivot element itself is not included in either left or right sum."
+            },
+            {
+              "pattern": "first.*index|leftmost",
+              "errorType": "WRONG_PIVOT_SELECTION",
+              "microLessonRef": "ml-ps-006",
+              "feedback": "Return the leftmost (first) pivot index. Stop as soon as you find one."
+            }
+          ],
+          "microLessonRefs": ["ml-ps-001", "ml-ps-005", "ml-ps-006"],
+          "hints": [
+            "First calculate the total sum of the array.",
+            "Iterate through, maintaining leftSum.",
+            "rightSum = total - leftSum - nums[i]",
+            "If leftSum == rightSum, you found the pivot.",
+            "Update leftSum += nums[i] after checking."
+          ]
+        },
+        {
+          "problemId": "ps-r1-sibling-3",
+          "title": "Product of Array Except Self",
+          "statement": "Given an integer array `nums`, return an array `answer` such that `answer[i]` is equal to the product of all the elements of `nums` except `nums[i]`.\n\nThe product of any prefix or suffix of `nums` is guaranteed to fit in a 32-bit integer.\n\nYou must write an algorithm that runs in O(n) time and without using the division operation.\n\n**Example 1:**\n```\nInput: nums = [1, 2, 3, 4]\nOutput: [24, 12, 8, 6]\nExplanation:\nFor index 0: 2 * 3 * 4 = 24\nFor index 1: 1 * 3 * 4 = 12\nFor index 2: 1 * 2 * 4 = 8\nFor index 3: 1 * 2 * 3 = 6\n```\n\n**Example 2:**\n```\nInput: nums = [-1, 1, 0, -3, 3]\nOutput: [0, 0, 9, 0, 0]\n```\n\n**Constraints:**\n- 2 <= nums.length <= 10^5\n- -30 <= nums[i] <= 30\n- The product of any prefix or suffix fits in a 32-bit integer\n\n**Follow up:** Can you solve it in O(1) extra space complexity? (The output array does not count as extra space.)",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[1, 2, 3, 4]",
+              "expectedOutput": "[24, 12, 8, 6]",
+              "isHidden": false,
+              "explanation": "Product of all except self"
+            },
+            {
+              "input": "[-1, 1, 0, -3, 3]",
+              "expectedOutput": "[0, 0, 9, 0, 0]",
+              "isHidden": false,
+              "explanation": "Contains zero"
+            },
+            {
+              "input": "[2, 3]",
+              "expectedOutput": "[3, 2]",
+              "isHidden": true,
+              "explanation": "Two elements"
+            },
+            {
+              "input": "[0, 0]",
+              "expectedOutput": "[0, 0]",
+              "isHidden": true,
+              "explanation": "Multiple zeros"
+            },
+            {
+              "input": "[1, 0, 3, 4]",
+              "expectedOutput": "[0, 12, 0, 0]",
+              "isHidden": true,
+              "explanation": "Single zero"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "PREFIX_SUM",
+                  "acceptableVariants": ["prefix product", "prefix and suffix", "cumulative product"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "For each index, result = (product of all elements before) * (product of all elements after); use prefix and suffix products",
+                  "keywords": ["prefix product", "suffix product", "before", "after", "multiply"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(1) extra space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles zeros", "No division used"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "O(1) extra space possible"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear prefix/suffix logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Prefix products from left, suffix products from right, multiply them for each index",
+                  "isCorrect": true,
+                  "feedback": "Correct! answer[i] = prefixProduct[i] * suffixProduct[i]."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "Calculate total product and divide by each element",
+                  "isCorrect": false,
+                  "feedback": "Division is not allowed, and it fails when there are zeros."
+                },
+                {
+                  "id": "opt-c",
+                  "text": "For each element, multiply all other elements",
+                  "isCorrect": false,
+                  "feedback": "That's O(n²). Prefix and suffix products give O(n)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "division|divide|/",
+              "errorType": "DIVISION_USED",
+              "microLessonRef": "ml-ps-007",
+              "feedback": "Division is not allowed. Use prefix and suffix products instead."
+            },
+            {
+              "pattern": "zero.*divide|divide.*zero|infinity",
+              "errorType": "ZERO_HANDLING",
+              "microLessonRef": "ml-ps-008",
+              "feedback": "Division approach fails with zeros. Prefix/suffix products handle zeros naturally."
+            }
+          ],
+          "microLessonRefs": ["ml-ps-001", "ml-ps-007", "ml-ps-008"],
+          "hints": [
+            "Can't use division - what's another way to get product of all except self?",
+            "For each index, you need product of everything before AND everything after.",
+            "Build prefix products going left to right.",
+            "Build suffix products going right to left.",
+            "Multiply prefix[i] * suffix[i] for each position."
+          ]
+        }
+      ]
+    },
+    "2": {
+      "level": 2,
+      "name": "Prefix Sum with Hash Map",
+      "description": "Combining prefix sums with hash maps to find subarrays with specific sum properties",
+      "canonical": {
+        "problemId": "ps-r2-canonical",
+        "title": "Subarray Sum Equals K",
+        "statement": "Given an array of integers `nums` and an integer `k`, return the total number of subarrays whose sum equals to `k`.\n\nA subarray is a contiguous non-empty sequence of elements within an array.\n\n**Example 1:**\n```\nInput: nums = [1, 1, 1], k = 2\nOutput: 2\nExplanation: The subarrays [1, 1] (indices 0-1) and [1, 1] (indices 1-2) sum to 2.\n```\n\n**Example 2:**\n```\nInput: nums = [1, 2, 3], k = 3\nOutput: 2\nExplanation: The subarrays [1, 2] and [3] sum to 3.\n```\n\n**Constraints:**\n- 1 <= nums.length <= 2 * 10^4\n- -1000 <= nums[i] <= 1000\n- -10^7 <= k <= 10^7",
+        "targetComplexity": "O(n)",
+        "testCases": [
+          {
+            "input": "[1, 1, 1], 2",
+            "expectedOutput": "2",
+            "isHidden": false,
+            "explanation": "Two subarrays sum to 2"
+          },
+          {
+            "input": "[1, 2, 3], 3",
+            "expectedOutput": "2",
+            "isHidden": false,
+            "explanation": "[1,2] and [3] both sum to 3"
+          },
+          {
+            "input": "[1, -1, 0], 0",
+            "expectedOutput": "3",
+            "isHidden": true,
+            "explanation": "[1,-1], [-1,0], and [1,-1,0] all sum to 0"
+          },
+          {
+            "input": "[3, 4, 7, 2, -3, 1, 4, 2], 7",
+            "expectedOutput": "4",
+            "isHidden": true,
+            "explanation": "Multiple ways to get sum 7"
+          },
+          {
+            "input": "[1], 1",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "Single element equals k"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "PREFIX_SUM",
+                "acceptableVariants": ["prefix sum with hash map", "cumulative sum"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "If prefix[j] - prefix[i] = k, then subarray (i,j] sums to k; use hash map to count prefix sums seen",
+                "keywords": ["prefix sum", "hash map", "difference", "count"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n)",
+                "acceptableVariants": ["O(n) time, O(n) space"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Handles negative numbers", "Handles k=0"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n) time", "Single pass with hash map"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear prefix sum and lookup logic"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "We look for prefix[j] - k in the hash map; if it exists, those prefix sums can form subarrays summing to k",
+                "isCorrect": true,
+                "feedback": "Correct! If prefix[j] - prefix[i] = k, then prefix[i] = prefix[j] - k."
+              },
+              {
+                "id": "opt-b",
+                "text": "Sliding window can solve this problem",
+                "isCorrect": false,
+                "feedback": "Sliding window requires positive numbers (monotonic sum). This has negatives."
+              },
+              {
+                "id": "opt-c",
+                "text": "We need to check all pairs of indices",
+                "isCorrect": false,
+                "feedback": "That's O(n²). Hash map lookup reduces it to O(n)."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "sliding.*window",
+            "errorType": "WRONG_APPROACH",
+            "microLessonRef": "ml-ps-101",
+            "feedback": "Sliding window doesn't work with negative numbers. Use prefix sum with hash map."
+          },
+          {
+            "pattern": "prefix.*0|initialize.*0|map\\[0\\]",
+            "errorType": "MISSING_BASE_CASE",
+            "microLessonRef": "ml-ps-102",
+            "feedback": "Initialize hash map with {0: 1} to handle subarrays starting from index 0."
+          },
+          {
+            "pattern": "order.*wrong|update.*before.*check",
+            "errorType": "WRONG_UPDATE_ORDER",
+            "microLessonRef": "ml-ps-103",
+            "feedback": "Check for (prefixSum - k) BEFORE adding current prefixSum to the map."
+          }
+        ],
+        "microLessonRefs": ["ml-ps-101", "ml-ps-102", "ml-ps-103", "ml-ps-hashmap-intro"],
+        "hints": [
+          "If sum of subarray (i, j] = k, then prefix[j] - prefix[i] = k.",
+          "Rearranging: prefix[i] = prefix[j] - k.",
+          "Use a hash map to count how many times each prefix sum has occurred.",
+          "For each j, look up how many times (prefix[j] - k) has been seen.",
+          "Initialize the hash map with {0: 1} for subarrays starting at index 0."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "ps-r2-sibling-1",
+          "title": "Contiguous Array",
+          "statement": "Given a binary array `nums`, return the maximum length of a contiguous subarray with an equal number of 0 and 1.\n\n**Example 1:**\n```\nInput: nums = [0, 1]\nOutput: 2\nExplanation: [0, 1] has equal number of 0s and 1s.\n```\n\n**Example 2:**\n```\nInput: nums = [0, 1, 0]\nOutput: 2\nExplanation: [0, 1] or [1, 0] are the longest with equal 0s and 1s.\n```\n\n**Example 3:**\n```\nInput: nums = [0, 1, 1, 0, 1, 1, 1, 0]\nOutput: 4\nExplanation: [0, 1, 1, 0] or [1, 0, 1, 1, 1, 0] - wait, [1,1,0,0] isn't valid but [0,1,1,0] is.\n```\n\n**Constraints:**\n- 1 <= nums.length <= 10^5\n- nums[i] is either 0 or 1",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[0, 1]",
+              "expectedOutput": "2",
+              "isHidden": false,
+              "explanation": "One 0 and one 1"
+            },
+            {
+              "input": "[0, 1, 0]",
+              "expectedOutput": "2",
+              "isHidden": false,
+              "explanation": "Best is length 2"
+            },
+            {
+              "input": "[0, 0, 1, 0, 0, 0, 1, 1]",
+              "expectedOutput": "6",
+              "isHidden": true,
+              "explanation": "Indices 2-7 or similar"
+            },
+            {
+              "input": "[0, 0, 0, 1, 1, 1]",
+              "expectedOutput": "6",
+              "isHidden": true,
+              "explanation": "Entire array"
+            },
+            {
+              "input": "[1, 1, 1, 1]",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "No equal subarray"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "PREFIX_SUM",
+                  "acceptableVariants": ["prefix sum with hash map", "running count"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Treat 0 as -1; equal 0s and 1s means sum = 0; same prefix sum at two indices means subarray between them sums to 0",
+                  "keywords": ["-1", "sum zero", "same prefix", "hash map"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(n) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Returns 0 when no valid subarray"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Single pass"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear transformation logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Converting 0 to -1 transforms 'equal count' into 'sum equals 0', which is solvable with prefix sums",
+                  "isCorrect": true,
+                  "feedback": "Correct! This clever transformation reduces the problem to finding subarrays with sum 0."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should count 0s and 1s separately as we iterate",
+                  "isCorrect": false,
+                  "feedback": "Tracking two counts separately is harder. The -1 transformation unifies the problem."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "count.*0.*count.*1|separate.*count",
+              "errorType": "SUBOPTIMAL_APPROACH",
+              "microLessonRef": "ml-ps-104",
+              "feedback": "Transform 0 to -1, then find subarrays with sum 0 using prefix sums."
+            },
+            {
+              "pattern": "first.*occurrence|earliest.*index",
+              "errorType": "INDEX_STORAGE",
+              "microLessonRef": "ml-ps-105",
+              "feedback": "Store the FIRST index where each prefix sum occurs to maximize subarray length."
+            }
+          ],
+          "microLessonRefs": ["ml-ps-101", "ml-ps-104", "ml-ps-105"],
+          "hints": [
+            "If you treat 0 as -1, equal 0s and 1s means the sum is 0.",
+            "Find the longest subarray with sum 0.",
+            "If prefix[i] == prefix[j], then subarray (i, j] has sum 0.",
+            "Store the first occurrence of each prefix sum.",
+            "Initialize with {0: -1} to handle subarrays starting at index 0."
+          ]
+        },
+        {
+          "problemId": "ps-r2-sibling-2",
+          "title": "Subarray Sums Divisible by K",
+          "statement": "Given an integer array `nums` and an integer `k`, return the number of non-empty subarrays that have a sum divisible by `k`.\n\nA subarray is a contiguous part of an array.\n\n**Example 1:**\n```\nInput: nums = [4, 5, 0, -2, -3, 1], k = 5\nOutput: 7\nExplanation: There are 7 subarrays with sum divisible by 5:\n[4, 5, 0, -2, -3, 1], [5], [5, 0], [5, 0, -2, -3], [0], [0, -2, -3], [-2, -3]\n```\n\n**Example 2:**\n```\nInput: nums = [5], k = 9\nOutput: 0\n```\n\n**Constraints:**\n- 1 <= nums.length <= 3 * 10^4\n- -10^4 <= nums[i] <= 10^4\n- 2 <= k <= 10^4",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[4, 5, 0, -2, -3, 1], 5",
+              "expectedOutput": "7",
+              "isHidden": false,
+              "explanation": "7 subarrays divisible by 5"
+            },
+            {
+              "input": "[5], 9",
+              "expectedOutput": "0",
+              "isHidden": false,
+              "explanation": "5 is not divisible by 9"
+            },
+            {
+              "input": "[2, -2, 2, -4], 6",
+              "expectedOutput": "2",
+              "isHidden": true,
+              "explanation": "Handle negatives with modulo"
+            },
+            {
+              "input": "[-1, 2, 9], 2",
+              "expectedOutput": "2",
+              "isHidden": true,
+              "explanation": "Negative prefix sum handling"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "PREFIX_SUM",
+                  "acceptableVariants": ["prefix sum with modulo", "prefix sum with hash map"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "If prefix[j] % k == prefix[i] % k, then (prefix[j] - prefix[i]) % k == 0; count remainders in hash map",
+                  "keywords": ["modulo", "remainder", "hash map", "same remainder"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(k) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles negative remainders correctly"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "O(k) space"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear modulo handling"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Two prefix sums with the same remainder (mod k) define a subarray divisible by k",
+                  "isCorrect": true,
+                  "feedback": "Correct! (a - b) % k == 0 if and only if a % k == b % k."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need to check each subarray sum for divisibility",
+                  "isCorrect": false,
+                  "feedback": "That's O(n²). Using remainders with a hash map gives O(n)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "negative.*modulo|negative.*remainder|%.*negative",
+              "errorType": "NEGATIVE_MODULO",
+              "microLessonRef": "ml-ps-106",
+              "feedback": "In some languages, modulo of negative numbers is negative. Use ((n % k) + k) % k to get positive remainder."
+            },
+            {
+              "pattern": "nC2|n.*n-1.*2|choose.*2",
+              "errorType": "COUNTING_PAIRS",
+              "microLessonRef": "ml-ps-107",
+              "feedback": "For each remainder, if it appears c times, there are c*(c-1)/2 pairs, or simply add the count before incrementing."
+            }
+          ],
+          "microLessonRefs": ["ml-ps-101", "ml-ps-106", "ml-ps-107"],
+          "hints": [
+            "A subarray sum is divisible by k if prefix[j] - prefix[i] is divisible by k.",
+            "This happens when prefix[j] % k == prefix[i] % k.",
+            "Count occurrences of each remainder in a hash map.",
+            "Be careful with negative remainders in some languages.",
+            "Initialize with remainder 0 having count 1."
+          ]
+        },
+        {
+          "problemId": "ps-r2-sibling-3",
+          "title": "Range Sum Query 2D - Immutable",
+          "statement": "Given a 2D matrix `matrix`, handle multiple queries of the following type:\n\nCalculate the sum of the elements of `matrix` inside the rectangle defined by its upper left corner `(row1, col1)` and lower right corner `(row2, col2)`.\n\nImplement the `NumMatrix` class:\n- `NumMatrix(int[][] matrix)` Initializes the object with the integer matrix `matrix`.\n- `int sumRegion(int row1, int col1, int row2, int col2)` Returns the sum of the elements of matrix inside the rectangle.\n\n**Example:**\n```\nInput:\nmatrix = [\n  [3, 0, 1, 4, 2],\n  [5, 6, 3, 2, 1],\n  [1, 2, 0, 1, 5],\n  [4, 1, 0, 1, 7],\n  [1, 0, 3, 0, 5]\n]\nsumRegion(2, 1, 4, 3) -> 8\nsumRegion(1, 1, 2, 2) -> 11\nsumRegion(1, 2, 2, 4) -> 12\n```\n\n**Constraints:**\n- m == matrix.length\n- n == matrix[i].length\n- 1 <= m, n <= 200\n- -10^4 <= matrix[i][j] <= 10^4\n- 0 <= row1 <= row2 < m\n- 0 <= col1 <= col2 < n\n- At most 10^4 calls will be made to sumRegion",
+          "targetComplexity": "O(1) per query",
+          "testCases": [
+            {
+              "input": "matrix as above, (2,1,4,3)",
+              "expectedOutput": "8",
+              "isHidden": false,
+              "explanation": "Sum of 3x3 region"
+            },
+            {
+              "input": "matrix as above, (1,1,2,2)",
+              "expectedOutput": "11",
+              "isHidden": false,
+              "explanation": "Sum of 2x2 region"
+            },
+            {
+              "input": "matrix as above, (1,2,2,4)",
+              "expectedOutput": "12",
+              "isHidden": false,
+              "explanation": "Sum of 2x3 region"
+            },
+            {
+              "input": "[[1]], (0,0,0,0)",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "Single element"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "PREFIX_SUM",
+                  "acceptableVariants": ["2D prefix sum", "integral image"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "prefix[i][j] = sum of rectangle (0,0) to (i-1,j-1); use inclusion-exclusion for any rectangle",
+                  "keywords": ["2D prefix", "inclusion-exclusion", "rectangle", "subtract"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(mn) preprocessing, O(1) per query",
+                  "acceptableVariants": ["O(mn) build, O(1) query"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles edge cases"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(mn) preprocessing", "O(1) per query"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear 2D prefix construction", "Clean query formula"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "2D prefix sums with inclusion-exclusion: add the big rectangle, subtract two overlapping sides, add back the doubly-subtracted corner",
+                  "isCorrect": true,
+                  "feedback": "Correct! sum = prefix[r2+1][c2+1] - prefix[r1][c2+1] - prefix[r2+1][c1] + prefix[r1][c1]"
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need to sum all elements in the rectangle for each query",
+                  "isCorrect": false,
+                  "feedback": "That's O(mn) per query. 2D prefix sums give O(1) per query."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "inclusion.*exclusion.*wrong|add.*subtract.*wrong",
+              "errorType": "WRONG_FORMULA",
+              "microLessonRef": "ml-ps-108",
+              "feedback": "The formula is: sum = prefix[r2+1][c2+1] - prefix[r1][c2+1] - prefix[r2+1][c1] + prefix[r1][c1]"
+            },
+            {
+              "pattern": "row.*col.*confused|transpose",
+              "errorType": "ROW_COL_CONFUSION",
+              "microLessonRef": "ml-ps-109",
+              "feedback": "Be careful with row vs column indices. prefix[i][j] typically means row i, column j."
+            }
+          ],
+          "microLessonRefs": ["ml-ps-001", "ml-ps-108", "ml-ps-109"],
+          "hints": [
+            "Extend 1D prefix sums to 2D.",
+            "prefix[i][j] = sum of all elements from (0,0) to (i-1, j-1).",
+            "To build: prefix[i][j] = matrix[i-1][j-1] + prefix[i-1][j] + prefix[i][j-1] - prefix[i-1][j-1].",
+            "Use inclusion-exclusion for query: add big rectangle, subtract two sides, add corner.",
+            "Draw a diagram to visualize the overlapping regions."
+          ]
+        }
+      ]
+    }
+  },
+  "microLessons": {
+    "ml-ps-001": {
+      "id": "ml-ps-001",
+      "title": "Prefix Sum Basics",
+      "content": "A prefix sum array stores cumulative sums:\n\n```python\n# Build prefix sum array\nprefix = [0] * (n + 1)  # Extra element for convenience\nfor i in range(n):\n    prefix[i + 1] = prefix[i] + nums[i]\n\n# Query sum from index left to right (inclusive)\ndef sumRange(left, right):\n    return prefix[right + 1] - prefix[left]\n```\n\nKey insight: sum(left, right) = prefix[right+1] - prefix[left]\n\nTime: O(n) to build, O(1) per query\nSpace: O(n) for prefix array"
+    },
+    "ml-ps-002": {
+      "id": "ml-ps-002",
+      "title": "Prefix Sum Indexing Conventions",
+      "content": "Two common conventions:\n\n**Convention 1: prefix[i] = sum of nums[0..i-1]**\n```python\nprefix = [0] * (n + 1)\nfor i in range(n):\n    prefix[i + 1] = prefix[i] + nums[i]\n# sumRange(left, right) = prefix[right + 1] - prefix[left]\n```\n\n**Convention 2: prefix[i] = sum of nums[0..i]**\n```python\nprefix = [0] * n\nprefix[0] = nums[0]\nfor i in range(1, n):\n    prefix[i] = prefix[i - 1] + nums[i]\n# sumRange(left, right) = prefix[right] - (prefix[left-1] if left > 0 else 0)\n```\n\nConvention 1 is cleaner because it avoids the special case for left = 0."
+    },
+    "ml-ps-003": {
+      "id": "ml-ps-003",
+      "title": "Range Sum Formula",
+      "content": "To get sum from index `left` to `right` (inclusive):\n\n```\nsum(left, right) = sum(0, right) - sum(0, left-1)\n                 = prefix[right + 1] - prefix[left]\n```\n\nVisual example with nums = [1, 2, 3, 4, 5]:\n```\nprefix = [0, 1, 3, 6, 10, 15]\n              0  1  2   3   4   5 (indices)\n\nsum(1, 3) = prefix[4] - prefix[1]\n          = 10 - 1\n          = 9  (which is 2 + 3 + 4)\n```"
+    },
+    "ml-ps-004": {
+      "id": "ml-ps-004",
+      "title": "Avoiding Redundant Computation",
+      "content": "When building a running sum:\n\n```python\n# Bad: O(n²) - recalculating from start\nfor i in range(n):\n    result[i] = sum(nums[0:i+1])  # O(n) each\n\n# Good: O(n) - use previous result\nresult[0] = nums[0]\nfor i in range(1, n):\n    result[i] = result[i-1] + nums[i]  # O(1) each\n```\n\nEach element only depends on the previous running sum."
+    },
+    "ml-ps-005": {
+      "id": "ml-ps-005",
+      "title": "Pivot Index Calculation",
+      "content": "For pivot index problems:\n\n```python\ntotal = sum(nums)\nleftSum = 0\n\nfor i in range(n):\n    rightSum = total - leftSum - nums[i]  # Exclude pivot\n    if leftSum == rightSum:\n        return i\n    leftSum += nums[i]  # Update AFTER check\n\nreturn -1\n```\n\nThe pivot element nums[i] is not included in either sum.\nUpdate leftSum after the check, not before."
+    },
+    "ml-ps-006": {
+      "id": "ml-ps-006",
+      "title": "Finding Leftmost/Rightmost",
+      "content": "When multiple valid answers exist:\n\n**Leftmost**: Return immediately when found\n```python\nfor i in range(n):\n    if condition(i):\n        return i  # First valid index\n```\n\n**Rightmost**: Track the last valid, return at end\n```python\nresult = -1\nfor i in range(n):\n    if condition(i):\n        result = i  # Update each time\nreturn result\n```"
+    },
+    "ml-ps-007": {
+      "id": "ml-ps-007",
+      "title": "Product Without Division",
+      "content": "To compute product of array except self without division:\n\n```python\nn = len(nums)\nresult = [1] * n\n\n# Prefix products (left to right)\nprefix = 1\nfor i in range(n):\n    result[i] = prefix\n    prefix *= nums[i]\n\n# Suffix products (right to left)\nsuffix = 1\nfor i in range(n - 1, -1, -1):\n    result[i] *= suffix\n    suffix *= nums[i]\n\nreturn result\n```\n\nThis uses O(1) extra space (output doesn't count)."
+    },
+    "ml-ps-008": {
+      "id": "ml-ps-008",
+      "title": "Handling Zeros in Products",
+      "content": "When there are zeros in the array:\n\n**Division approach fails:**\n- Can't divide by zero\n- Multiple zeros make all products zero\n\n**Prefix/suffix approach works:**\n- Zeros naturally propagate through products\n- No special handling needed\n\n```python\n# If nums = [1, 0, 3, 4]\n# prefix products: [1, 1, 0, 0]  # Zero propagates right\n# suffix products: [0, 12, 4, 1]  # Zero propagates left\n# result: [0, 12, 0, 0]  # Correct!\n```"
+    },
+    "ml-ps-101": {
+      "id": "ml-ps-101",
+      "title": "Why Sliding Window Fails Here",
+      "content": "Sliding window requires monotonic sum behavior:\n- Expanding window always increases sum (all positive)\n- Shrinking window always decreases sum\n\nWith negative numbers, this breaks:\n- Adding an element might decrease the sum\n- Removing an element might increase the sum\n\n**Use prefix sum + hash map instead:**\n```python\n# Looking for subarrays with sum = k\n# If prefix[j] - prefix[i] = k, then prefix[i] = prefix[j] - k\n# Use hash map to count prefix sums\n```"
+    },
+    "ml-ps-102": {
+      "id": "ml-ps-102",
+      "title": "Initializing the Hash Map",
+      "content": "Always initialize with the base case:\n\n```python\nprefixCount = {0: 1}  # Important!\n```\n\nWhy? Consider nums = [3, 4, 7], k = 7:\n- At index 2, prefixSum = 14\n- We look for prefixSum - k = 14 - 7 = 7\n- prefix[0..1] = 7, which is in the map\n\nBut also nums = [7], k = 7:\n- At index 0, prefixSum = 7\n- We look for 7 - 7 = 0\n- Without {0: 1}, we'd miss this!\n\nThe {0: 1} represents the empty prefix (sum = 0) occurring once."
+    },
+    "ml-ps-103": {
+      "id": "ml-ps-103",
+      "title": "Update Order Matters",
+      "content": "When counting subarrays with sum k:\n\n```python\n# CORRECT: Check before update\nprefixSum = 0\ncount = 0\nprefixCount = {0: 1}\n\nfor num in nums:\n    prefixSum += num\n    count += prefixCount.get(prefixSum - k, 0)  # Check first\n    prefixCount[prefixSum] = prefixCount.get(prefixSum, 0) + 1  # Then update\n\n# WRONG: Update before check\nfor num in nums:\n    prefixSum += num\n    prefixCount[prefixSum] = ...  # Update first\n    count += prefixCount.get(prefixSum - k, 0)  # Then check\n    # This might count current index with itself!\n```"
+    },
+    "ml-ps-104": {
+      "id": "ml-ps-104",
+      "title": "Binary Array Transformation",
+      "content": "For problems about equal 0s and 1s:\n\nTransform: treat 0 as -1\n\n```python\n# Original: [0, 1, 0, 1, 1]\n# Transformed: [-1, 1, -1, 1, 1]\n# Prefix sums: [-1, 0, -1, 0, 1]\n```\n\nNow \"equal 0s and 1s\" becomes \"sum = 0\":\n- When prefix[i] == prefix[j], subarray (i,j] has sum 0\n- Sum 0 means equal +1s and -1s, which means equal 1s and 0s\n\n```python\nfor num in nums:\n    prefixSum += 1 if num == 1 else -1\n```"
+    },
+    "ml-ps-105": {
+      "id": "ml-ps-105",
+      "title": "Storing First vs All Occurrences",
+      "content": "**For counting subarrays: store count**\n```python\nprefixCount = {0: 1}\nprefixCount[prefixSum] = prefixCount.get(prefixSum, 0) + 1\n```\n\n**For longest subarray: store first index**\n```python\nfirstIndex = {0: -1}  # -1 so length = current_idx - (-1) = current_idx + 1\nif prefixSum not in firstIndex:\n    firstIndex[prefixSum] = i  # Only store first occurrence\n```\n\nFor longest, we want earliest start (smallest i), so don't overwrite."
+    },
+    "ml-ps-106": {
+      "id": "ml-ps-106",
+      "title": "Negative Modulo Handling",
+      "content": "In some languages, modulo of negative numbers is negative:\n```\nPython: -7 % 5 = 3  (always positive)\nJava/JS: -7 % 5 = -2 (can be negative)\n```\n\nTo ensure positive remainder:\n```python\n# Python (already positive, but explicit)\nremainder = prefixSum % k\n\n# Java/JavaScript\nremainder = ((prefixSum % k) + k) % k\n```\n\nThis ensures remainders are always in range [0, k-1]."
+    },
+    "ml-ps-107": {
+      "id": "ml-ps-107",
+      "title": "Counting Pairs with Same Remainder",
+      "content": "If c prefix sums have the same remainder, they form c*(c-1)/2 pairs.\n\nOr, simpler: add the count before incrementing:\n```python\nremainderCount = {0: 1}\nresult = 0\n\nfor num in nums:\n    prefixSum += num\n    remainder = ((prefixSum % k) + k) % k\n    result += remainderCount.get(remainder, 0)  # Add existing count\n    remainderCount[remainder] = remainderCount.get(remainder, 0) + 1\n```\n\nEach new prefix sum pairs with all previous ones having the same remainder."
+    },
+    "ml-ps-108": {
+      "id": "ml-ps-108",
+      "title": "2D Prefix Sum Formula",
+      "content": "**Building 2D prefix sum:**\n```python\nprefix[i][j] = matrix[i-1][j-1] \n             + prefix[i-1][j] \n             + prefix[i][j-1] \n             - prefix[i-1][j-1]\n```\n\n**Query rectangle (r1, c1) to (r2, c2):**\n```python\nsum = prefix[r2+1][c2+1] \n    - prefix[r1][c2+1] \n    - prefix[r2+1][c1] \n    + prefix[r1][c1]\n```\n\nInclusion-exclusion:\n- Add full rectangle to (r2, c2)\n- Subtract rectangle above\n- Subtract rectangle to left\n- Add back doubly-subtracted corner"
+    },
+    "ml-ps-109": {
+      "id": "ml-ps-109",
+      "title": "2D Array Indexing",
+      "content": "Be consistent with row/column conventions:\n\n```python\n# matrix[row][col] - row first, column second\nfor r in range(rows):\n    for c in range(cols):\n        process(matrix[r][c])\n\n# When building 2D prefix:\nfor i in range(1, rows + 1):    # i = row\n    for j in range(1, cols + 1):  # j = col\n        prefix[i][j] = matrix[i-1][j-1] + ...\n```\n\nDraw a small example and trace through to verify your indexing."
+    },
+    "ml-ps-basic-intro": {
+      "id": "ml-ps-basic-intro",
+      "title": "Introduction to Prefix Sums",
+      "content": "Prefix sums precompute cumulative sums for efficient range queries:\n\n**Problem**: Given an array, answer many \"sum from i to j\" queries.\n\n**Naive**: O(n) per query - sum elements each time\n**Prefix sum**: O(1) per query - subtraction of two precomputed values\n\n**The key insight**:\nsum(i, j) = sum(0, j) - sum(0, i-1)\n          = prefix[j+1] - prefix[i]\n\nUse prefix sums when:\n- Multiple range sum queries\n- Need to find subarrays with specific sum properties\n- Checking balance (left sum vs right sum)"
+    },
+    "ml-ps-hashmap-intro": {
+      "id": "ml-ps-hashmap-intro",
+      "title": "Prefix Sum + Hash Map Pattern",
+      "content": "Combine prefix sums with hash maps to find subarrays with specific properties:\n\n**Pattern**:\n1. Maintain running prefix sum\n2. For each position, check hash map for complementary prefix sum\n3. Update hash map with current prefix sum\n\n```python\nprefixMap = {0: 1}  # Base case\nprefixSum = 0\nresult = 0\n\nfor num in nums:\n    prefixSum += num\n    # Check for complement\n    result += prefixMap.get(prefixSum - target, 0)\n    # Update map\n    prefixMap[prefixSum] = prefixMap.get(prefixSum, 0) + 1\n```\n\n**Applications**:\n- Count subarrays with sum = k\n- Longest subarray with sum = 0\n- Subarrays divisible by k"
+    }
+  }
+}

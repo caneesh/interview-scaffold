@@ -1,0 +1,1084 @@
+{
+  "$schema": "./content-pack.schema.json",
+  "packId": "two-pointers",
+  "pattern": "TWO_POINTERS",
+  "version": "1.0.0",
+  "rungs": {
+    "1": {
+      "level": 1,
+      "name": "Converging Pointers",
+      "description": "Two pointers starting from opposite ends, moving toward each other",
+      "canonical": {
+        "problemId": "tp-r1-canonical",
+        "title": "Two Sum II - Sorted Array",
+        "statement": "Given a **1-indexed** array of integers `numbers` that is already sorted in non-decreasing order, find two numbers such that they add up to a specific `target` number.\n\nReturn the indices of the two numbers (1-indexed) as an integer array `[index1, index2]` where `1 <= index1 < index2 <= numbers.length`.\n\nYou may not use the same element twice. Your solution must use only constant extra space.\n\n**Example 1:**\n```\nInput: numbers = [2, 7, 11, 15], target = 9\nOutput: [1, 2]\nExplanation: 2 + 7 = 9. So index1 = 1, index2 = 2.\n```\n\n**Example 2:**\n```\nInput: numbers = [2, 3, 4], target = 6\nOutput: [1, 3]\nExplanation: 2 + 4 = 6. So index1 = 1, index2 = 3.\n```\n\n**Example 3:**\n```\nInput: numbers = [-1, 0], target = -1\nOutput: [1, 2]\nExplanation: -1 + 0 = -1. So index1 = 1, index2 = 2.\n```\n\n**Constraints:**\n- 2 <= numbers.length <= 3 * 10^4\n- -1000 <= numbers[i] <= 1000\n- numbers is sorted in non-decreasing order\n- -1000 <= target <= 1000\n- Exactly one solution exists",
+        "targetComplexity": "O(n)",
+        "testCases": [
+          {
+            "input": "[2, 7, 11, 15], 9",
+            "expectedOutput": "[1, 2]",
+            "isHidden": false,
+            "explanation": "2 + 7 = 9"
+          },
+          {
+            "input": "[2, 3, 4], 6",
+            "expectedOutput": "[1, 3]",
+            "isHidden": false,
+            "explanation": "2 + 4 = 6"
+          },
+          {
+            "input": "[-1, 0], -1",
+            "expectedOutput": "[1, 2]",
+            "isHidden": false,
+            "explanation": "-1 + 0 = -1"
+          },
+          {
+            "input": "[1, 2, 3, 4, 5], 9",
+            "expectedOutput": "[4, 5]",
+            "isHidden": true,
+            "explanation": "4 + 5 = 9"
+          },
+          {
+            "input": "[5, 25, 75], 100",
+            "expectedOutput": "[2, 3]",
+            "isHidden": true,
+            "explanation": "25 + 75 = 100"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "TWO_POINTERS",
+                "acceptableVariants": ["two pointers", "converging pointers", "start and end"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Left pointer at start, right at end; if sum < target move left right, if sum > target move right left",
+                "keywords": ["left", "right", "sum", "move", "sorted"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n)",
+                "acceptableVariants": ["O(n) time, O(1) space", "linear"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Returns 1-indexed result", "Handles negative numbers"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n) time", "O(1) space", "No hash map used"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear pointer movement logic", "Readable variable names"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "The sorted property lets us decide which pointer to move based on whether sum is too small or too large",
+                "isCorrect": true,
+                "feedback": "Correct! Sorted order means moving left increases sum, moving right decreases it."
+              },
+              {
+                "id": "opt-b",
+                "text": "A hash map would be more efficient for this problem",
+                "isCorrect": false,
+                "feedback": "Hash map uses O(n) space. Two pointers achieves O(1) space by leveraging the sorted property."
+              },
+              {
+                "id": "opt-c",
+                "text": "We should try all pairs to find the answer",
+                "isCorrect": false,
+                "feedback": "That's O(n²). Two pointers gives us O(n) by eliminating pairs intelligently."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "hash.*map|HashMap|dict|Map\\(",
+            "errorType": "WRONG_APPROACH",
+            "microLessonRef": "ml-tp-001",
+            "feedback": "The problem requires O(1) space. Use two pointers instead of a hash map."
+          },
+          {
+            "pattern": "0.*indexed|index.*0|\\[0\\].*\\[1\\]",
+            "errorType": "INDEX_OFF_BY_ONE",
+            "microLessonRef": "ml-tp-002",
+            "feedback": "This problem uses 1-indexed output. Add 1 to your indices."
+          },
+          {
+            "pattern": "both.*pointers.*same|left.*==.*right|move.*both",
+            "errorType": "WRONG_POINTER_MOVEMENT",
+            "microLessonRef": "ml-tp-003",
+            "feedback": "Move only one pointer at a time based on whether sum is less than or greater than target."
+          }
+        ],
+        "microLessonRefs": ["ml-tp-001", "ml-tp-002", "ml-tp-003", "ml-tp-converging-intro"],
+        "hints": [
+          "Since the array is sorted, think about what the sum of the smallest and largest elements tells you.",
+          "If the sum is too small, which element should you change? The smaller one (move left pointer right).",
+          "If the sum is too large, which element should you change? The larger one (move right pointer left).",
+          "Don't forget the output is 1-indexed, not 0-indexed.",
+          "You're guaranteed exactly one solution exists, so the loop will always find it."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "tp-r1-sibling-1",
+          "title": "Valid Palindrome",
+          "statement": "Given a string `s`, return `true` if it is a palindrome after converting all uppercase letters to lowercase and removing all non-alphanumeric characters, or `false` otherwise.\n\nA string is a palindrome if it reads the same forward and backward.\n\n**Example 1:**\n```\nInput: s = \"A man, a plan, a canal: Panama\"\nOutput: true\nExplanation: \"amanaplanacanalpanama\" is a palindrome.\n```\n\n**Example 2:**\n```\nInput: s = \"race a car\"\nOutput: false\nExplanation: \"raceacar\" is not a palindrome.\n```\n\n**Example 3:**\n```\nInput: s = \" \"\nOutput: true\nExplanation: After removing non-alphanumeric characters, s is an empty string. An empty string is a palindrome.\n```\n\n**Constraints:**\n- 1 <= s.length <= 2 * 10^5\n- s consists only of printable ASCII characters",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "\"A man, a plan, a canal: Panama\"",
+              "expectedOutput": "true",
+              "isHidden": false,
+              "explanation": "Classic palindrome example"
+            },
+            {
+              "input": "\"race a car\"",
+              "expectedOutput": "false",
+              "isHidden": false,
+              "explanation": "Not a palindrome"
+            },
+            {
+              "input": "\" \"",
+              "expectedOutput": "true",
+              "isHidden": false,
+              "explanation": "Empty after cleaning is palindrome"
+            },
+            {
+              "input": "\"0P\"",
+              "expectedOutput": "false",
+              "isHidden": true,
+              "explanation": "Alphanumeric includes digits"
+            },
+            {
+              "input": "\"a\"",
+              "expectedOutput": "true",
+              "isHidden": true,
+              "explanation": "Single character is palindrome"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "TWO_POINTERS",
+                  "acceptableVariants": ["converging pointers", "start and end"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Compare characters at left and right; skip non-alphanumeric; move inward until they meet or mismatch",
+                  "keywords": ["left", "right", "compare", "skip", "alphanumeric"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(1) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles case insensitivity", "Handles non-alphanumeric"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "O(1) space", "No new string created"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clean skip logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Two pointers avoid creating a cleaned copy of the string, achieving O(1) space",
+                  "isCorrect": true,
+                  "feedback": "Correct! In-place comparison with skipping is more space-efficient."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should clean the string first, then check if it equals its reverse",
+                  "isCorrect": false,
+                  "feedback": "That uses O(n) space for the cleaned string. Two pointers can do it in O(1) space."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "reverse|\\[::-1\\]|reversed",
+              "errorType": "INEFFICIENT_APPROACH",
+              "microLessonRef": "ml-tp-004",
+              "feedback": "Reversing creates O(n) extra space. Use two pointers to compare in-place."
+            },
+            {
+              "pattern": "isalpha|isalnum|isdigit",
+              "errorType": "PARTIAL_CHECK",
+              "microLessonRef": "ml-tp-005",
+              "feedback": "Make sure you're checking for alphanumeric (letters AND digits), not just letters."
+            }
+          ],
+          "microLessonRefs": ["ml-tp-001", "ml-tp-004", "ml-tp-005"],
+          "hints": [
+            "Use two pointers: one at the start, one at the end.",
+            "Skip non-alphanumeric characters by moving the pointer without comparing.",
+            "Convert both characters to lowercase before comparing.",
+            "If pointers cross without finding a mismatch, it's a palindrome."
+          ]
+        },
+        {
+          "problemId": "tp-r1-sibling-2",
+          "title": "Reverse String",
+          "statement": "Write a function that reverses a string. The input string is given as an array of characters `s`.\n\nYou must do this by modifying the input array in-place with O(1) extra memory.\n\n**Example 1:**\n```\nInput: s = [\"h\",\"e\",\"l\",\"l\",\"o\"]\nOutput: [\"o\",\"l\",\"l\",\"e\",\"h\"]\n```\n\n**Example 2:**\n```\nInput: s = [\"H\",\"a\",\"n\",\"n\",\"a\",\"h\"]\nOutput: [\"h\",\"a\",\"n\",\"n\",\"a\",\"H\"]\n```\n\n**Constraints:**\n- 1 <= s.length <= 10^5\n- s[i] is a printable ASCII character",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[\"h\",\"e\",\"l\",\"l\",\"o\"]",
+              "expectedOutput": "[\"o\",\"l\",\"l\",\"e\",\"h\"]",
+              "isHidden": false,
+              "explanation": "Standard reverse"
+            },
+            {
+              "input": "[\"H\",\"a\",\"n\",\"n\",\"a\",\"h\"]",
+              "expectedOutput": "[\"h\",\"a\",\"n\",\"n\",\"a\",\"H\"]",
+              "isHidden": false,
+              "explanation": "Palindrome-like input"
+            },
+            {
+              "input": "[\"a\"]",
+              "expectedOutput": "[\"a\"]",
+              "isHidden": true,
+              "explanation": "Single element"
+            },
+            {
+              "input": "[\"a\",\"b\"]",
+              "expectedOutput": "[\"b\",\"a\"]",
+              "isHidden": true,
+              "explanation": "Two elements"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "TWO_POINTERS",
+                  "acceptableVariants": ["converging pointers", "swap from ends"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Swap elements at left and right pointers, then move both inward until they meet",
+                  "keywords": ["swap", "left", "right", "meet"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(1) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Modifies in-place"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "O(1) space"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clean swap logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Swapping from both ends ensures every element is moved exactly once, giving O(n/2) swaps",
+                  "isCorrect": true,
+                  "feedback": "Correct! Each swap handles two elements, so we do n/2 swaps total."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need O(n) extra space to hold the reversed result",
+                  "isCorrect": false,
+                  "feedback": "In-place swapping needs no extra space beyond a temp variable for swapping."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "new.*array|slice|copy",
+              "errorType": "NOT_IN_PLACE",
+              "microLessonRef": "ml-tp-006",
+              "feedback": "The problem requires in-place modification. Swap elements directly."
+            },
+            {
+              "pattern": "left.*>.*right|left.*>=.*right",
+              "errorType": "WRONG_TERMINATION",
+              "microLessonRef": "ml-tp-007",
+              "feedback": "The loop should continue while left < right. When left >= right, you're done."
+            }
+          ],
+          "microLessonRefs": ["ml-tp-001", "ml-tp-006", "ml-tp-007"],
+          "hints": [
+            "Use two pointers starting at opposite ends.",
+            "Swap the elements at the two pointers.",
+            "Move both pointers inward after each swap.",
+            "Stop when the pointers meet or cross."
+          ]
+        },
+        {
+          "problemId": "tp-r1-sibling-3",
+          "title": "Squares of a Sorted Array",
+          "statement": "Given an integer array `nums` sorted in non-decreasing order, return an array of the squares of each number sorted in non-decreasing order.\n\n**Example 1:**\n```\nInput: nums = [-4, -1, 0, 3, 10]\nOutput: [0, 1, 9, 16, 100]\nExplanation: Squares are [16, 1, 0, 9, 100], sorted: [0, 1, 9, 16, 100]\n```\n\n**Example 2:**\n```\nInput: nums = [-7, -3, 2, 3, 11]\nOutput: [4, 9, 9, 49, 121]\n```\n\n**Constraints:**\n- 1 <= nums.length <= 10^4\n- -10^4 <= nums[i] <= 10^4\n- nums is sorted in non-decreasing order\n\n**Follow up:** Can you solve it in O(n) time?",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[-4, -1, 0, 3, 10]",
+              "expectedOutput": "[0, 1, 9, 16, 100]",
+              "isHidden": false,
+              "explanation": "Largest squares at ends"
+            },
+            {
+              "input": "[-7, -3, 2, 3, 11]",
+              "expectedOutput": "[4, 9, 9, 49, 121]",
+              "isHidden": false,
+              "explanation": "Duplicate squares possible"
+            },
+            {
+              "input": "[1, 2, 3]",
+              "expectedOutput": "[1, 4, 9]",
+              "isHidden": true,
+              "explanation": "All positive"
+            },
+            {
+              "input": "[-3, -2, -1]",
+              "expectedOutput": "[1, 4, 9]",
+              "isHidden": true,
+              "explanation": "All negative"
+            },
+            {
+              "input": "[0]",
+              "expectedOutput": "[0]",
+              "isHidden": true,
+              "explanation": "Single element"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "TWO_POINTERS",
+                  "acceptableVariants": ["converging pointers", "merge from ends"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Largest squares are at the ends; compare absolute values, place larger square at result end, move that pointer inward",
+                  "keywords": ["ends", "absolute", "compare", "largest", "result"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(n) space for result"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles all negative", "Handles all positive"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "No sorting used"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear comparison logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "The largest absolute values are at the ends of a sorted array with negatives, so we build the result from largest to smallest",
+                  "isCorrect": true,
+                  "feedback": "Correct! Negatives at the start can have large absolute values, so we compare from both ends."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should square all elements first, then sort",
+                  "isCorrect": false,
+                  "feedback": "Sorting after squaring is O(n log n). Two pointers achieves O(n)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "sort|sorted|Arrays\\.sort",
+              "errorType": "INEFFICIENT_APPROACH",
+              "microLessonRef": "ml-tp-008",
+              "feedback": "Sorting is O(n log n). Use two pointers to achieve O(n) by leveraging the sorted property."
+            },
+            {
+              "pattern": "fill.*front|insert.*0|unshift",
+              "errorType": "WRONG_FILL_ORDER",
+              "microLessonRef": "ml-tp-009",
+              "feedback": "Fill the result array from the end (largest to smallest) for efficiency."
+            }
+          ],
+          "microLessonRefs": ["ml-tp-001", "ml-tp-008", "ml-tp-009"],
+          "hints": [
+            "Think about where the largest squared values can be in the original array.",
+            "The largest absolute values are at either end (most negative or most positive).",
+            "Compare the squares at both ends, put the larger one at the end of the result.",
+            "Move the pointer of whichever element you just used.",
+            "Fill the result array from right to left."
+          ]
+        }
+      ]
+    },
+    "2": {
+      "level": 2,
+      "name": "Same-Direction Pointers",
+      "description": "Two pointers moving in the same direction at different speeds or for different purposes",
+      "canonical": {
+        "problemId": "tp-r2-canonical",
+        "title": "Remove Duplicates from Sorted Array",
+        "statement": "Given an integer array `nums` sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same.\n\nReturn `k` after placing the final result in the first `k` slots of `nums`.\n\nDo not allocate extra space for another array. You must do this by modifying the input array in-place with O(1) extra memory.\n\n**Example 1:**\n```\nInput: nums = [1, 1, 2]\nOutput: 2, nums = [1, 2, _]\nExplanation: Your function should return k = 2, with the first two elements being 1 and 2.\n```\n\n**Example 2:**\n```\nInput: nums = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4]\nOutput: 5, nums = [0, 1, 2, 3, 4, _, _, _, _, _]\nExplanation: Your function should return k = 5.\n```\n\n**Constraints:**\n- 1 <= nums.length <= 3 * 10^4\n- -100 <= nums[i] <= 100\n- nums is sorted in non-decreasing order",
+        "targetComplexity": "O(n)",
+        "testCases": [
+          {
+            "input": "[1, 1, 2]",
+            "expectedOutput": "2",
+            "isHidden": false,
+            "explanation": "Two unique elements: 1, 2"
+          },
+          {
+            "input": "[0, 0, 1, 1, 1, 2, 2, 3, 3, 4]",
+            "expectedOutput": "5",
+            "isHidden": false,
+            "explanation": "Five unique elements: 0, 1, 2, 3, 4"
+          },
+          {
+            "input": "[1]",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "Single element"
+          },
+          {
+            "input": "[1, 1, 1, 1, 1]",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "All same elements"
+          },
+          {
+            "input": "[1, 2, 3, 4, 5]",
+            "expectedOutput": "5",
+            "isHidden": true,
+            "explanation": "All unique elements"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "TWO_POINTERS",
+                "acceptableVariants": ["fast and slow", "read and write pointers", "same direction"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Slow pointer marks position to write next unique; fast pointer scans all elements; copy when fast sees new value",
+                "keywords": ["slow", "fast", "unique", "copy", "write"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n)",
+                "acceptableVariants": ["O(n) time, O(1) space"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Modifies in-place", "Returns correct count"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n) time", "O(1) space", "Single pass"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear pointer roles", "Readable logic"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "The slow pointer tracks where to write, fast pointer scans for new values - this separates reading from writing",
+                "isCorrect": true,
+                "feedback": "Correct! This read/write separation is the key insight for in-place modification."
+              },
+              {
+                "id": "opt-b",
+                "text": "We need to shift all elements after each duplicate removal",
+                "isCorrect": false,
+                "feedback": "Shifting is O(n) per duplicate, giving O(n²) total. The two-pointer approach is O(n)."
+              },
+              {
+                "id": "opt-c",
+                "text": "We should use a hash set to track unique elements",
+                "isCorrect": false,
+                "feedback": "A hash set uses O(n) space. The sorted property lets us detect duplicates in O(1) space."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "splice|delete|shift|remove",
+            "errorType": "INEFFICIENT_REMOVAL",
+            "microLessonRef": "ml-tp-101",
+            "feedback": "Don't remove elements - overwrite them. Removal causes O(n) shifts each time."
+          },
+          {
+            "pattern": "set|Set|hash|Hash",
+            "errorType": "SPACE_VIOLATION",
+            "microLessonRef": "ml-tp-102",
+            "feedback": "The problem requires O(1) space. Use the sorted property instead of extra data structures."
+          },
+          {
+            "pattern": "slow.*=.*0|writeIndex.*=.*0",
+            "errorType": "WRONG_INITIALIZATION",
+            "microLessonRef": "ml-tp-103",
+            "feedback": "The first element is always unique. Consider starting slow at 1, or handle the first element specially."
+          }
+        ],
+        "microLessonRefs": ["ml-tp-101", "ml-tp-102", "ml-tp-103", "ml-tp-same-dir-intro"],
+        "hints": [
+          "Use two pointers: slow (write position) and fast (read position).",
+          "The first element is always part of the result.",
+          "When fast finds a different element than slow points to, copy it to slow+1.",
+          "Increment slow only when you write a new unique element.",
+          "Return slow + 1 as the count of unique elements."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "tp-r2-sibling-1",
+          "title": "Move Zeroes",
+          "statement": "Given an integer array `nums`, move all `0`s to the end of it while maintaining the relative order of the non-zero elements.\n\n**Note:** You must do this in-place without making a copy of the array.\n\n**Example 1:**\n```\nInput: nums = [0, 1, 0, 3, 12]\nOutput: [1, 3, 12, 0, 0]\n```\n\n**Example 2:**\n```\nInput: nums = [0]\nOutput: [0]\n```\n\n**Constraints:**\n- 1 <= nums.length <= 10^4\n- -2^31 <= nums[i] <= 2^31 - 1\n\n**Follow up:** Can you minimize the total number of operations done?",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[0, 1, 0, 3, 12]",
+              "expectedOutput": "[1, 3, 12, 0, 0]",
+              "isHidden": false,
+              "explanation": "Non-zeros maintain relative order"
+            },
+            {
+              "input": "[0]",
+              "expectedOutput": "[0]",
+              "isHidden": false,
+              "explanation": "Single zero"
+            },
+            {
+              "input": "[1, 2, 3]",
+              "expectedOutput": "[1, 2, 3]",
+              "isHidden": true,
+              "explanation": "No zeros"
+            },
+            {
+              "input": "[0, 0, 0, 1]",
+              "expectedOutput": "[1, 0, 0, 0]",
+              "isHidden": true,
+              "explanation": "Many zeros at start"
+            },
+            {
+              "input": "[1, 0]",
+              "expectedOutput": "[1, 0]",
+              "isHidden": true,
+              "explanation": "Already in correct order"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "TWO_POINTERS",
+                  "acceptableVariants": ["fast and slow", "same direction", "partition"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Slow pointer marks next position for non-zero; fast scans all; swap or overwrite when fast finds non-zero",
+                  "keywords": ["slow", "fast", "non-zero", "swap", "overwrite"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(1) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Maintains relative order", "In-place"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "O(1) space", "Minimal operations"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "This is like removing duplicates, but we're 'removing' zeros (moving them to the end)",
+                  "isCorrect": true,
+                  "feedback": "Correct! Same pattern: write pointer for non-zeros, read pointer scans all."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should count zeros first, then shift all elements",
+                  "isCorrect": false,
+                  "feedback": "Two passes aren't necessary. Single pass with two pointers suffices."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "count.*zero|zeros.*count",
+              "errorType": "UNNECESSARY_COUNTING",
+              "microLessonRef": "ml-tp-104",
+              "feedback": "You don't need to count zeros first. Process in a single pass."
+            },
+            {
+              "pattern": "relative.*order.*wrong|order.*changed",
+              "errorType": "ORDER_VIOLATION",
+              "microLessonRef": "ml-tp-105",
+              "feedback": "Ensure you're processing left to right to maintain relative order of non-zeros."
+            }
+          ],
+          "microLessonRefs": ["ml-tp-101", "ml-tp-104", "ml-tp-105"],
+          "hints": [
+            "Similar to remove duplicates: use a 'write' pointer for non-zeros.",
+            "When you find a non-zero, swap it with the position at the write pointer.",
+            "Alternatively: overwrite and fill zeros at the end.",
+            "Both approaches maintain relative order and are O(n)."
+          ]
+        },
+        {
+          "problemId": "tp-r2-sibling-2",
+          "title": "Container With Most Water",
+          "statement": "Given `n` non-negative integers `height` where each represents a point at coordinate `(i, height[i])`, `n` vertical lines are drawn such that the two endpoints of the `i`th line are at `(i, 0)` and `(i, height[i])`.\n\nFind two lines that together with the x-axis form a container, such that the container contains the most water.\n\nReturn the maximum amount of water a container can store.\n\n**Example 1:**\n```\nInput: height = [1, 8, 6, 2, 5, 4, 8, 3, 7]\nOutput: 49\nExplanation: Lines at indices 1 and 8 (heights 8 and 7) form a container with area = 7 * 7 = 49.\n```\n\n**Example 2:**\n```\nInput: height = [1, 1]\nOutput: 1\n```\n\n**Constraints:**\n- n == height.length\n- 2 <= n <= 10^5\n- 0 <= height[i] <= 10^4",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[1, 8, 6, 2, 5, 4, 8, 3, 7]",
+              "expectedOutput": "49",
+              "isHidden": false,
+              "explanation": "Width 7, height 7 = area 49"
+            },
+            {
+              "input": "[1, 1]",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "Only one container possible"
+            },
+            {
+              "input": "[4, 3, 2, 1, 4]",
+              "expectedOutput": "16",
+              "isHidden": true,
+              "explanation": "First and last with height 4, width 4"
+            },
+            {
+              "input": "[1, 2, 1]",
+              "expectedOutput": "2",
+              "isHidden": true,
+              "explanation": "First and last with height 1, width 2"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "TWO_POINTERS",
+                  "acceptableVariants": ["converging pointers", "greedy two pointers"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Start with widest container; move the shorter side inward hoping to find a taller line; track maximum area",
+                  "keywords": ["widest", "shorter", "taller", "area", "move"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(1) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correct area calculation"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "O(1) space"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear area formula", "Readable pointer logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Moving the shorter line is correct because the shorter line limits the height, and we're reducing width, so we need to find a taller line to possibly increase area",
+                  "isCorrect": true,
+                  "feedback": "Correct! Moving the taller line can only decrease or maintain area, never increase it."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should move the taller line to explore more options",
+                  "isCorrect": false,
+                  "feedback": "Moving the taller line can't increase area since the shorter line still limits height, and width decreases."
+                },
+                {
+                  "id": "opt-c",
+                  "text": "We should try all pairs to be sure we find the maximum",
+                  "isCorrect": false,
+                  "feedback": "That's O(n²). The greedy approach provably finds the maximum in O(n)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "move.*taller|move.*higher|move.*larger",
+              "errorType": "WRONG_POINTER_CHOICE",
+              "microLessonRef": "ml-tp-106",
+              "feedback": "Always move the shorter line. Moving the taller line can never increase area."
+            },
+            {
+              "pattern": "height.*\\*.*height|min.*\\*.*min",
+              "errorType": "WRONG_AREA_FORMULA",
+              "microLessonRef": "ml-tp-107",
+              "feedback": "Area = min(height[left], height[right]) * (right - left). The width is the distance between indices."
+            }
+          ],
+          "microLessonRefs": ["ml-tp-001", "ml-tp-106", "ml-tp-107"],
+          "hints": [
+            "Start with pointers at both ends (widest possible container).",
+            "Area = min(height[left], height[right]) * (right - left).",
+            "To potentially increase area, you need a taller line since width is decreasing.",
+            "The shorter line limits the height, so move that pointer inward.",
+            "Track the maximum area seen."
+          ]
+        },
+        {
+          "problemId": "tp-r2-sibling-3",
+          "title": "3Sum",
+          "statement": "Given an integer array `nums`, return all the triplets `[nums[i], nums[j], nums[k]]` such that `i != j`, `i != k`, and `j != k`, and `nums[i] + nums[j] + nums[k] == 0`.\n\nNotice that the solution set must not contain duplicate triplets.\n\n**Example 1:**\n```\nInput: nums = [-1, 0, 1, 2, -1, -4]\nOutput: [[-1, -1, 2], [-1, 0, 1]]\nExplanation:\nnums[0] + nums[1] + nums[2] = -1 + 0 + 1 = 0\nnums[1] + nums[2] + nums[4] = 0 + 1 + -1 = 0\nnums[0] + nums[3] + nums[4] = -1 + 2 + -1 = 0\nThe distinct triplets are [-1, -1, 2] and [-1, 0, 1].\n```\n\n**Example 2:**\n```\nInput: nums = [0, 1, 1]\nOutput: []\nExplanation: The only possible triplet does not sum to 0.\n```\n\n**Example 3:**\n```\nInput: nums = [0, 0, 0]\nOutput: [[0, 0, 0]]\n```\n\n**Constraints:**\n- 3 <= nums.length <= 3000\n- -10^5 <= nums[i] <= 10^5",
+          "targetComplexity": "O(n²)",
+          "testCases": [
+            {
+              "input": "[-1, 0, 1, 2, -1, -4]",
+              "expectedOutput": "[[-1, -1, 2], [-1, 0, 1]]",
+              "isHidden": false,
+              "explanation": "Two distinct triplets"
+            },
+            {
+              "input": "[0, 1, 1]",
+              "expectedOutput": "[]",
+              "isHidden": false,
+              "explanation": "No triplet sums to 0"
+            },
+            {
+              "input": "[0, 0, 0]",
+              "expectedOutput": "[[0, 0, 0]]",
+              "isHidden": false,
+              "explanation": "Three zeros sum to 0"
+            },
+            {
+              "input": "[-2, 0, 1, 1, 2]",
+              "expectedOutput": "[[-2, 0, 2], [-2, 1, 1]]",
+              "isHidden": true,
+              "explanation": "Handle duplicate elements"
+            },
+            {
+              "input": "[1, 2, -2, -1]",
+              "expectedOutput": "[]",
+              "isHidden": true,
+              "explanation": "No valid triplets"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "TWO_POINTERS",
+                  "acceptableVariants": ["sort + two pointers", "reduce to two sum"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Sort array; fix one element, use two pointers for remaining two; skip duplicates to avoid duplicate triplets",
+                  "keywords": ["sort", "fix", "two pointers", "skip duplicates"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n²)",
+                  "acceptableVariants": ["O(n² log n)", "O(n²) with O(n) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "No duplicate triplets", "Handles all zeros"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n²) time", "Proper duplicate skipping"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear duplicate handling", "Readable nested structure"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Sorting allows us to skip duplicates and use Two Sum II for the inner loop, giving O(n²) total",
+                  "isCorrect": true,
+                  "feedback": "Correct! Sort O(n log n) + outer loop O(n) * inner two-pointer O(n) = O(n²)."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should use three nested loops to check all triplets",
+                  "isCorrect": false,
+                  "feedback": "Three nested loops is O(n³). Reducing to Two Sum gives O(n²)."
+                },
+                {
+                  "id": "opt-c",
+                  "text": "Sorting destroys information we need",
+                  "isCorrect": false,
+                  "feedback": "We only need the values, not original indices. Sorting is essential for the two-pointer technique."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "duplicate.*triplet|same.*result|repeated",
+              "errorType": "DUPLICATE_RESULTS",
+              "microLessonRef": "ml-tp-108",
+              "feedback": "Skip over duplicate values when moving pointers to avoid duplicate triplets in the result."
+            },
+            {
+              "pattern": "O\\(n\\^3\\)|three.*loop|triple.*loop",
+              "errorType": "INEFFICIENT_APPROACH",
+              "microLessonRef": "ml-tp-109",
+              "feedback": "Use sorting + two pointers to reduce from O(n³) to O(n²)."
+            },
+            {
+              "pattern": "skip.*wrong|while.*wrong",
+              "errorType": "WRONG_SKIP_LOGIC",
+              "microLessonRef": "ml-tp-110",
+              "feedback": "Skip duplicates AFTER finding a valid triplet, and for the outer loop, skip BEFORE the inner search."
+            }
+          ],
+          "microLessonRefs": ["ml-tp-001", "ml-tp-108", "ml-tp-109", "ml-tp-110"],
+          "hints": [
+            "Sort the array first to enable two-pointer technique.",
+            "Fix one element with an outer loop, then use two pointers for Two Sum on the rest.",
+            "The target for Two Sum is -nums[i] (negative of the fixed element).",
+            "Skip duplicate values to avoid duplicate triplets.",
+            "Skip duplicates both in the outer loop and after finding each valid triplet."
+          ]
+        }
+      ]
+    }
+  },
+  "microLessons": {
+    "ml-tp-001": {
+      "id": "ml-tp-001",
+      "title": "Converging Two Pointers Pattern",
+      "content": "When pointers start at opposite ends and move toward each other:\n\n```\nleft = 0\nright = n - 1\nwhile left < right:\n    // Process elements at left and right\n    // Move one or both pointers based on condition\n    if condition:\n        left += 1\n    else:\n        right -= 1\n```\n\nKey insight: Each iteration eliminates at least one element from consideration, giving O(n) total."
+    },
+    "ml-tp-002": {
+      "id": "ml-tp-002",
+      "title": "1-indexed vs 0-indexed",
+      "content": "Some problems (especially on LeetCode) use 1-indexed output:\n\n```python\n# 0-indexed internally\nleft, right = 0, n - 1\n\n# Convert to 1-indexed for output\nreturn [left + 1, right + 1]\n```\n\nAlways read the problem carefully for indexing requirements."
+    },
+    "ml-tp-003": {
+      "id": "ml-tp-003",
+      "title": "Pointer Movement Decisions",
+      "content": "In converging two pointers, move ONE pointer at a time:\n\n- If you need to increase the result: move left pointer right\n- If you need to decrease the result: move right pointer left\n- If equal: typically move one (either works) or both\n\nMoving both simultaneously usually loses information."
+    },
+    "ml-tp-004": {
+      "id": "ml-tp-004",
+      "title": "In-Place Palindrome Check",
+      "content": "Instead of creating a cleaned string:\n\n```python\nleft, right = 0, len(s) - 1\nwhile left < right:\n    # Skip non-alphanumeric\n    while left < right and not s[left].isalnum():\n        left += 1\n    while left < right and not s[right].isalnum():\n        right -= 1\n    \n    if s[left].lower() != s[right].lower():\n        return False\n    left += 1\n    right -= 1\nreturn True\n```\n\nThis uses O(1) space instead of O(n)."
+    },
+    "ml-tp-005": {
+      "id": "ml-tp-005",
+      "title": "Alphanumeric Check",
+      "content": "Alphanumeric means letters AND digits:\n\n```python\nchar.isalnum()  # Python: letters and digits\n\n// JavaScript\nchar.match(/[a-zA-Z0-9]/)\n\n// Java\nCharacter.isLetterOrDigit(char)\n```\n\nDon't use isalpha() which only checks letters."
+    },
+    "ml-tp-006": {
+      "id": "ml-tp-006",
+      "title": "In-Place Array Modification",
+      "content": "For in-place operations, swap elements rather than creating new arrays:\n\n```python\n# Swap elements\ndef swap(arr, i, j):\n    arr[i], arr[j] = arr[j], arr[i]\n\n# Or in one line\narr[i], arr[j] = arr[j], arr[i]\n```\n\nCreating new arrays violates O(1) space requirement."
+    },
+    "ml-tp-007": {
+      "id": "ml-tp-007",
+      "title": "Loop Termination Condition",
+      "content": "For converging pointers:\n\n```python\nwhile left < right:   # Standard: stops when pointers meet\nwhile left <= right:  # Use when you need to process the middle element\n```\n\nFor same-direction pointers:\n```python\nwhile fast < n:  # Fast pointer scans all elements\n```"
+    },
+    "ml-tp-008": {
+      "id": "ml-tp-008",
+      "title": "Leveraging Sorted Array Property",
+      "content": "When an array is sorted, you can often avoid O(n log n) sorting:\n\n- Largest values are at the ends\n- Duplicates are adjacent\n- Two pointers from ends can find target sum in O(n)\n\n```python\n# For sorted array with negatives, largest absolute values are at ends\nwhile left <= right:\n    if abs(nums[left]) > abs(nums[right]):\n        // Process left\n        left += 1\n    else:\n        // Process right\n        right -= 1\n```"
+    },
+    "ml-tp-009": {
+      "id": "ml-tp-009",
+      "title": "Filling Result Array Efficiently",
+      "content": "When building a result that should be sorted, sometimes fill from the end:\n\n```python\nresult = [0] * n\npos = n - 1  # Fill from end\n\nwhile left <= right:\n    if condition_for_larger_at_left:\n        result[pos] = process(nums[left])\n        left += 1\n    else:\n        result[pos] = process(nums[right])\n        right -= 1\n    pos -= 1\n```\n\nThis avoids inserting at the front (which shifts all elements)."
+    },
+    "ml-tp-101": {
+      "id": "ml-tp-101",
+      "title": "Overwrite Instead of Remove",
+      "content": "Array removal operations are O(n) each because they shift elements:\n\n```python\n# Bad: O(n) per removal\narr.remove(val)  # or splice, shift, etc.\n\n# Good: O(1) overwrite\narr[writeIndex] = arr[readIndex]\nwriteIndex += 1\n```\n\nThe two-pointer technique overwrites in-place, avoiding expensive removals."
+    },
+    "ml-tp-102": {
+      "id": "ml-tp-102",
+      "title": "O(1) Space Means No Extra Data Structures",
+      "content": "O(1) space constraints mean:\n- No hash sets/maps\n- No additional arrays\n- No recursion (uses stack space)\n\nAllowed:\n- A few scalar variables (pointers, counters)\n- The input array itself (for in-place modification)\n\nLeverage the input's properties (like being sorted) instead of extra structures."
+    },
+    "ml-tp-103": {
+      "id": "ml-tp-103",
+      "title": "Read-Write Pointer Initialization",
+      "content": "For remove-duplicates style problems:\n\n```python\n# Option 1: Start write at 0, first element is always included\nwrite = 1  # First unique at index 0\nfor read in range(1, n):\n    if nums[read] != nums[write - 1]:\n        nums[write] = nums[read]\n        write += 1\n\n# Option 2: Start write at 0, handle first explicitly\nwrite = 0\nfor read in range(n):\n    if read == 0 or nums[read] != nums[read - 1]:\n        nums[write] = nums[read]\n        write += 1\n```"
+    },
+    "ml-tp-104": {
+      "id": "ml-tp-104",
+      "title": "Single-Pass Processing",
+      "content": "Avoid multiple passes when one suffices:\n\n```python\n# Two passes (unnecessary)\ncount = sum(1 for x in arr if x == 0)\nfor i, x in enumerate(arr):\n    // process...\n\n# Single pass\nwrite = 0\nfor read in range(n):\n    if arr[read] != 0:\n        arr[write] = arr[read]\n        write += 1\n// Fill remaining with zeros\nfor i in range(write, n):\n    arr[i] = 0\n```"
+    },
+    "ml-tp-105": {
+      "id": "ml-tp-105",
+      "title": "Maintaining Relative Order",
+      "content": "To maintain relative order of elements:\n\n1. Always process from left to right\n2. Use a write pointer that only moves forward\n3. Elements are copied in the order they're encountered\n\n```python\nwrite = 0\nfor read in range(n):\n    if should_keep(arr[read]):\n        arr[write] = arr[read]  # Preserves order\n        write += 1\n```\n\nNever swap non-adjacent elements if order matters."
+    },
+    "ml-tp-106": {
+      "id": "ml-tp-106",
+      "title": "Container With Most Water - Proof",
+      "content": "Why move the shorter line?\n\n- Area = min(h[left], h[right]) * width\n- Moving a pointer decreases width\n- The shorter line determines height\n\nIf we move the taller line:\n- Width decreases\n- Height stays same or decreases (limited by shorter)\n- Area can only decrease\n\nIf we move the shorter line:\n- Width decreases\n- Height might increase (if new line is taller)\n- Area might increase\n\nSo moving the shorter line is the only way to potentially find a larger area."
+    },
+    "ml-tp-107": {
+      "id": "ml-tp-107",
+      "title": "Area Calculation",
+      "content": "For container problems, area formula:\n\n```python\nwidth = right - left  # Distance between lines\nheight = min(height[left], height[right])  # Shorter line\narea = width * height\n```\n\nCommon mistakes:\n- Using max instead of min for height\n- Forgetting width is the index difference\n- Multiplying heights instead of height * width"
+    },
+    "ml-tp-108": {
+      "id": "ml-tp-108",
+      "title": "Avoiding Duplicate Triplets",
+      "content": "In 3Sum, skip duplicates at multiple levels:\n\n```python\nnums.sort()\nfor i in range(n - 2):\n    # Skip duplicate first elements\n    if i > 0 and nums[i] == nums[i - 1]:\n        continue\n    \n    left, right = i + 1, n - 1\n    while left < right:\n        if sum == 0:\n            result.append([nums[i], nums[left], nums[right]])\n            # Skip duplicates after finding a triplet\n            while left < right and nums[left] == nums[left + 1]:\n                left += 1\n            while left < right and nums[right] == nums[right - 1]:\n                right -= 1\n            left += 1\n            right -= 1\n```"
+    },
+    "ml-tp-109": {
+      "id": "ml-tp-109",
+      "title": "Reducing 3Sum to 2Sum",
+      "content": "3Sum pattern: fix one element, solve 2Sum for the rest:\n\n```python\nfor i in range(n - 2):\n    target = -nums[i]  # Need two numbers that sum to this\n    # Two pointer 2Sum on nums[i+1:]\n    left, right = i + 1, n - 1\n    while left < right:\n        s = nums[left] + nums[right]\n        if s == target:\n            // found triplet\n        elif s < target:\n            left += 1\n        else:\n            right -= 1\n```\n\nOuter loop O(n) × inner O(n) = O(n²)"
+    },
+    "ml-tp-110": {
+      "id": "ml-tp-110",
+      "title": "Duplicate Skipping Logic",
+      "content": "Two different duplicate skip patterns:\n\n```python\n# 1. Skip duplicates BEFORE processing (outer loop)\nif i > 0 and nums[i] == nums[i - 1]:\n    continue  # Skip this iteration entirely\n\n# 2. Skip duplicates AFTER finding result (inner loop)\nif found_result:\n    while left < right and nums[left] == nums[left + 1]:\n        left += 1\n    left += 1  # Move past the last duplicate\n```\n\nThe timing of when to skip depends on the context."
+    },
+    "ml-tp-converging-intro": {
+      "id": "ml-tp-converging-intro",
+      "title": "Introduction to Converging Pointers",
+      "content": "Converging two pointers work when:\n\n1. Array is sorted (or has monotonic property)\n2. You're looking for a pair satisfying some condition\n3. Moving one pointer eliminates candidates predictably\n\nTemplate:\n```\nleft, right = 0, n - 1\nwhile left < right:\n    current = compute(arr[left], arr[right])\n    if current == target:\n        return found\n    elif current < target:\n        left += 1  # Need larger\n    else:\n        right -= 1  # Need smaller\n```\n\nExamples: Two Sum II, Valid Palindrome, Container With Most Water"
+    },
+    "ml-tp-same-dir-intro": {
+      "id": "ml-tp-same-dir-intro",
+      "title": "Introduction to Same-Direction Pointers",
+      "content": "Same-direction (fast/slow) pointers work when:\n\n1. You need to modify an array in-place\n2. You're partitioning elements\n3. You need to detect cycles\n\nTemplate for in-place modification:\n```\nslow = 0  # Write position\nfor fast in range(n):  # Read position\n    if should_keep(arr[fast]):\n        arr[slow] = arr[fast]\n        slow += 1\nreturn slow  # New length\n```\n\nExamples: Remove Duplicates, Move Zeroes, Remove Element"
+    }
+  }
+}

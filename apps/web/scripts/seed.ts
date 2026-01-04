@@ -1,0 +1,505 @@
+/**
+ * Seed script for demo problems
+ * Run with: npx tsx scripts/seed.ts
+ */
+
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import { randomUUID } from 'crypto';
+
+// Inline schema definitions to avoid import issues
+const createSchema = () => {
+  const { pgTable, text, integer, timestamp, jsonb, uuid, index } = require('drizzle-orm/pg-core');
+
+  const tenants = pgTable('tenants', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  });
+
+  const problems = pgTable('problems', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id').notNull(),
+    title: text('title').notNull(),
+    statement: text('statement').notNull(),
+    pattern: text('pattern').notNull(),
+    rung: integer('rung').notNull(),
+    targetComplexity: text('target_complexity').notNull(),
+    testCases: jsonb('test_cases').notNull(),
+    hints: jsonb('hints').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  });
+
+  const skills = pgTable('skills', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id').notNull(),
+    userId: text('user_id').notNull(),
+    pattern: text('pattern').notNull(),
+    rung: integer('rung').notNull(),
+    score: integer('score').notNull().default(0),
+    attemptsCount: integer('attempts_count').notNull().default(0),
+    lastAttemptAt: timestamp('last_attempt_at'),
+    unlockedAt: timestamp('unlocked_at'),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  });
+
+  return { tenants, problems, skills };
+};
+
+interface TestCase {
+  input: string;
+  expectedOutput: string;
+  isHidden: boolean;
+  explanation?: string;
+}
+
+interface Problem {
+  title: string;
+  statement: string;
+  pattern: string;
+  rung: number;
+  targetComplexity: string;
+  testCases: TestCase[];
+  hints: string[];
+}
+
+const DEMO_PROBLEMS: Problem[] = [
+  // SLIDING_WINDOW - Rung 1
+  {
+    title: 'Maximum Sum Subarray of Size K',
+    statement: `Given an array of integers and a number k, find the maximum sum of a subarray of size k.
+
+Example:
+Input: arr = [2, 1, 5, 1, 3, 2], k = 3
+Output: 9
+Explanation: Subarray [5, 1, 3] has the maximum sum of 9.
+
+Constraints:
+- 1 <= k <= arr.length <= 10^5
+- -10^4 <= arr[i] <= 10^4`,
+    pattern: 'SLIDING_WINDOW',
+    rung: 1,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[2, 1, 5, 1, 3, 2], k = 3', expectedOutput: '9', isHidden: false, explanation: 'Subarray [5, 1, 3]' },
+      { input: '[2, 3, 4, 1, 5], k = 2', expectedOutput: '7', isHidden: false, explanation: 'Subarray [3, 4]' },
+      { input: '[1, 1, 1, 1, 1], k = 3', expectedOutput: '3', isHidden: false },
+      { input: '[-1, -2, -3, -4], k = 2', expectedOutput: '-3', isHidden: true, explanation: 'Handle negatives' },
+      { input: '[5], k = 1', expectedOutput: '5', isHidden: true, explanation: 'Single element' },
+    ],
+    hints: [
+      'What if you calculated the sum of the first k elements first?',
+      'When sliding the window, you add one element and remove one element.',
+      'Keep track of the current window sum and update max as you slide.',
+      'Example: For [2,1,5,1,3,2] k=3, start with sum=2+1+5=8, then slide: 8-2+1=7, 7-1+3=9...',
+      'windowSum = windowSum - arr[i-k] + arr[i]; maxSum = Math.max(maxSum, windowSum);',
+    ],
+  },
+  // SLIDING_WINDOW - Rung 2
+  {
+    title: 'Longest Substring Without Repeating Characters',
+    statement: `Given a string s, find the length of the longest substring without repeating characters.
+
+Example 1:
+Input: s = "abcabcbb"
+Output: 3
+Explanation: The answer is "abc", with length 3.
+
+Example 2:
+Input: s = "bbbbb"
+Output: 1
+Explanation: The answer is "b", with length 1.
+
+Constraints:
+- 0 <= s.length <= 5 * 10^4
+- s consists of English letters, digits, symbols and spaces.`,
+    pattern: 'SLIDING_WINDOW',
+    rung: 2,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '"abcabcbb"', expectedOutput: '3', isHidden: false },
+      { input: '"bbbbb"', expectedOutput: '1', isHidden: false },
+      { input: '"pwwkew"', expectedOutput: '3', isHidden: false },
+      { input: '""', expectedOutput: '0', isHidden: true },
+      { input: '" "', expectedOutput: '1', isHidden: true },
+    ],
+    hints: [
+      'Can you use a Set or Map to track characters in the current window?',
+      'When you find a duplicate, shrink the window from the left.',
+      'The window [left, right] should always contain unique characters.',
+      'Use a Map to store the last index of each character for O(1) updates.',
+      'When char at right exists in map and index >= left, move left to map[char] + 1',
+    ],
+  },
+  // TWO_POINTERS - Rung 1
+  {
+    title: 'Two Sum II - Sorted Array',
+    statement: `Given a 1-indexed array of integers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number.
+
+Return the indices of the two numbers (1-indexed) as an array [index1, index2].
+
+You may not use the same element twice.
+
+Example:
+Input: numbers = [2, 7, 11, 15], target = 9
+Output: [1, 2]
+Explanation: 2 + 7 = 9, so index1 = 1, index2 = 2.
+
+Constraints:
+- 2 <= numbers.length <= 3 * 10^4
+- -1000 <= numbers[i] <= 1000
+- numbers is sorted in non-decreasing order
+- Exactly one solution exists`,
+    pattern: 'TWO_POINTERS',
+    rung: 1,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[2, 7, 11, 15], target = 9', expectedOutput: '[1, 2]', isHidden: false },
+      { input: '[2, 3, 4], target = 6', expectedOutput: '[1, 3]', isHidden: false },
+      { input: '[-1, 0], target = -1', expectedOutput: '[1, 2]', isHidden: false },
+      { input: '[1, 2, 3, 4, 5], target = 9', expectedOutput: '[4, 5]', isHidden: true },
+      { input: '[5, 25, 75], target = 100', expectedOutput: '[2, 3]', isHidden: true },
+    ],
+    hints: [
+      'Since the array is sorted, what does it mean if the sum is too large or too small?',
+      'Start with pointers at both ends of the array.',
+      'If sum > target, move the right pointer left. If sum < target, move the left pointer right.',
+      'The invariant: all pairs (i, j) where j > right or i < left have been eliminated.',
+      'while (left < right) { if (sum === target) return; else if (sum < target) left++; else right--; }',
+    ],
+  },
+  // TWO_POINTERS - Rung 2
+  {
+    title: 'Container With Most Water',
+    statement: `You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).
+
+Find two lines that together with the x-axis form a container that holds the most water.
+
+Return the maximum amount of water a container can store.
+
+Example:
+Input: height = [1, 8, 6, 2, 5, 4, 8, 3, 7]
+Output: 49
+Explanation: The max area is between lines at index 1 and 8, with height 7 and width 7.
+
+Constraints:
+- 2 <= height.length <= 10^5
+- 0 <= height[i] <= 10^4`,
+    pattern: 'TWO_POINTERS',
+    rung: 2,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[1, 8, 6, 2, 5, 4, 8, 3, 7]', expectedOutput: '49', isHidden: false },
+      { input: '[1, 1]', expectedOutput: '1', isHidden: false },
+      { input: '[4, 3, 2, 1, 4]', expectedOutput: '16', isHidden: false },
+      { input: '[1, 2, 1]', expectedOutput: '2', isHidden: true },
+      { input: '[2, 3, 4, 5, 18, 17, 6]', expectedOutput: '17', isHidden: true },
+    ],
+    hints: [
+      'The area is determined by the shorter line. Why?',
+      'Start with the widest container (pointers at both ends).',
+      'Moving the pointer at the shorter line might find a taller line.',
+      'Moving the pointer at the taller line can only decrease or maintain width, never increase height.',
+      'Always move the pointer pointing to the shorter line inward.',
+    ],
+  },
+  // BINARY_SEARCH - Rung 1
+  {
+    title: 'Binary Search',
+    statement: `Given a sorted array of integers nums and an integer target, return the index of target if found, otherwise return -1.
+
+You must write an algorithm with O(log n) runtime complexity.
+
+Example 1:
+Input: nums = [-1, 0, 3, 5, 9, 12], target = 9
+Output: 4
+
+Example 2:
+Input: nums = [-1, 0, 3, 5, 9, 12], target = 2
+Output: -1
+
+Constraints:
+- 1 <= nums.length <= 10^4
+- -10^4 < nums[i], target < 10^4
+- All integers in nums are unique
+- nums is sorted in ascending order`,
+    pattern: 'BINARY_SEARCH',
+    rung: 1,
+    targetComplexity: 'O(log n)',
+    testCases: [
+      { input: '[-1, 0, 3, 5, 9, 12], target = 9', expectedOutput: '4', isHidden: false },
+      { input: '[-1, 0, 3, 5, 9, 12], target = 2', expectedOutput: '-1', isHidden: false },
+      { input: '[5], target = 5', expectedOutput: '0', isHidden: false },
+      { input: '[1, 2, 3], target = 1', expectedOutput: '0', isHidden: true },
+      { input: '[1, 2, 3], target = 3', expectedOutput: '2', isHidden: true },
+    ],
+    hints: [
+      'Compare the target with the middle element.',
+      'If target < middle, search the left half. If target > middle, search the right half.',
+      'Be careful with how you calculate mid to avoid integer overflow.',
+      'Use mid = left + Math.floor((right - left) / 2) instead of (left + right) / 2',
+      'while (left <= right) { mid = left + (right - left) / 2; if (nums[mid] === target) return mid; }',
+    ],
+  },
+  // DFS - Rung 1
+  {
+    title: 'Maximum Depth of Binary Tree',
+    statement: `Given the root of a binary tree, return its maximum depth.
+
+A binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.
+
+Example 1:
+Input: root = [3, 9, 20, null, null, 15, 7]
+Output: 3
+
+Example 2:
+Input: root = [1, null, 2]
+Output: 2
+
+Constraints:
+- The number of nodes in the tree is in the range [0, 10^4]
+- -100 <= Node.val <= 100`,
+    pattern: 'DFS',
+    rung: 1,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[3, 9, 20, null, null, 15, 7]', expectedOutput: '3', isHidden: false },
+      { input: '[1, null, 2]', expectedOutput: '2', isHidden: false },
+      { input: '[]', expectedOutput: '0', isHidden: false },
+      { input: '[1]', expectedOutput: '1', isHidden: true },
+      { input: '[1, 2, 3, 4, 5]', expectedOutput: '3', isHidden: true },
+    ],
+    hints: [
+      'The depth of a node is 1 + the maximum depth of its children.',
+      'What is the base case? What is the depth of a null node?',
+      'Use recursion: maxDepth(node) = 1 + max(maxDepth(left), maxDepth(right))',
+      'Handle the null case by returning 0.',
+      'return node === null ? 0 : 1 + Math.max(maxDepth(node.left), maxDepth(node.right));',
+    ],
+  },
+  // BFS - Rung 1
+  {
+    title: 'Binary Tree Level Order Traversal',
+    statement: `Given the root of a binary tree, return the level order traversal of its nodes' values (i.e., from left to right, level by level).
+
+Example 1:
+Input: root = [3, 9, 20, null, null, 15, 7]
+Output: [[3], [9, 20], [15, 7]]
+
+Example 2:
+Input: root = [1]
+Output: [[1]]
+
+Example 3:
+Input: root = []
+Output: []
+
+Constraints:
+- The number of nodes in the tree is in the range [0, 2000]
+- -1000 <= Node.val <= 1000`,
+    pattern: 'BFS',
+    rung: 1,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[3, 9, 20, null, null, 15, 7]', expectedOutput: '[[3], [9, 20], [15, 7]]', isHidden: false },
+      { input: '[1]', expectedOutput: '[[1]]', isHidden: false },
+      { input: '[]', expectedOutput: '[]', isHidden: false },
+      { input: '[1, 2, 3, 4, 5]', expectedOutput: '[[1], [2, 3], [4, 5]]', isHidden: true },
+    ],
+    hints: [
+      'Use a queue to process nodes level by level.',
+      'At each level, process all nodes currently in the queue before moving to the next level.',
+      'Track the size of the queue at the start of each level.',
+      'For each level: levelSize = queue.length; for (i = 0; i < levelSize; i++) { process node }',
+      'Add children to queue as you process each node, but they will be processed in the next iteration.',
+    ],
+  },
+  // DYNAMIC_PROGRAMMING - Rung 1
+  {
+    title: 'Climbing Stairs',
+    statement: `You are climbing a staircase. It takes n steps to reach the top.
+
+Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?
+
+Example 1:
+Input: n = 2
+Output: 2
+Explanation: There are two ways: (1+1) and (2).
+
+Example 2:
+Input: n = 3
+Output: 3
+Explanation: There are three ways: (1+1+1), (1+2), and (2+1).
+
+Constraints:
+- 1 <= n <= 45`,
+    pattern: 'DYNAMIC_PROGRAMMING',
+    rung: 1,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '2', expectedOutput: '2', isHidden: false },
+      { input: '3', expectedOutput: '3', isHidden: false },
+      { input: '4', expectedOutput: '5', isHidden: false },
+      { input: '1', expectedOutput: '1', isHidden: true },
+      { input: '5', expectedOutput: '8', isHidden: true },
+    ],
+    hints: [
+      'Think about how you can reach step n. From which steps can you get there?',
+      'You can reach step n from step n-1 (one step) or step n-2 (two steps).',
+      'So ways(n) = ways(n-1) + ways(n-2). This is the Fibonacci sequence!',
+      'Base cases: ways(1) = 1, ways(2) = 2',
+      'Use iteration instead of recursion to avoid stack overflow: dp[i] = dp[i-1] + dp[i-2]',
+    ],
+  },
+  // PREFIX_SUM - Rung 1
+  {
+    title: 'Range Sum Query - Immutable',
+    statement: `Given an integer array nums, handle multiple queries of the following type:
+Calculate the sum of the elements of nums between indices left and right inclusive.
+
+Implement the NumArray class:
+- NumArray(int[] nums): Initializes the object with the integer array nums.
+- int sumRange(int left, int right): Returns the sum of elements between indices left and right inclusive.
+
+Example:
+Input: nums = [-2, 0, 3, -5, 2, -1]
+sumRange(0, 2) -> 1
+sumRange(2, 5) -> -1
+sumRange(0, 5) -> -3
+
+Constraints:
+- 1 <= nums.length <= 10^4
+- -10^5 <= nums[i] <= 10^5
+- 0 <= left <= right < nums.length
+- At most 10^4 calls will be made to sumRange`,
+    pattern: 'PREFIX_SUM',
+    rung: 1,
+    targetComplexity: 'O(1) per query',
+    testCases: [
+      { input: '[-2, 0, 3, -5, 2, -1], sumRange(0, 2)', expectedOutput: '1', isHidden: false },
+      { input: '[-2, 0, 3, -5, 2, -1], sumRange(2, 5)', expectedOutput: '-1', isHidden: false },
+      { input: '[-2, 0, 3, -5, 2, -1], sumRange(0, 5)', expectedOutput: '-3', isHidden: false },
+      { input: '[1, 2, 3], sumRange(0, 0)', expectedOutput: '1', isHidden: true },
+      { input: '[1], sumRange(0, 0)', expectedOutput: '1', isHidden: true },
+    ],
+    hints: [
+      'If you had precomputed sum(0, i) for all i, could you answer queries faster?',
+      'sum(left, right) = sum(0, right) - sum(0, left-1)',
+      'Build a prefix sum array where prefix[i] = sum of nums[0..i-1]',
+      'prefix[0] = 0, prefix[i] = prefix[i-1] + nums[i-1]',
+      'sumRange(left, right) = prefix[right+1] - prefix[left]',
+    ],
+  },
+  // GREEDY - Rung 1
+  {
+    title: 'Best Time to Buy and Sell Stock II',
+    statement: `You are given an integer array prices where prices[i] is the price of a given stock on the ith day.
+
+On each day, you may decide to buy and/or sell the stock. You can only hold at most one share of the stock at any time. However, you can buy it then immediately sell it on the same day.
+
+Find and return the maximum profit you can achieve.
+
+Example 1:
+Input: prices = [7, 1, 5, 3, 6, 4]
+Output: 7
+Explanation: Buy on day 2 (price=1), sell on day 3 (price=5), profit=4.
+Then buy on day 4 (price=3), sell on day 5 (price=6), profit=3. Total=7.
+
+Example 2:
+Input: prices = [1, 2, 3, 4, 5]
+Output: 4
+Explanation: Buy on day 1, sell on day 5, profit=4.
+
+Constraints:
+- 1 <= prices.length <= 3 * 10^4
+- 0 <= prices[i] <= 10^4`,
+    pattern: 'GREEDY',
+    rung: 1,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[7, 1, 5, 3, 6, 4]', expectedOutput: '7', isHidden: false },
+      { input: '[1, 2, 3, 4, 5]', expectedOutput: '4', isHidden: false },
+      { input: '[7, 6, 4, 3, 1]', expectedOutput: '0', isHidden: false },
+      { input: '[1, 2]', expectedOutput: '1', isHidden: true },
+      { input: '[2, 1, 2, 0, 1]', expectedOutput: '2', isHidden: true },
+    ],
+    hints: [
+      'You want to capture every upward price movement.',
+      'If tomorrow\'s price is higher than today\'s, you should buy today and sell tomorrow.',
+      'The greedy approach: add up all positive price differences.',
+      'profit += Math.max(0, prices[i] - prices[i-1])',
+      'This works because buying/selling on the same day is allowed (you can chain transactions).',
+    ],
+  },
+];
+
+async function seed() {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error('DATABASE_URL environment variable is required');
+    process.exit(1);
+  }
+
+  console.log('Connecting to database...');
+  const client = postgres(connectionString);
+  const db = drizzle(client);
+
+  const TENANT_ID = '00000000-0000-0000-0000-000000000001';
+  const TENANT_NAME = 'Demo Tenant';
+
+  try {
+    // Check if tenant exists, create if not
+    console.log('Setting up demo tenant...');
+    const existingTenant = await client`
+      SELECT id FROM tenants WHERE id = ${TENANT_ID}::uuid
+    `;
+
+    if (existingTenant.length === 0) {
+      await client`
+        INSERT INTO tenants (id, name) VALUES (${TENANT_ID}::uuid, ${TENANT_NAME})
+      `;
+      console.log('Created demo tenant');
+    } else {
+      console.log('Demo tenant already exists');
+    }
+
+    // Delete existing problems for this tenant
+    console.log('Clearing existing problems...');
+    await client`DELETE FROM problems WHERE tenant_id = ${TENANT_ID}::uuid`;
+
+    // Insert demo problems
+    console.log('Inserting demo problems...');
+    for (const problem of DEMO_PROBLEMS) {
+      const id = randomUUID();
+      await client`
+        INSERT INTO problems (id, tenant_id, title, statement, pattern, rung, target_complexity, test_cases, hints)
+        VALUES (
+          ${id}::uuid,
+          ${TENANT_ID}::uuid,
+          ${problem.title},
+          ${problem.statement},
+          ${problem.pattern},
+          ${problem.rung},
+          ${problem.targetComplexity},
+          ${JSON.stringify(problem.testCases)}::jsonb,
+          ${JSON.stringify(problem.hints)}::jsonb
+        )
+      `;
+      console.log(`  Added: ${problem.title} (${problem.pattern} R${problem.rung})`);
+    }
+
+    console.log(`\nSeeded ${DEMO_PROBLEMS.length} problems successfully!`);
+    console.log('\nTo test:');
+    console.log('1. Make sure DATABASE_URL is set');
+    console.log('2. Run: pnpm dev');
+    console.log('3. Open http://localhost:3000');
+
+  } catch (error) {
+    console.error('Seed failed:', error);
+    process.exit(1);
+  } finally {
+    await client.end();
+  }
+}
+
+seed();
