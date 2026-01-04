@@ -3,11 +3,12 @@
  * This is the only place where adapters are instantiated
  */
 
+import { randomUUID } from 'crypto';
 import { createDbClient } from '@scaffold/adapter-db';
 import { createAttemptRepo, createSkillRepo, createContentRepo } from '@scaffold/adapter-db';
 import { createDemoAuthProvider } from '@scaffold/adapter-auth';
 import { createConsoleEventSink } from '@scaffold/adapter-analytics';
-import { SystemClock, SimpleIdGenerator } from '@scaffold/core/ports';
+import { SystemClock } from '@scaffold/core/ports';
 import type { AttemptRepo, SkillRepo, ContentRepo, EventSink, Clock, IdGenerator } from '@scaffold/core/ports';
 
 // Database client (singleton)
@@ -24,8 +25,10 @@ export const eventSink: EventSink = createConsoleEventSink();
 // Clock
 export const clock: Clock = SystemClock;
 
-// ID Generator
-export const idGenerator: IdGenerator = SimpleIdGenerator;
+// ID Generator - uses proper UUIDs for database compatibility
+export const idGenerator: IdGenerator = {
+  generate: () => randomUUID(),
+};
 
 // Auth provider factory
 export function getAuthProvider(tenantId: string, userId: string) {

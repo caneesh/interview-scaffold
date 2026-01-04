@@ -3,9 +3,13 @@
  * Run with: npx tsx scripts/seed.ts
  */
 
+import { config } from 'dotenv';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { randomUUID } from 'crypto';
+
+// Load .env file
+config();
 
 // Inline schema definitions to avoid import issues
 const createSchema = () => {

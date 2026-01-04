@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { attemptRepo, contentRepo } from '@/lib/deps';
+import { DEMO_TENANT_ID } from '@/lib/constants';
 
 /**
  * GET /api/attempts/[attemptId]
@@ -11,7 +12,7 @@ export async function GET(
   { params }: { params: { attemptId: string } }
 ) {
   try {
-    const tenantId = request.headers.get('x-tenant-id') ?? 'default';
+    const tenantId = request.headers.get('x-tenant-id') ?? DEMO_TENANT_ID;
 
     const attempt = await attemptRepo.findById(tenantId, params.attemptId);
     if (!attempt) {

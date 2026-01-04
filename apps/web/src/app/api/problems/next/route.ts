@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getNextProblem } from '@scaffold/core/use-cases';
 import { GetNextProblemRequestSchema } from '@scaffold/contracts';
 import { contentRepo, skillRepo, attemptRepo } from '@/lib/deps';
+import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,8 +13,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: NextRequest) {
   try {
-    const tenantId = request.headers.get('x-tenant-id') ?? 'default';
-    const userId = request.headers.get('x-user-id') ?? 'demo';
+    const tenantId = request.headers.get('x-tenant-id') ?? DEMO_TENANT_ID;
+    const userId = request.headers.get('x-user-id') ?? DEMO_USER_ID;
 
     // Parse optional query params
     const { searchParams } = new URL(request.url);

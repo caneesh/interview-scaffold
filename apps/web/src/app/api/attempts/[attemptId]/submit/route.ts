@@ -4,6 +4,7 @@ import type { CodeExecutor } from '@scaffold/core/use-cases';
 import { SubmitCodeRequestSchema } from '@scaffold/contracts';
 import { attemptRepo, contentRepo, eventSink, clock, idGenerator } from '@/lib/deps';
 import type { TestResultData } from '@scaffold/core/entities';
+import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
  * Simple code executor for demo - in production, use sandboxed execution
@@ -36,8 +37,8 @@ export async function POST(
   { params }: { params: { attemptId: string } }
 ) {
   try {
-    const tenantId = request.headers.get('x-tenant-id') ?? 'default';
-    const userId = request.headers.get('x-user-id') ?? 'demo';
+    const tenantId = request.headers.get('x-tenant-id') ?? DEMO_TENANT_ID;
+    const userId = request.headers.get('x-user-id') ?? DEMO_USER_ID;
 
     const body = await request.json();
     const parsed = SubmitCodeRequestSchema.safeParse({
