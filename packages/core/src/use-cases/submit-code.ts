@@ -7,11 +7,13 @@ import type { EventSink } from '../ports/event-sink.js';
 import type { Clock } from '../ports/clock.js';
 import type { IdGenerator } from '../ports/id-generator.js';
 import { hasPassedThinkingGate, hasPassedReflection, needsReflection } from '../entities/attempt.js';
-import type { GatingDecision, ErrorEvent } from '../validation/types.js';
+import { ERROR_TYPES } from '../validation/types.js';
+import type { GatingDecision, ErrorEvent, ErrorType } from '../validation/types.js';
 import { gradeSubmission } from '../validation/rubric.js';
 import { runHeuristics } from '../validation/heuristics.js';
 import { detectForbiddenConcepts, getForbiddenForPattern } from '../validation/forbidden.js';
 import { makeGatingDecision } from '../validation/gating.js';
+import type { LLMValidationPort, LLMValidationResponse } from '../validation/llm-port.js';
 
 export interface SubmitCodeInput {
   readonly tenantId: TenantId;
@@ -36,6 +38,7 @@ export interface SubmitCodeDeps {
   readonly clock: Clock;
   readonly idGenerator: IdGenerator;
   readonly codeExecutor: CodeExecutor;
+  readonly llmValidation?: LLMValidationPort; // Optional LLM validation
 }
 
 export interface CodeExecutor {
@@ -146,7 +149,46 @@ export async function submitCode(
   const additionalForbidden = getForbiddenForPattern(attempt.pattern);
   const forbiddenResult = detectForbiddenConcepts(code, attempt.pattern, additionalForbidden);
 
-  // 4. Collect previous failures for gating context
+  // 4. Optional LLM validation (if enabled)
+  let llmResult: LLMValidationResponse | null = null;
+  if (deps.llmValidation?.isEnabled()) {
+    llmResult = await deps.llmValidation.validateCode({
+      code,
+      language,
+      expectedPattern: attempt.pattern,
+      testResults: testResults.map((t) => ({
+        input: t.input,
+        expected: t.expected,
+        actual: t.actual,
+        passed: t.passed,
+      })),
+      heuristicErrors: heuristicErrors,
+    });
+
+    // Merge LLM-detected errors with heuristic errors
+    if (llmResult?.errors) {
+      for (const error of llmResult.errors) {
+        // Only add if not a duplicate
+        const isDuplicate = heuristicErrors.some(
+          (e) => e.type === error.type && e.message === error.message
+        );
+        if (!isDuplicate) {
+          // Map LLM error type to known ErrorType, default to 'UNKNOWN'
+          const errorType: ErrorType = ERROR_TYPES.includes(error.type as ErrorType)
+            ? (error.type as ErrorType)
+            : 'UNKNOWN';
+          heuristicErrors.push({
+            type: errorType,
+            severity: error.severity,
+            message: error.message,
+            evidence: error.lineNumber ? [`Line ${error.lineNumber}`] : undefined,
+          });
+        }
+      }
+    }
+  }
+
+  // 5. Collect previous failures for gating context
   const previousCodingSteps = attempt.steps.filter(
     (s) => s.type === 'CODING' && s.result === 'FAIL'
   );
@@ -157,7 +199,7 @@ export async function submitCode(
     })
     .filter((e): e is string => typeof e === 'string');
 
-  // 5. Make gating decision
+  // 6. Make gating decision
   const allErrors: ErrorEvent[] = [...heuristicErrors, ...forbiddenResult.errors];
 
   const gatingDecision = makeGatingDecision({
@@ -170,15 +212,17 @@ export async function submitCode(
     previousFailures: previousFailures.map((e) => e as any), // ErrorType
   });
 
-  // 6. Build validation data
+  // 7. Build validation data
   const validation: CodingValidationData = {
-    rubricGrade: rubricResult.grade,
+    rubricGrade: llmResult?.grade ?? rubricResult.grade, // Use LLM grade if available
     rubricScore: rubricResult.score,
     heuristicErrors: heuristicErrors.map((e) => e.type),
     forbiddenConcepts: forbiddenResult.detected.map((d) => d.concept.id),
     gatingAction: gatingDecision.action,
     gatingReason: gatingDecision.reason,
-    microLessonId: gatingDecision.microLessonId,
+    microLessonId: llmResult?.suggestedMicroLesson ?? gatingDecision.microLessonId,
+    llmFeedback: llmResult?.feedback,
+    llmConfidence: llmResult?.confidence,
   };
 
   // ============ Determine next state based on gating ============

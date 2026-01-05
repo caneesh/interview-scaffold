@@ -26,6 +26,9 @@ importers:
       '@scaffold/adapter-db':
         specifier: workspace:*
         version: link:../../packages/adapter-db
+      '@scaffold/adapter-llm':
+        specifier: workspace:*
+        version: link:../../packages/adapter-llm
       '@scaffold/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

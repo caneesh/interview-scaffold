@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { submitCode } from '@scaffold/core/use-cases';
 import type { CodeExecutor } from '@scaffold/core/use-cases';
 import { SubmitCodeRequestSchema } from '@scaffold/contracts';
-import { attemptRepo, contentRepo, eventSink, clock, idGenerator } from '@/lib/deps';
+import { attemptRepo, contentRepo, eventSink, clock, idGenerator, getLLMValidation } from '@/lib/deps';
 import type { TestResultData } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
@@ -53,6 +53,17 @@ export async function POST(
       );
     }
 
+    // Get attempt and problem for LLM validation context
+    const attempt = await attemptRepo.findById(tenantId, parsed.data.attemptId);
+    if (!attempt) {
+      return NextResponse.json(
+        { error: { code: 'ATTEMPT_NOT_FOUND', message: 'Attempt not found' } },
+        { status: 404 }
+      );
+    }
+    const problem = await contentRepo.findById(tenantId, attempt.problemId);
+    const problemStatement = problem?.statement ?? '';
+
     const result = await submitCode(
       {
         tenantId,
@@ -68,6 +79,7 @@ export async function POST(
         clock,
         idGenerator,
         codeExecutor: demoCodeExecutor,
+        llmValidation: getLLMValidation(problemStatement),
       }
     );
 
@@ -75,6 +87,8 @@ export async function POST(
       attempt: result.attempt,
       testResults: result.testResults,
       passed: result.passed,
+      validation: result.validation,
+      gatingDecision: result.gatingDecision,
     });
   } catch (error) {
     if (error instanceof Error && 'code' in error) {

@@ -53,6 +53,8 @@ export interface CodingValidationData {
   readonly gatingAction: 'PROCEED' | 'SHOW_MICRO_LESSON' | 'REQUIRE_REFLECTION' | 'BLOCK_SUBMISSION';
   readonly gatingReason: string;
   readonly microLessonId?: string;
+  readonly llmFeedback?: string;
+  readonly llmConfidence?: number;
 }
 
 export interface TestResultData {
