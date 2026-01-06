@@ -202,7 +202,7 @@ export async function submitCode(
   // 6. Make gating decision
   const allErrors: ErrorEvent[] = [...heuristicErrors, ...forbiddenResult.errors];
 
-  const gatingDecision = makeGatingDecision({
+  let gatingDecision = makeGatingDecision({
     pattern: attempt.pattern,
     rung: attempt.rung,
     rubric: rubricResult,
@@ -211,6 +211,34 @@ export async function submitCode(
     hintsUsed: attempt.hintsUsed.length,
     previousFailures: previousFailures.map((e) => e as any), // ErrorType
   });
+
+  // 6b. Override gating decision if LLM detected issues with high confidence
+  const LLM_CONFIDENCE_THRESHOLD = 0.8;
+  if (
+    llmResult &&
+    llmResult.confidence >= LLM_CONFIDENCE_THRESHOLD &&
+    llmResult.grade === 'FAIL' &&
+    gatingDecision.action === 'PROCEED'
+  ) {
+    // LLM detected a problem that heuristics missed - require reflection
+    gatingDecision = {
+      action: 'REQUIRE_REFLECTION',
+      reason: `LLM detected code issues: ${llmResult.feedback?.slice(0, 100)}...`,
+      microLessonId: llmResult.suggestedMicroLesson ?? undefined,
+    };
+  } else if (
+    llmResult &&
+    llmResult.confidence >= LLM_CONFIDENCE_THRESHOLD &&
+    llmResult.grade === 'PARTIAL' &&
+    gatingDecision.action === 'PROCEED'
+  ) {
+    // LLM detected partial issues - show micro lesson
+    gatingDecision = {
+      action: 'SHOW_MICRO_LESSON',
+      reason: `LLM suggests improvement: ${llmResult.feedback?.slice(0, 100)}...`,
+      microLessonId: llmResult.suggestedMicroLesson ?? undefined,
+    };
+  }
 
   // 7. Build validation data
   const validation: CodingValidationData = {
