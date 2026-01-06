@@ -1,0 +1,1051 @@
+{
+  "$schema": "./content-pack.schema.json",
+  "packId": "dfs",
+  "pattern": "DFS",
+  "version": "1.0.0",
+  "rungs": {
+    "1": {
+      "level": 1,
+      "name": "Tree DFS",
+      "description": "Recursive DFS traversal on binary trees for path and property problems",
+      "canonical": {
+        "problemId": "dfs-r1-canonical",
+        "title": "Maximum Depth of Binary Tree",
+        "statement": "Given the `root` of a binary tree, return its maximum depth.\n\nA binary tree's maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.\n\n**Example 1:**\n```\nInput: root = [3,9,20,null,null,15,7]\n    3\n   / \\\n  9  20\n    /  \\\n   15   7\nOutput: 3\n```\n\n**Example 2:**\n```\nInput: root = [1,null,2]\nOutput: 2\n```\n\n**Constraints:**\n- The number of nodes in the tree is in the range [0, 10^4].\n- -100 <= Node.val <= 100",
+        "targetComplexity": "O(n)",
+        "testCases": [
+          {
+            "input": "[3,9,20,null,null,15,7]",
+            "expectedOutput": "3",
+            "isHidden": false,
+            "explanation": "Longest path has 3 nodes"
+          },
+          {
+            "input": "[1,null,2]",
+            "expectedOutput": "2",
+            "isHidden": false,
+            "explanation": "Skewed tree with 2 nodes"
+          },
+          {
+            "input": "[]",
+            "expectedOutput": "0",
+            "isHidden": true,
+            "explanation": "Empty tree"
+          },
+          {
+            "input": "[1]",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "Single node"
+          },
+          {
+            "input": "[1,2,3,4,5,null,null,6]",
+            "expectedOutput": "4",
+            "isHidden": true,
+            "explanation": "Deeper left subtree"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "DFS",
+                "acceptableVariants": ["DFS", "recursion", "tree traversal", "post-order"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Depth of node = 1 + max(depth of left subtree, depth of right subtree); base case: null node has depth 0",
+                "keywords": ["recursion", "max", "left", "right", "base case", "null"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n)",
+                "acceptableVariants": ["O(n) time, O(h) space", "O(n) time, O(n) space worst case"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Handles null root", "Handles single node"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n) time", "Visits each node once"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clean recursive structure", "Clear base case"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "DFS naturally follows the tree structure - we go deep before backtracking, computing depth bottom-up",
+                "isCorrect": true,
+                "feedback": "Correct! DFS visits all descendants before returning, allowing us to compute depth from leaves up."
+              },
+              {
+                "id": "opt-b",
+                "text": "BFS would be more efficient for finding depth",
+                "isCorrect": false,
+                "feedback": "BFS works too (counting levels), but DFS is simpler and equally efficient at O(n)."
+              },
+              {
+                "id": "opt-c",
+                "text": "We need to track all paths to find the maximum",
+                "isCorrect": false,
+                "feedback": "We don't need to store paths. The recursive formula max(left, right) + 1 suffices."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "null.*check|None.*check|base.*case",
+            "errorType": "MISSING_BASE_CASE",
+            "microLessonRef": "ml-dfs-001",
+            "feedback": "Handle the null node base case: return 0 for null/None nodes."
+          },
+          {
+            "pattern": "stack.*overflow|recursion.*limit|maximum.*recursion",
+            "errorType": "STACK_OVERFLOW",
+            "microLessonRef": "ml-dfs-002",
+            "feedback": "For very deep trees, recursion may overflow. Consider iterative DFS with explicit stack."
+          },
+          {
+            "pattern": "return.*1|depth.*=.*1",
+            "errorType": "OFF_BY_ONE",
+            "microLessonRef": "ml-dfs-003",
+            "feedback": "Check your depth counting. Null returns 0, leaf returns 1, etc."
+          }
+        ],
+        "microLessonRefs": ["ml-dfs-001", "ml-dfs-002", "ml-dfs-003", "ml-dfs-tree-intro"],
+        "hints": [
+          "Think recursively: depth of a tree = 1 + max(depth of subtrees).",
+          "Base case: an empty tree (null) has depth 0.",
+          "For each node, recursively find depth of left and right subtrees.",
+          "Return 1 + max(leftDepth, rightDepth).",
+          "This naturally handles all cases including leaves."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "dfs-r1-sibling-1",
+          "title": "Path Sum",
+          "statement": "Given the `root` of a binary tree and an integer `targetSum`, return `true` if the tree has a root-to-leaf path such that adding up all the values along the path equals `targetSum`.\n\nA leaf is a node with no children.\n\n**Example 1:**\n```\nInput: root = [5,4,8,11,null,13,4,7,2,null,null,null,1], targetSum = 22\n        5\n       / \\\n      4   8\n     /   / \\\n    11  13  4\n   /  \\      \\\n  7    2      1\nOutput: true\nExplanation: The path 5 -> 4 -> 11 -> 2 sums to 22.\n```\n\n**Example 2:**\n```\nInput: root = [1,2,3], targetSum = 5\nOutput: false\n```\n\n**Example 3:**\n```\nInput: root = [], targetSum = 0\nOutput: false\nExplanation: Since the tree is empty, there are no root-to-leaf paths.\n```\n\n**Constraints:**\n- The number of nodes in the tree is in the range [0, 5000].\n- -1000 <= Node.val <= 1000\n- -1000 <= targetSum <= 1000",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[5,4,8,11,null,13,4,7,2,null,null,null,1], 22",
+              "expectedOutput": "true",
+              "isHidden": false,
+              "explanation": "Path 5->4->11->2 = 22"
+            },
+            {
+              "input": "[1,2,3], 5",
+              "expectedOutput": "false",
+              "isHidden": false,
+              "explanation": "No path sums to 5"
+            },
+            {
+              "input": "[], 0",
+              "expectedOutput": "false",
+              "isHidden": false,
+              "explanation": "Empty tree has no paths"
+            },
+            {
+              "input": "[1,2], 1",
+              "expectedOutput": "false",
+              "isHidden": true,
+              "explanation": "Path must end at leaf, not root"
+            },
+            {
+              "input": "[1], 1",
+              "expectedOutput": "true",
+              "isHidden": true,
+              "explanation": "Single node is a leaf"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "DFS",
+                  "acceptableVariants": ["DFS", "recursion", "path traversal"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Track remaining sum; at leaf check if remaining equals node value; recurse on children with reduced target",
+                  "keywords": ["remaining", "leaf", "subtract", "recurse", "or"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(h) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Only checks at leaves", "Handles empty tree"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Early termination when found"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear leaf check"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "We subtract node values as we go down; at a leaf, we check if remaining sum equals node value",
+                  "isCorrect": true,
+                  "feedback": "Correct! This elegantly handles the path sum by reducing the target as we descend."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should accumulate sum and check at every node",
+                  "isCorrect": false,
+                  "feedback": "We must check only at LEAF nodes. The path must go root-to-leaf."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "check.*every.*node|not.*leaf",
+              "errorType": "NON_LEAF_CHECK",
+              "microLessonRef": "ml-dfs-004",
+              "feedback": "Only check the sum at LEAF nodes (nodes with no children). Internal nodes don't count."
+            },
+            {
+              "pattern": "empty.*tree.*true|null.*return.*true",
+              "errorType": "EMPTY_TREE_HANDLING",
+              "microLessonRef": "ml-dfs-005",
+              "feedback": "Empty tree has no paths, so return false, even if targetSum is 0."
+            }
+          ],
+          "microLessonRefs": ["ml-dfs-001", "ml-dfs-004", "ml-dfs-005"],
+          "hints": [
+            "DFS down the tree, subtracting each node's value from targetSum.",
+            "At a leaf node, check if remaining sum equals the leaf's value.",
+            "A leaf node has both left and right children as null.",
+            "Return true if either subtree has a valid path (use OR).",
+            "Empty tree returns false (no paths exist)."
+          ]
+        },
+        {
+          "problemId": "dfs-r1-sibling-2",
+          "title": "Lowest Common Ancestor of a Binary Tree",
+          "statement": "Given a binary tree, find the lowest common ancestor (LCA) of two given nodes in the tree.\n\nAccording to the definition of LCA on Wikipedia: \"The lowest common ancestor is defined between two nodes `p` and `q` as the lowest node in T that has both `p` and `q` as descendants (where we allow a node to be a descendant of itself).\"\n\n**Example 1:**\n```\nInput: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1\n        3\n       / \\\n      5   1\n     / \\ / \\\n    6  2 0  8\n      / \\\n     7   4\nOutput: 3\nExplanation: The LCA of nodes 5 and 1 is 3.\n```\n\n**Example 2:**\n```\nInput: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4\nOutput: 5\nExplanation: The LCA of nodes 5 and 4 is 5, since a node can be a descendant of itself.\n```\n\n**Constraints:**\n- The number of nodes in the tree is in the range [2, 10^5].\n- -10^9 <= Node.val <= 10^9\n- All Node.val are unique.\n- p != q\n- p and q will exist in the tree.",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[3,5,1,6,2,0,8,null,null,7,4], p=5, q=1",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "5 and 1 are in different subtrees of 3"
+            },
+            {
+              "input": "[3,5,1,6,2,0,8,null,null,7,4], p=5, q=4",
+              "expectedOutput": "5",
+              "isHidden": false,
+              "explanation": "4 is descendant of 5"
+            },
+            {
+              "input": "[1,2], p=1, q=2",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "Root is ancestor of child"
+            },
+            {
+              "input": "[1,2,3], p=2, q=3",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "Siblings have parent as LCA"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "DFS",
+                  "acceptableVariants": ["DFS", "recursion", "post-order"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "If current node is p or q, return it; recurse on both subtrees; if both return non-null, current is LCA; else return non-null child",
+                  "keywords": ["p or q", "both subtrees", "non-null", "LCA"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(h) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles node being ancestor of other"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Single traversal"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear recursive logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "The LCA is where p and q are found in different subtrees, or where one is the ancestor of the other",
+                  "isCorrect": true,
+                  "feedback": "Correct! The first node where left and right both return non-null (or the node itself is p/q) is the LCA."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need to store the path to both nodes and find where they diverge",
+                  "isCorrect": false,
+                  "feedback": "That works but uses O(n) extra space. The recursive approach uses only O(h) stack space."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "store.*path|find.*path|ancestor.*list",
+              "errorType": "SUBOPTIMAL_APPROACH",
+              "microLessonRef": "ml-dfs-006",
+              "feedback": "The elegant recursive solution doesn't need to store paths. Use the return value to bubble up findings."
+            },
+            {
+              "pattern": "node.*==.*p.*or.*q|check.*before.*recurse",
+              "errorType": "CHECK_ORDER",
+              "microLessonRef": "ml-dfs-007",
+              "feedback": "Check if current node is p or q BEFORE recursing. This handles the case where one node is ancestor of the other."
+            }
+          ],
+          "microLessonRefs": ["ml-dfs-001", "ml-dfs-006", "ml-dfs-007"],
+          "hints": [
+            "If current node is p or q, return it (it might be the LCA).",
+            "Recurse on left and right subtrees.",
+            "If both left and right return non-null, current node is the LCA.",
+            "If only one side returns non-null, propagate that result up.",
+            "The first node where both p and q are found (in different subtrees or current node) is LCA."
+          ]
+        },
+        {
+          "problemId": "dfs-r1-sibling-3",
+          "title": "Diameter of Binary Tree",
+          "statement": "Given the `root` of a binary tree, return the length of the diameter of the tree.\n\nThe diameter of a binary tree is the length of the longest path between any two nodes in a tree. This path may or may not pass through the root.\n\nThe length of a path between two nodes is represented by the number of edges between them.\n\n**Example 1:**\n```\nInput: root = [1,2,3,4,5]\n        1\n       / \\\n      2   3\n     / \\\n    4   5\nOutput: 3\nExplanation: The longest path is [4,2,1,3] or [5,2,1,3] with 3 edges.\n```\n\n**Example 2:**\n```\nInput: root = [1,2]\nOutput: 1\n```\n\n**Constraints:**\n- The number of nodes in the tree is in the range [1, 10^4].\n- -100 <= Node.val <= 100",
+          "targetComplexity": "O(n)",
+          "testCases": [
+            {
+              "input": "[1,2,3,4,5]",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "Path through root: 4-2-1-3"
+            },
+            {
+              "input": "[1,2]",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "Single edge"
+            },
+            {
+              "input": "[1]",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "Single node, no edges"
+            },
+            {
+              "input": "[1,2,null,3,null,4,null,5]",
+              "expectedOutput": "4",
+              "isHidden": true,
+              "explanation": "Skewed tree"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "DFS",
+                  "acceptableVariants": ["DFS", "recursion", "post-order"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "For each node, diameter through it = leftHeight + rightHeight; track global max; return height (not diameter) for parent's calculation",
+                  "keywords": ["height", "diameter", "left + right", "global max", "return height"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n)",
+                  "acceptableVariants": ["O(n) time, O(h) space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Returns edges not nodes", "Handles single node"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n) time", "Single traversal"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear separation of height and diameter"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "We compute height but track diameter as a side effect - the diameter through any node is leftHeight + rightHeight",
+                  "isCorrect": true,
+                  "feedback": "Correct! The function returns height for the parent, but we update global diameter at each node."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "The diameter always passes through the root",
+                  "isCorrect": false,
+                  "feedback": "The diameter may be entirely within one subtree, not passing through root."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "node.*count|number.*of.*nodes",
+              "errorType": "COUNTING_NODES",
+              "microLessonRef": "ml-dfs-008",
+              "feedback": "Diameter is number of EDGES, not nodes. A path with 4 nodes has 3 edges."
+            },
+            {
+              "pattern": "only.*root|through.*root",
+              "errorType": "ROOT_ASSUMPTION",
+              "microLessonRef": "ml-dfs-009",
+              "feedback": "The longest path doesn't have to go through the root. Check diameter at every node."
+            }
+          ],
+          "microLessonRefs": ["ml-dfs-001", "ml-dfs-008", "ml-dfs-009"],
+          "hints": [
+            "For each node, the longest path THROUGH that node = leftHeight + rightHeight.",
+            "But the function should RETURN height (for parent's calculation).",
+            "Use a global variable or class member to track the maximum diameter.",
+            "Diameter is edges, not nodes: leftHeight + rightHeight gives edges.",
+            "The longest path may not pass through the root."
+          ]
+        }
+      ]
+    },
+    "2": {
+      "level": 2,
+      "name": "Graph DFS",
+      "description": "DFS for graph problems including cycle detection, connected components, and complex traversals",
+      "canonical": {
+        "problemId": "dfs-r2-canonical",
+        "title": "Clone Graph",
+        "statement": "Given a reference of a node in a connected undirected graph, return a deep copy (clone) of the graph.\n\nEach node in the graph contains a value (`int`) and a list (`List[Node]`) of its neighbors.\n\n```\nclass Node {\n    public int val;\n    public List<Node> neighbors;\n}\n```\n\nThe given node will always be the first node with `val = 1`. You must return the copy of the given node as a reference to the cloned graph.\n\n**Example 1:**\n```\nInput: adjList = [[2,4],[1,3],[2,4],[1,3]]\nOutput: [[2,4],[1,3],[2,4],[1,3]]\nExplanation: Node 1 connects to 2 and 4. Node 2 connects to 1 and 3. etc.\n```\n\n**Example 2:**\n```\nInput: adjList = [[]]\nOutput: [[]]\nExplanation: Single node with no neighbors.\n```\n\n**Example 3:**\n```\nInput: adjList = []\nOutput: []\nExplanation: Empty graph.\n```\n\n**Constraints:**\n- The number of nodes in the graph is in the range [0, 100].\n- 1 <= Node.val <= 100\n- Node.val is unique for each node.\n- There are no repeated edges and no self-loops.\n- The Graph is connected and all nodes can be visited starting from the given node.",
+        "targetComplexity": "O(V + E)",
+        "testCases": [
+          {
+            "input": "[[2,4],[1,3],[2,4],[1,3]]",
+            "expectedOutput": "[[2,4],[1,3],[2,4],[1,3]]",
+            "isHidden": false,
+            "explanation": "4-node graph cloned correctly"
+          },
+          {
+            "input": "[[]]",
+            "expectedOutput": "[[]]",
+            "isHidden": false,
+            "explanation": "Single node, no neighbors"
+          },
+          {
+            "input": "[]",
+            "expectedOutput": "[]",
+            "isHidden": false,
+            "explanation": "Empty graph"
+          },
+          {
+            "input": "[[2],[1]]",
+            "expectedOutput": "[[2],[1]]",
+            "isHidden": true,
+            "explanation": "Two connected nodes"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "DFS",
+                "acceptableVariants": ["DFS", "BFS", "graph traversal with mapping"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Use hash map to track original->clone mapping; DFS to traverse; create clone when first visiting; connect neighbors using the map",
+                "keywords": ["hash map", "clone", "mapping", "visited", "neighbors"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(V + E)",
+                "acceptableVariants": ["O(n + m)", "linear in nodes and edges"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Deep copy (new objects)", "Handles empty graph"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(V+E) time", "Each node visited once"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear mapping logic"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "The hash map serves dual purpose: tracking visited nodes AND storing original-to-clone mapping",
+                "isCorrect": true,
+                "feedback": "Correct! The map prevents revisiting and lets us look up clones when building neighbor lists."
+              },
+              {
+                "id": "opt-b",
+                "text": "We need to clone all nodes first, then add all edges",
+                "isCorrect": false,
+                "feedback": "We can clone nodes and set up neighbors in one DFS pass using the map."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "shallow.*copy|reference.*copy|same.*object",
+            "errorType": "SHALLOW_COPY",
+            "microLessonRef": "ml-dfs-101",
+            "feedback": "Create NEW node objects. Don't copy references to original nodes."
+          },
+          {
+            "pattern": "infinite.*loop|revisit|no.*visited",
+            "errorType": "MISSING_VISITED",
+            "microLessonRef": "ml-dfs-102",
+            "feedback": "Use a hash map to track visited nodes. Graphs can have cycles!"
+          },
+          {
+            "pattern": "neighbor.*before.*create|null.*neighbor",
+            "errorType": "ORDER_ERROR",
+            "microLessonRef": "ml-dfs-103",
+            "feedback": "Create the clone node first, add to map, THEN recurse on neighbors."
+          }
+        ],
+        "microLessonRefs": ["ml-dfs-101", "ml-dfs-102", "ml-dfs-103", "ml-dfs-graph-intro"],
+        "hints": [
+          "Use a hash map: original node -> cloned node.",
+          "For each node, if not in map, create a clone and add to map.",
+          "For each neighbor, recursively clone it (or get from map if already cloned).",
+          "Add cloned neighbors to the current clone's neighbor list.",
+          "Return the clone of the starting node."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "dfs-r2-sibling-1",
+          "title": "Course Schedule",
+          "statement": "There are a total of `numCourses` courses you have to take, labeled from `0` to `numCourses - 1`. You are given an array `prerequisites` where `prerequisites[i] = [ai, bi]` indicates that you must take course `bi` first if you want to take course `ai`.\n\nFor example, the pair `[0, 1]` indicates that to take course `0` you have to first take course `1`.\n\nReturn `true` if you can finish all courses. Otherwise, return `false`.\n\n**Example 1:**\n```\nInput: numCourses = 2, prerequisites = [[1,0]]\nOutput: true\nExplanation: To take course 1, you should have finished course 0. So it is possible.\n```\n\n**Example 2:**\n```\nInput: numCourses = 2, prerequisites = [[1,0],[0,1]]\nOutput: false\nExplanation: To take course 1 you need course 0, and to take course 0 you need course 1. Impossible.\n```\n\n**Constraints:**\n- 1 <= numCourses <= 2000\n- 0 <= prerequisites.length <= 5000\n- prerequisites[i].length == 2\n- 0 <= ai, bi < numCourses\n- All the pairs prerequisites[i] are unique.",
+          "targetComplexity": "O(V + E)",
+          "testCases": [
+            {
+              "input": "2, [[1,0]]",
+              "expectedOutput": "true",
+              "isHidden": false,
+              "explanation": "Linear dependency, no cycle"
+            },
+            {
+              "input": "2, [[1,0],[0,1]]",
+              "expectedOutput": "false",
+              "isHidden": false,
+              "explanation": "Circular dependency"
+            },
+            {
+              "input": "3, [[1,0],[2,1]]",
+              "expectedOutput": "true",
+              "isHidden": true,
+              "explanation": "Chain of dependencies"
+            },
+            {
+              "input": "1, []",
+              "expectedOutput": "true",
+              "isHidden": true,
+              "explanation": "Single course, no prerequisites"
+            },
+            {
+              "input": "4, [[1,0],[2,1],[3,2],[1,3]]",
+              "expectedOutput": "false",
+              "isHidden": true,
+              "explanation": "Cycle: 1->2->3->1"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "DFS",
+                  "acceptableVariants": ["DFS cycle detection", "topological sort", "graph coloring"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Build directed graph; DFS with 3-state coloring (unvisited, visiting, visited); cycle exists if we reach a 'visiting' node",
+                  "keywords": ["directed", "cycle", "coloring", "visiting", "visited"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(V + E)",
+                  "acceptableVariants": ["O(n + m)", "linear"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correctly detects cycles", "Handles disconnected components"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(V+E) time", "Single traversal"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear state management"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "A cycle in a directed graph means we can reach a node that's currently in our DFS stack (visiting state)",
+                  "isCorrect": true,
+                  "feedback": "Correct! Three states distinguish: unvisited, currently-being-explored (visiting), and fully-explored (visited)."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "Any revisited node indicates a cycle",
+                  "isCorrect": false,
+                  "feedback": "In directed graphs, revisiting a fully-visited node is fine. Only revisiting a 'visiting' node indicates a cycle."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "two.*state|visited.*only|boolean.*visited",
+              "errorType": "TWO_STATE_VISITED",
+              "microLessonRef": "ml-dfs-104",
+              "feedback": "For directed graph cycle detection, use THREE states: unvisited, visiting, visited."
+            },
+            {
+              "pattern": "undirected|both.*direction",
+              "errorType": "WRONG_GRAPH_TYPE",
+              "microLessonRef": "ml-dfs-105",
+              "feedback": "Prerequisites form a DIRECTED graph. [a, b] means b -> a, not bidirectional."
+            },
+            {
+              "pattern": "disconnect|not.*all.*nodes",
+              "errorType": "DISCONNECTED_GRAPH",
+              "microLessonRef": "ml-dfs-106",
+              "feedback": "The graph may be disconnected. Run DFS from every unvisited node."
+            }
+          ],
+          "microLessonRefs": ["ml-dfs-102", "ml-dfs-104", "ml-dfs-105", "ml-dfs-106"],
+          "hints": [
+            "Model as directed graph: prerequisite[i] = [a, b] means edge b -> a.",
+            "The question is: does this directed graph have a cycle?",
+            "Use 3-state DFS: 0 = unvisited, 1 = visiting (in current path), 2 = visited.",
+            "If we reach a node with state 1, we found a cycle.",
+            "Run DFS from every node to handle disconnected components."
+          ]
+        },
+        {
+          "problemId": "dfs-r2-sibling-2",
+          "title": "Pacific Atlantic Water Flow",
+          "statement": "There is an `m x n` rectangular island that borders both the Pacific Ocean and Atlantic Ocean. The Pacific Ocean touches the island's left and top edges, and the Atlantic Ocean touches the island's right and bottom edges.\n\nThe island is partitioned into a grid of square cells. You are given an `m x n` integer matrix `heights` where `heights[r][c]` represents the height above sea level of the cell at coordinate `(r, c)`.\n\nThe island receives a lot of rain, and the rain water can flow to neighboring cells directly north, south, east, and west if the neighboring cell's height is less than or equal to the current cell's height. Water can flow from any cell adjacent to an ocean into the ocean.\n\nReturn a 2D list of grid coordinates `result` where `result[i] = [ri, ci]` denotes that rain water can flow from cell `(ri, ci)` to both the Pacific and Atlantic oceans.\n\n**Example 1:**\n```\nInput: heights = [[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]\nOutput: [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]\n```\n\n**Example 2:**\n```\nInput: heights = [[1]]\nOutput: [[0,0]]\n```\n\n**Constraints:**\n- m == heights.length\n- n == heights[r].length\n- 1 <= m, n <= 200\n- 0 <= heights[r][c] <= 10^5",
+          "targetComplexity": "O(m*n)",
+          "testCases": [
+            {
+              "input": "[[1,2,2,3,5],[3,2,3,4,4],[2,4,5,3,1],[6,7,1,4,5],[5,1,1,2,4]]",
+              "expectedOutput": "[[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]",
+              "isHidden": false,
+              "explanation": "Cells reachable from both oceans"
+            },
+            {
+              "input": "[[1]]",
+              "expectedOutput": "[[0,0]]",
+              "isHidden": false,
+              "explanation": "Single cell reaches both"
+            },
+            {
+              "input": "[[1,1],[1,1]]",
+              "expectedOutput": "[[0,0],[0,1],[1,0],[1,1]]",
+              "isHidden": true,
+              "explanation": "All cells reach both (flat terrain)"
+            },
+            {
+              "input": "[[10,10,10],[10,1,10],[10,10,10]]",
+              "expectedOutput": "[[0,0],[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[2,2]]",
+              "isHidden": true,
+              "explanation": "Border cells reach both, center doesn't"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "DFS",
+                  "acceptableVariants": ["DFS", "BFS", "reverse flow", "two-pass"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "DFS from ocean borders going uphill (reverse flow); find cells reachable from Pacific and from Atlantic; return intersection",
+                  "keywords": ["reverse", "uphill", "Pacific", "Atlantic", "intersection"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(m*n)",
+                  "acceptableVariants": ["O(m*n) time and space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correct flow direction", "Handles all edge cases"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(m*n) time", "Two DFS passes"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear reachability tracking"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Reverse the problem: DFS from oceans going uphill, rather than from each cell going downhill to both oceans",
+                  "isCorrect": true,
+                  "feedback": "Correct! Going uphill from ocean borders is more efficient than checking each cell individually."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "DFS from each cell to see if it reaches both oceans",
+                  "isCorrect": false,
+                  "feedback": "That's O(m²n²). Reversing the flow direction gives O(mn)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "downhill|flow.*down|height.*<",
+              "errorType": "WRONG_DIRECTION",
+              "microLessonRef": "ml-dfs-107",
+              "feedback": "DFS from ocean going UPHILL (>=), not downhill. We're finding cells that CAN reach ocean."
+            },
+            {
+              "pattern": "from.*each.*cell|O\\(n\\^2.*m\\^2\\)",
+              "errorType": "INEFFICIENT_APPROACH",
+              "microLessonRef": "ml-dfs-108",
+              "feedback": "Don't DFS from each cell. DFS from all Pacific borders, then all Atlantic borders, then intersect."
+            }
+          ],
+          "microLessonRefs": ["ml-dfs-102", "ml-dfs-107", "ml-dfs-108"],
+          "hints": [
+            "Reverse the problem: instead of 'can cell reach ocean?', ask 'can ocean reach cell?'",
+            "Water flows downhill, so going from ocean to cells means going UPHILL (>=).",
+            "DFS from all Pacific-touching cells, marking reachable cells.",
+            "DFS from all Atlantic-touching cells, marking reachable cells.",
+            "Answer = cells marked in BOTH sets."
+          ]
+        },
+        {
+          "problemId": "dfs-r2-sibling-3",
+          "title": "All Paths From Source to Target",
+          "statement": "Given a directed acyclic graph (DAG) of `n` nodes labeled from `0` to `n - 1`, find all possible paths from node `0` to node `n - 1` and return them in any order.\n\nThe graph is given as follows: `graph[i]` is a list of all nodes you can visit from node `i` (i.e., there is a directed edge from node `i` to node `graph[i][j]`).\n\n**Example 1:**\n```\nInput: graph = [[1,2],[3],[3],[]]\n0 -> 1 -> 3\n0 -> 2 -> 3\nOutput: [[0,1,3],[0,2,3]]\n```\n\n**Example 2:**\n```\nInput: graph = [[4,3,1],[3,2,4],[3],[4],[]]\nOutput: [[0,4],[0,3,4],[0,1,3,4],[0,1,2,3,4],[0,1,4]]\n```\n\n**Constraints:**\n- n == graph.length\n- 2 <= n <= 15\n- 0 <= graph[i][j] < n\n- graph[i][j] != i (i.e., there will be no self-loops)\n- All the elements of graph[i] are unique.\n- The input graph is guaranteed to be a DAG.",
+          "targetComplexity": "O(2^n * n)",
+          "testCases": [
+            {
+              "input": "[[1,2],[3],[3],[]]",
+              "expectedOutput": "[[0,1,3],[0,2,3]]",
+              "isHidden": false,
+              "explanation": "Two paths from 0 to 3"
+            },
+            {
+              "input": "[[4,3,1],[3,2,4],[3],[4],[]]",
+              "expectedOutput": "[[0,4],[0,3,4],[0,1,3,4],[0,1,2,3,4],[0,1,4]]",
+              "isHidden": false,
+              "explanation": "Multiple paths to node 4"
+            },
+            {
+              "input": "[[1],[]]",
+              "expectedOutput": "[[0,1]]",
+              "isHidden": true,
+              "explanation": "Single path"
+            },
+            {
+              "input": "[[1,2],[2],[]]",
+              "expectedOutput": "[[0,1,2],[0,2]]",
+              "isHidden": true,
+              "explanation": "Diamond shape"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "DFS",
+                  "acceptableVariants": ["DFS", "backtracking", "path enumeration"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "DFS from node 0; track current path; when reaching n-1, add path to results; backtrack to explore other branches",
+                  "keywords": ["path", "backtrack", "n-1", "enumerate", "DAG"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(2^n * n)",
+                  "acceptableVariants": ["exponential", "O(paths * path_length)"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Finds all paths", "Correct backtracking"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["Proper backtracking", "No duplicate work"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear path building"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Since it's a DAG, no cycles exist, so we don't need a visited set - we can revisit nodes on different paths",
+                  "isCorrect": true,
+                  "feedback": "Correct! DAG guarantees no cycles. Different paths can share intermediate nodes."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need a visited set to avoid infinite loops",
+                  "isCorrect": false,
+                  "feedback": "The graph is a DAG (no cycles), so infinite loops are impossible. We WANT to revisit nodes on different paths."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "visited.*set|skip.*visited",
+              "errorType": "UNNECESSARY_VISITED",
+              "microLessonRef": "ml-dfs-109",
+              "feedback": "In a DAG, we don't need a visited set. Different paths may share nodes, and we want to find all of them."
+            },
+            {
+              "pattern": "shallow.*copy|path.*reference",
+              "errorType": "PATH_COPY",
+              "microLessonRef": "ml-dfs-110",
+              "feedback": "Add a COPY of the path to results, not a reference. Otherwise, backtracking modifies saved results."
+            }
+          ],
+          "microLessonRefs": ["ml-dfs-102", "ml-dfs-109", "ml-dfs-110"],
+          "hints": [
+            "DFS from node 0, building the current path.",
+            "When reaching node n-1, add a copy of the current path to results.",
+            "After exploring a node, remove it from path (backtrack).",
+            "No visited set needed - it's a DAG, so no cycles.",
+            "Be careful to add copies of paths, not references."
+          ]
+        }
+      ]
+    }
+  },
+  "microLessons": {
+    "ml-dfs-001": {
+      "id": "ml-dfs-001",
+      "title": "Base Case for Tree DFS",
+      "content": "Every recursive DFS on trees needs a base case for null nodes:\n\n```python\ndef dfs(node):\n    # Base case: empty tree/subtree\n    if node is None:\n        return base_value  # e.g., 0 for depth, True for valid, etc.\n    \n    # Recursive case\n    left_result = dfs(node.left)\n    right_result = dfs(node.right)\n    \n    return combine(left_result, right_result, node.val)\n```\n\n**Common base values:**\n- Depth/Height: return 0\n- Sum: return 0\n- Valid/Check: return True\n- Find: return None\n\nForgetting the base case causes NullPointerException or infinite recursion."
+    },
+    "ml-dfs-002": {
+      "id": "ml-dfs-002",
+      "title": "Recursion Stack Overflow",
+      "content": "Recursive DFS uses the call stack, which has limits:\n\n**Problem:** Very deep trees cause stack overflow\n```python\n# Python default: ~1000 frames\n# Can increase with sys.setrecursionlimit()\n```\n\n**Solution:** Iterative DFS with explicit stack\n```python\ndef iterative_dfs(root):\n    if not root:\n        return result\n    \n    stack = [root]\n    while stack:\n        node = stack.pop()\n        # Process node\n        if node.right:\n            stack.append(node.right)\n        if node.left:\n            stack.append(node.left)\n```\n\n**Space complexity:**\n- Recursive: O(h) call stack\n- Iterative: O(h) explicit stack\n- Same asymptotically, but iterative avoids system limits"
+    },
+    "ml-dfs-003": {
+      "id": "ml-dfs-003",
+      "title": "Height vs Depth vs Level",
+      "content": "These terms have specific meanings:\n\n```\n        1        <- Level 0 (depth 0)\n       / \\\n      2   3      <- Level 1 (depth 1)\n     / \\\n    4   5        <- Level 2 (depth 2)\n```\n\n**Depth of a node:** Distance from root to that node (root has depth 0)\n\n**Height of a node:** Distance from that node to its deepest descendant leaf\n- Height of leaf = 0\n- Height of tree = height of root\n\n**Level:** Same as depth (root at level 0)\n\n**Common confusion:**\n- Some define height of null as -1 (then leaf height = 0)\n- Some define height of null as 0 (then leaf height = 1)\n- Be consistent with the problem's definition!"
+    },
+    "ml-dfs-004": {
+      "id": "ml-dfs-004",
+      "title": "Checking at Leaf Nodes",
+      "content": "For path problems, only check conditions at LEAF nodes:\n\n```python\ndef path_sum(node, target):\n    if node is None:\n        return False\n    \n    # Reduce target\n    target -= node.val\n    \n    # Check ONLY at leaf\n    if node.left is None and node.right is None:\n        return target == 0\n    \n    # Recurse on children\n    return path_sum(node.left, target) or path_sum(node.right, target)\n```\n\n**Leaf definition:** Both children are null\n```python\nis_leaf = node.left is None and node.right is None\n```\n\n**Common mistake:** Checking when target == 0 at any node, not just leaves."
+    },
+    "ml-dfs-005": {
+      "id": "ml-dfs-005",
+      "title": "Empty Tree Edge Cases",
+      "content": "Handle empty trees explicitly:\n\n```python\n# Path Sum: empty tree has no paths\nif root is None:\n    return False  # NOT True even if target == 0\n\n# Max Depth: empty tree has depth 0\nif root is None:\n    return 0\n\n# Valid BST: empty tree is valid\nif root is None:\n    return True\n```\n\n**Key insight:** An empty tree has NO paths, so path-related questions typically return False or empty list.\n\n**Don't confuse with:**\n- Single node (which IS a valid path from root to leaf)\n- Zero target sum (which requires an actual path)"
+    },
+    "ml-dfs-006": {
+      "id": "ml-dfs-006",
+      "title": "LCA Recursive Solution",
+      "content": "Elegant O(n) solution without storing paths:\n\n```python\ndef lowestCommonAncestor(root, p, q):\n    # Base case\n    if root is None or root == p or root == q:\n        return root\n    \n    # Recurse\n    left = lowestCommonAncestor(root.left, p, q)\n    right = lowestCommonAncestor(root.right, p, q)\n    \n    # If both found, root is LCA\n    if left and right:\n        return root\n    \n    # Otherwise, return whichever is non-null\n    return left if left else right\n```\n\n**Why it works:**\n1. If current node is p or q, return it\n2. Recurse on both subtrees\n3. If both return non-null, both p and q found in different subtrees → current is LCA\n4. If only one non-null, that side has both or the found node is LCA"
+    },
+    "ml-dfs-007": {
+      "id": "ml-dfs-007",
+      "title": "When to Check Current Node",
+      "content": "In tree DFS, order of checking current node matters:\n\n**Check BEFORE recursing (pre-order style):**\n```python\ndef find(node, target):\n    if node is None:\n        return False\n    if node.val == target:  # Check first\n        return True\n    return find(node.left, target) or find(node.right, target)\n```\n\n**Check AFTER recursing (post-order style):**\n```python\ndef height(node):\n    if node is None:\n        return 0\n    left = height(node.left)   # Recurse first\n    right = height(node.right)\n    return 1 + max(left, right)  # Then compute\n```\n\n**LCA combines both:** Check current, then recurse, then decide based on results."
+    },
+    "ml-dfs-008": {
+      "id": "ml-dfs-008",
+      "title": "Counting Edges vs Nodes",
+      "content": "Path length can be measured two ways:\n\n```\nPath: 1 -> 2 -> 3 -> 4\nNodes: 4\nEdges: 3\n```\n\n**Diameter asks for EDGES:**\n- leftHeight + rightHeight gives edges\n- Each height is number of edges to deepest leaf\n\n**If a problem asks for nodes:**\n- Add 1 to edge count\n- Or count nodes directly in recursion\n\n**Example:**\n```python\n# Height = edges from node to deepest leaf\ndef height(node):\n    if node is None:\n        return 0  # Or -1, depending on convention\n    return 1 + max(height(node.left), height(node.right))\n\n# Diameter at node = left_height + right_height (edges through node)\n```"
+    },
+    "ml-dfs-009": {
+      "id": "ml-dfs-009",
+      "title": "Diameter May Not Pass Through Root",
+      "content": "The longest path might be entirely in one subtree:\n\n```\n        1\n       /\n      2\n     / \\\n    3   4\n   /     \\\n  5       6\n```\n\nLongest path: 5-3-2-4-6 (4 edges), doesn't include root 1!\n\n**Solution:** Check diameter at EVERY node:\n\n```python\nclass Solution:\n    def __init__(self):\n        self.max_diameter = 0\n    \n    def diameterOfBinaryTree(self, root):\n        self.height(root)\n        return self.max_diameter\n    \n    def height(self, node):\n        if node is None:\n            return 0\n        \n        left = self.height(node.left)\n        right = self.height(node.right)\n        \n        # Update global max\n        self.max_diameter = max(self.max_diameter, left + right)\n        \n        return 1 + max(left, right)\n```"
+    },
+    "ml-dfs-101": {
+      "id": "ml-dfs-101",
+      "title": "Deep Copy vs Shallow Copy",
+      "content": "When cloning graphs:\n\n**Shallow copy (WRONG):**\n```python\nclone = original  # Same object, not a copy\nclone.neighbors = original.neighbors  # Same list!\n```\n\n**Deep copy (CORRECT):**\n```python\nclone = Node(original.val)  # New object\nclone.neighbors = []  # New list\nfor neighbor in original.neighbors:\n    clone.neighbors.append(clone_of(neighbor))  # Cloned neighbors\n```\n\n**Key principle:** Every node in the clone should be a NEW object, with no references to original graph nodes."
+    },
+    "ml-dfs-102": {
+      "id": "ml-dfs-102",
+      "title": "Tracking Visited in Graphs",
+      "content": "Unlike trees, graphs can have cycles. Must track visited:\n\n```python\ndef dfs_graph(node, visited):\n    if node in visited:\n        return  # Already processed\n    \n    visited.add(node)\n    \n    for neighbor in node.neighbors:\n        dfs_graph(neighbor, visited)\n```\n\n**For clone graph, the visited map serves dual purpose:**\n```python\n# old_to_new: tracks visited AND stores clones\ndef clone(node, old_to_new):\n    if node in old_to_new:\n        return old_to_new[node]  # Return existing clone\n    \n    copy = Node(node.val)\n    old_to_new[node] = copy  # Mark visited & store clone\n    \n    for neighbor in node.neighbors:\n        copy.neighbors.append(clone(neighbor, old_to_new))\n    \n    return copy\n```"
+    },
+    "ml-dfs-103": {
+      "id": "ml-dfs-103",
+      "title": "Clone Node Before Recursing",
+      "content": "Order matters when cloning:\n\n```python\n# CORRECT: Create clone first, add to map, then recurse\ndef clone(node, mapping):\n    if node in mapping:\n        return mapping[node]\n    \n    copy = Node(node.val)      # 1. Create clone\n    mapping[node] = copy       # 2. Add to map (marks as visited)\n    \n    for neighbor in node.neighbors:\n        copy.neighbors.append(clone(neighbor, mapping))  # 3. Then recurse\n    \n    return copy\n\n# WRONG: Recurse before adding to map\ndef clone_wrong(node, mapping):\n    copy = Node(node.val)\n    for neighbor in node.neighbors:\n        copy.neighbors.append(clone_wrong(neighbor, mapping))  # Recurses before adding!\n    mapping[node] = copy  # Too late - cycles cause infinite recursion\n    return copy\n```"
+    },
+    "ml-dfs-104": {
+      "id": "ml-dfs-104",
+      "title": "Three-State Cycle Detection",
+      "content": "For directed graphs, use three states:\n\n```python\nWHITE = 0  # Unvisited\nGRAY = 1   # Currently visiting (in current DFS path)\nBLACK = 2  # Fully visited (all descendants explored)\n\ndef has_cycle(node, color):\n    color[node] = GRAY  # Start visiting\n    \n    for neighbor in graph[node]:\n        if color[neighbor] == GRAY:\n            return True  # Back edge = cycle!\n        if color[neighbor] == WHITE:\n            if has_cycle(neighbor, color):\n                return True\n    \n    color[node] = BLACK  # Done visiting\n    return False\n```\n\n**Why three states?**\n- GRAY to GRAY: cycle in current path (back edge)\n- WHITE to BLACK: cross edge to already-finished node (no cycle)\n- Two states can't distinguish these!"
+    },
+    "ml-dfs-105": {
+      "id": "ml-dfs-105",
+      "title": "Building Directed Graphs",
+      "content": "For prerequisites/dependencies, build a directed graph:\n\n```python\n# prerequisites[i] = [course, prereq]\n# Meaning: to take 'course', must first take 'prereq'\n# Edge direction: prereq -> course\n\ngraph = defaultdict(list)\nfor course, prereq in prerequisites:\n    graph[prereq].append(course)  # prereq points to course\n\n# OR reverse direction if checking \"what do I need before X\"\nfor course, prereq in prerequisites:\n    graph[course].append(prereq)  # course points to its prereqs\n```\n\n**Direction matters for:**\n- Cycle detection (which way do dependencies flow?)\n- Topological sort (process prereqs before dependents)"
+    },
+    "ml-dfs-106": {
+      "id": "ml-dfs-106",
+      "title": "Handling Disconnected Graphs",
+      "content": "Graphs may not be connected. Start DFS from all nodes:\n\n```python\ndef can_finish(numCourses, prerequisites):\n    # Build graph...\n    \n    color = [WHITE] * numCourses\n    \n    # Check EVERY node, not just node 0\n    for course in range(numCourses):\n        if color[course] == WHITE:\n            if has_cycle(course, color, graph):\n                return False\n    \n    return True\n```\n\n**Why this matters:**\n- Some nodes might have no edges\n- Multiple disconnected components\n- A cycle could be in any component"
+    },
+    "ml-dfs-107": {
+      "id": "ml-dfs-107",
+      "title": "Reversing DFS Direction",
+      "content": "Sometimes it's more efficient to DFS in reverse:\n\n**Forward (often inefficient):**\n- From each cell, can I reach the ocean?\n- O(m*n) cells × O(m*n) DFS each = O(m²n²)\n\n**Reverse (efficient):**\n- From ocean, which cells can reach me?\n- O(m*n) total for all DFS from border\n\n```python\n# Pacific Atlantic Water Flow\n# Instead of: for each cell, check if it reaches Pacific AND Atlantic\n# Do: from Pacific border, DFS uphill to mark all reachable\n#     from Atlantic border, DFS uphill to mark all reachable\n#     return intersection\n\ndef dfs(r, c, reachable, prev_height):\n    if (r, c) in reachable:\n        return\n    if heights[r][c] < prev_height:  # Can't flow uphill\n        return\n    \n    reachable.add((r, c))\n    for dr, dc in directions:\n        dfs(r + dr, c + dc, reachable, heights[r][c])\n```"
+    },
+    "ml-dfs-108": {
+      "id": "ml-dfs-108",
+      "title": "Efficient Multi-Source DFS",
+      "content": "When checking reachability from multiple sources:\n\n**Inefficient: DFS from each cell**\n```python\nresult = []\nfor r in range(m):\n    for c in range(n):\n        if can_reach_pacific(r, c) and can_reach_atlantic(r, c):\n            result.append([r, c])\n```\n\n**Efficient: DFS from all sources at once**\n```python\n# Mark all cells reachable from Pacific\npacific_reachable = set()\nfor c in range(n):\n    dfs(0, c, pacific_reachable)  # Top row\nfor r in range(m):\n    dfs(r, 0, pacific_reachable)  # Left column\n\n# Mark all cells reachable from Atlantic\natlantic_reachable = set()\nfor c in range(n):\n    dfs(m-1, c, atlantic_reachable)  # Bottom row\nfor r in range(m):\n    dfs(r, n-1, atlantic_reachable)  # Right column\n\n# Intersection\nresult = pacific_reachable & atlantic_reachable\n```"
+    },
+    "ml-dfs-109": {
+      "id": "ml-dfs-109",
+      "title": "DAG Requires No Visited Set",
+      "content": "In a Directed Acyclic Graph (DAG):\n\n```python\n# Finding ALL paths - don't use visited!\ndef all_paths(node, target, path, results):\n    path.append(node)\n    \n    if node == target:\n        results.append(list(path))  # Found a path\n    else:\n        for neighbor in graph[node]:\n            all_paths(neighbor, target, path, results)  # No visited check!\n    \n    path.pop()  # Backtrack\n```\n\n**Why no visited?**\n- DAG has no cycles, so no infinite loops\n- We WANT to visit nodes multiple times on different paths\n- Visited set would miss valid paths\n\n**Compare with cycle detection:**\n- Cycle detection: mark visited to detect back edges\n- Path enumeration: don't mark visited, enumerate all paths"
+    },
+    "ml-dfs-110": {
+      "id": "ml-dfs-110",
+      "title": "Copying Paths Correctly",
+      "content": "When saving paths, copy the list:\n\n```python\n# WRONG: Saves reference\nif node == target:\n    results.append(path)  # path will be modified later!\n\n# CORRECT: Saves copy\nif node == target:\n    results.append(list(path))  # New list with same elements\n    # Or: results.append(path[:])  # Slice copy\n    # Or: results.append(path.copy())  # Explicit copy\n```\n\n**Why this matters:**\n```python\npath = [0, 1, 2]\nresults.append(path)\npath.pop()  # Modifies the list in results too!\npath.append(3)\n# results[0] is now [0, 1, 3], not [0, 1, 2]!\n```\n\nAlways copy mutable objects when saving them."
+    },
+    "ml-dfs-tree-intro": {
+      "id": "ml-dfs-tree-intro",
+      "title": "Introduction to Tree DFS",
+      "content": "DFS on binary trees naturally follows the recursive structure:\n\n```python\ndef dfs(node):\n    if node is None:        # Base case\n        return base_value\n    \n    # Option 1: Pre-order (process before children)\n    process(node)\n    dfs(node.left)\n    dfs(node.right)\n    \n    # Option 2: In-order (process between children)\n    dfs(node.left)\n    process(node)\n    dfs(node.right)\n    \n    # Option 3: Post-order (process after children)\n    left_result = dfs(node.left)\n    right_result = dfs(node.right)\n    return combine(left_result, right_result, node)\n```\n\n**Common patterns:**\n- Height/Depth: post-order, combine with max\n- Path sum: pre-order, track remaining sum\n- Validate BST: in-order, check sorted property"
+    },
+    "ml-dfs-graph-intro": {
+      "id": "ml-dfs-graph-intro",
+      "title": "Introduction to Graph DFS",
+      "content": "Graphs differ from trees:\n1. Can have cycles\n2. May be disconnected\n3. Edges can be directed or undirected\n\n```python\ndef dfs_graph(start, graph):\n    visited = set()\n    \n    def dfs(node):\n        if node in visited:\n            return\n        visited.add(node)\n        \n        for neighbor in graph[node]:\n            dfs(neighbor)\n    \n    dfs(start)\n    return visited\n```\n\n**Key differences from tree DFS:**\n- Must track visited (cycles possible)\n- May need to start from multiple nodes (disconnected)\n- Edge direction matters for directed graphs\n\n**Applications:**\n- Connected components\n- Cycle detection\n- Topological sort\n- Path finding"
+    }
+  }
+}

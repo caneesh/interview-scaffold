@@ -1,0 +1,1356 @@
+{
+  "packId": "greedy-v1",
+  "pattern": "GREEDY",
+  "version": "1.0.0",
+  "rungs": [
+    {
+      "rungLevel": 1,
+      "theme": "Selection Greedy",
+      "canonical": {
+        "problemId": "jump-game",
+        "title": "Jump Game",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 20,
+        "description": "You are given an integer array nums. You are initially positioned at the array's first index, and each element in the array represents your maximum jump length at that position. Return true if you can reach the last index, or false otherwise.",
+        "examples": [
+          {
+            "input": "nums = [2,3,1,1,4]",
+            "output": "true",
+            "explanation": "Jump 1 step from index 0 to 1, then 3 steps to the last index."
+          },
+          {
+            "input": "nums = [3,2,1,0,4]",
+            "output": "false",
+            "explanation": "You will always arrive at index 3. Its maximum jump length is 0, so you can't proceed."
+          }
+        ],
+        "constraints": [
+          "1 <= nums.length <= 10^4",
+          "0 <= nums[i] <= 10^5"
+        ],
+        "starterCode": {
+          "python": "def canJump(nums: List[int]) -> bool:\n    pass",
+          "typescript": "function canJump(nums: number[]): boolean {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def canJump(nums: List[int]) -> bool:\n    max_reach = 0\n    for i in range(len(nums)):\n        if i > max_reach:\n            return False\n        max_reach = max(max_reach, i + nums[i])\n    return True",
+          "typescript": "function canJump(nums: number[]): boolean {\n    let maxReach = 0;\n    for (let i = 0; i < nums.length; i++) {\n        if (i > maxReach) return false;\n        maxReach = Math.max(maxReach, i + nums[i]);\n    }\n    return true;\n}"
+        },
+        "testCases": [
+          {"input": {"nums": [2, 3, 1, 1, 4]}, "expected": true},
+          {"input": {"nums": [3, 2, 1, 0, 4]}, "expected": false},
+          {"input": {"nums": [0]}, "expected": true},
+          {"input": {"nums": [2, 0, 0]}, "expected": true},
+          {"input": {"nums": [1, 1, 1, 1]}, "expected": true},
+          {"input": {"nums": [1, 0, 1, 0]}, "expected": false}
+        ],
+        "steps": [
+          {
+            "stepId": "jump-game-think",
+            "type": "THINKING_GATE",
+            "prompt": "Before coding, think: what greedy insight lets you solve this in one pass? What single value do you need to track? When is it impossible to continue?",
+            "hints": [
+              "Track the farthest index you can reach so far",
+              "At each position, update max_reach = max(max_reach, i + nums[i])",
+              "If current index > max_reach, you can't get here - return False"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies tracking maximum reachable index as the greedy insight",
+                "points": 2,
+                "errorMappings": ["greedy_insight_missed", "greedy_vs_dp_confusion"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands that we greedily extend reach at each step",
+                "points": 2,
+                "errorMappings": ["greedy_invariant_wrong", "greedy_local_vs_global"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(n) time, O(1) space",
+                "points": 1,
+                "errorMappings": ["greedy_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "jump-game-code",
+            "type": "CODING",
+            "prompt": "Implement the greedy solution. Track max_reach and check at each step if you can actually reach the current position.",
+            "hints": [
+              "Initialize max_reach = 0",
+              "Loop through indices, check if i > max_reach first",
+              "Update max_reach after the reachability check"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly tracks and updates maximum reach",
+                "points": 2,
+                "errorMappings": ["greedy_tracking_wrong", "greedy_update_order_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Checks reachability before processing each position",
+                "points": 2,
+                "errorMappings": ["greedy_check_order_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Single pass solution with no extra data structures",
+                "points": 1,
+                "errorMappings": ["greedy_suboptimal_solution"]
+              }
+            }
+          },
+          {
+            "stepId": "jump-game-reflect",
+            "type": "REFLECTION",
+            "prompt": "How would you modify this to find the minimum number of jumps (Jump Game II)? Why does greedy work here but not for all jump problems?",
+            "hints": [
+              "Jump Game II: track current jump's boundary, increment jumps when you cross it",
+              "Greedy works because we only care about reachability, not the path"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Can extend to minimum jumps variant",
+                "points": 2,
+                "errorMappings": ["greedy_variant_not_understood"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands why greedy is valid for this problem",
+                "points": 2,
+                "errorMappings": ["greedy_correctness_not_understood"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Both variants are O(n)",
+                "points": 1,
+                "errorMappings": ["greedy_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "best-time-to-buy-sell-stock-ii",
+          "title": "Best Time to Buy and Sell Stock II",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 15,
+          "description": "You are given an integer array prices where prices[i] is the price of a given stock on the ith day. On each day, you may decide to buy and/or sell the stock. You can only hold at most one share of the stock at any time. However, you can buy it then immediately sell it on the same day. Find and return the maximum profit you can achieve.",
+          "examples": [
+            {
+              "input": "prices = [7,1,5,3,6,4]",
+              "output": "7",
+              "explanation": "Buy on day 2 (price = 1) and sell on day 3 (price = 5), profit = 4. Then buy on day 4 (price = 3) and sell on day 5 (price = 6), profit = 3. Total profit = 7."
+            },
+            {
+              "input": "prices = [1,2,3,4,5]",
+              "output": "4",
+              "explanation": "Buy on day 1 (price = 1) and sell on day 5 (price = 5), profit = 4."
+            },
+            {
+              "input": "prices = [7,6,4,3,1]",
+              "output": "0",
+              "explanation": "No profitable transactions possible."
+            }
+          ],
+          "constraints": [
+            "1 <= prices.length <= 3 * 10^4",
+            "0 <= prices[i] <= 10^4"
+          ],
+          "starterCode": {
+            "python": "def maxProfit(prices: List[int]) -> int:\n    pass",
+            "typescript": "function maxProfit(prices: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def maxProfit(prices: List[int]) -> int:\n    profit = 0\n    for i in range(1, len(prices)):\n        if prices[i] > prices[i-1]:\n            profit += prices[i] - prices[i-1]\n    return profit",
+            "typescript": "function maxProfit(prices: number[]): number {\n    let profit = 0;\n    for (let i = 1; i < prices.length; i++) {\n        if (prices[i] > prices[i-1]) {\n            profit += prices[i] - prices[i-1];\n        }\n    }\n    return profit;\n}"
+          },
+          "testCases": [
+            {"input": {"prices": [7, 1, 5, 3, 6, 4]}, "expected": 7},
+            {"input": {"prices": [1, 2, 3, 4, 5]}, "expected": 4},
+            {"input": {"prices": [7, 6, 4, 3, 1]}, "expected": 0},
+            {"input": {"prices": [1]}, "expected": 0},
+            {"input": {"prices": [1, 2]}, "expected": 1}
+          ],
+          "steps": [
+            {
+              "stepId": "stock-ii-think",
+              "type": "THINKING_GATE",
+              "prompt": "What's the greedy insight? How does capturing every upward movement relate to optimal profit?",
+              "hints": [
+                "Every upward price movement is a profit opportunity",
+                "Sum of all positive differences equals maximum profit",
+                "Think: 1→2→3 gives profit 2, same as (2-1) + (3-2) = 2"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Recognizes that all upward movements should be captured",
+                  "points": 2,
+                  "errorMappings": ["greedy_insight_missed", "stock_peak_valley_confusion"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands sum of positive differences = max profit",
+                  "points": 2,
+                  "errorMappings": ["greedy_invariant_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n) single pass solution",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "stock-ii-code",
+              "type": "CODING",
+              "prompt": "Implement the solution: add every positive price difference to profit.",
+              "hints": [
+                "Loop from index 1 to end",
+                "If prices[i] > prices[i-1], add the difference",
+                "Return total accumulated profit"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly captures all positive differences",
+                  "points": 2,
+                  "errorMappings": ["greedy_tracking_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles edge cases (single element, decreasing prices)",
+                  "points": 2,
+                  "errorMappings": ["greedy_edge_case_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Single pass with O(1) space",
+                  "points": 1,
+                  "errorMappings": ["greedy_suboptimal_solution"]
+                }
+              }
+            },
+            {
+              "stepId": "stock-ii-reflect",
+              "type": "REFLECTION",
+              "prompt": "Why is this equivalent to buying at valleys and selling at peaks? How does this differ from Stock I (one transaction only)?",
+              "hints": [
+                "Peak-to-valley equals sum of step-by-step gains within",
+                "Stock I needs to find single max difference, not sum all"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Connects daily gains to peak/valley strategy",
+                  "points": 2,
+                  "errorMappings": ["stock_peak_valley_confusion"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Distinguishes from single-transaction variant",
+                  "points": 2,
+                  "errorMappings": ["greedy_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both variants O(n) but different logic",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "assign-cookies",
+          "title": "Assign Cookies",
+          "difficulty": "EASY",
+          "estimatedMinutes": 15,
+          "description": "Assume you are an awesome parent and want to give your children some cookies. But, you should give each child at most one cookie. Each child i has a greed factor g[i], which is the minimum size of a cookie that the child will be content with; and each cookie j has a size s[j]. If s[j] >= g[i], we can assign the cookie j to the child i, and the child i will be content. Your goal is to maximize the number of your content children and output the maximum number.",
+          "examples": [
+            {
+              "input": "g = [1,2,3], s = [1,1]",
+              "output": "1",
+              "explanation": "You have 3 children and 2 cookies. The greed factors are 1, 2, 3. Only the child with greed 1 can be satisfied."
+            },
+            {
+              "input": "g = [1,2], s = [1,2,3]",
+              "output": "2",
+              "explanation": "You have 2 children and 3 cookies. Both children can be satisfied."
+            }
+          ],
+          "constraints": [
+            "1 <= g.length <= 3 * 10^4",
+            "0 <= s.length <= 3 * 10^4",
+            "1 <= g[i], s[j] <= 2^31 - 1"
+          ],
+          "starterCode": {
+            "python": "def findContentChildren(g: List[int], s: List[int]) -> int:\n    pass",
+            "typescript": "function findContentChildren(g: number[], s: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def findContentChildren(g: List[int], s: List[int]) -> int:\n    g.sort()\n    s.sort()\n    child = 0\n    cookie = 0\n    while child < len(g) and cookie < len(s):\n        if s[cookie] >= g[child]:\n            child += 1\n        cookie += 1\n    return child",
+            "typescript": "function findContentChildren(g: number[], s: number[]): number {\n    g.sort((a, b) => a - b);\n    s.sort((a, b) => a - b);\n    let child = 0, cookie = 0;\n    while (child < g.length && cookie < s.length) {\n        if (s[cookie] >= g[child]) {\n            child++;\n        }\n        cookie++;\n    }\n    return child;\n}"
+          },
+          "testCases": [
+            {"input": {"g": [1, 2, 3], "s": [1, 1]}, "expected": 1},
+            {"input": {"g": [1, 2], "s": [1, 2, 3]}, "expected": 2},
+            {"input": {"g": [1, 2, 3], "s": [3]}, "expected": 1},
+            {"input": {"g": [10, 9, 8, 7], "s": [5, 6, 7, 8]}, "expected": 2},
+            {"input": {"g": [1], "s": []}, "expected": 0}
+          ],
+          "steps": [
+            {
+              "stepId": "cookies-think",
+              "type": "THINKING_GATE",
+              "prompt": "Why should you sort both arrays? Which child should you try to satisfy first, and with which cookie?",
+              "hints": [
+                "Sort to enable greedy matching",
+                "Satisfy least greedy child first with smallest sufficient cookie",
+                "Don't waste a big cookie on a child who'd accept a smaller one"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies need to sort both arrays",
+                  "points": 2,
+                  "errorMappings": ["greedy_sorting_missed", "greedy_insight_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands greedy matching strategy",
+                  "points": 2,
+                  "errorMappings": ["greedy_matching_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n log n) due to sorting",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "cookies-code",
+              "type": "CODING",
+              "prompt": "Implement the two-pointer greedy solution after sorting both arrays.",
+              "hints": [
+                "Sort g and s",
+                "Use two pointers: child and cookie",
+                "If cookie satisfies child, move both; else just move cookie"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly implements two-pointer greedy",
+                  "points": 2,
+                  "errorMappings": ["greedy_two_pointer_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Moves pointers correctly based on match",
+                  "points": 2,
+                  "errorMappings": ["greedy_pointer_movement_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles empty arrays correctly",
+                  "points": 1,
+                  "errorMappings": ["greedy_edge_case_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "cookies-reflect",
+              "type": "REFLECTION",
+              "prompt": "Why is greedy optimal here? Could you solve this by satisfying the greediest child first instead?",
+              "hints": [
+                "Greedy is optimal: no benefit to giving bigger cookie than needed",
+                "Greediest-first also works if you use largest cookies first"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can prove greedy optimality",
+                  "points": 2,
+                  "errorMappings": ["greedy_correctness_not_understood"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands alternative greedy strategies",
+                  "points": 2,
+                  "errorMappings": ["greedy_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both strategies have same complexity",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "lemonade-change",
+          "title": "Lemonade Change",
+          "difficulty": "EASY",
+          "estimatedMinutes": 15,
+          "description": "At a lemonade stand, each lemonade costs $5. Customers are standing in a queue to buy from you and order one at a time (in the order specified by bills). Each customer will only buy one lemonade and pay with either a $5, $10, or $20 bill. You must provide the correct change to each customer so that the net transaction is that the customer pays $5. Return true if you can provide every customer with the correct change, or false otherwise.",
+          "examples": [
+            {
+              "input": "bills = [5,5,5,10,20]",
+              "output": "true",
+              "explanation": "From the first 3 customers, we collect three $5 bills. From the fourth, we give a $5 bill back. From the fifth, we give a $10 and a $5 bill."
+            },
+            {
+              "input": "bills = [5,5,10,10,20]",
+              "output": "false",
+              "explanation": "From the first two customers, we collect two $5 bills. For the next two customers, we give a $5 back each. For the last customer, we can't give $15 back."
+            }
+          ],
+          "constraints": [
+            "1 <= bills.length <= 10^5",
+            "bills[i] is either 5, 10, or 20"
+          ],
+          "starterCode": {
+            "python": "def lemonadeChange(bills: List[int]) -> bool:\n    pass",
+            "typescript": "function lemonadeChange(bills: number[]): boolean {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def lemonadeChange(bills: List[int]) -> bool:\n    five = ten = 0\n    for bill in bills:\n        if bill == 5:\n            five += 1\n        elif bill == 10:\n            if five == 0:\n                return False\n            five -= 1\n            ten += 1\n        else:  # bill == 20\n            if ten > 0 and five > 0:\n                ten -= 1\n                five -= 1\n            elif five >= 3:\n                five -= 3\n            else:\n                return False\n    return True",
+            "typescript": "function lemonadeChange(bills: number[]): boolean {\n    let five = 0, ten = 0;\n    for (const bill of bills) {\n        if (bill === 5) {\n            five++;\n        } else if (bill === 10) {\n            if (five === 0) return false;\n            five--;\n            ten++;\n        } else {\n            if (ten > 0 && five > 0) {\n                ten--;\n                five--;\n            } else if (five >= 3) {\n                five -= 3;\n            } else {\n                return false;\n            }\n        }\n    }\n    return true;\n}"
+          },
+          "testCases": [
+            {"input": {"bills": [5, 5, 5, 10, 20]}, "expected": true},
+            {"input": {"bills": [5, 5, 10, 10, 20]}, "expected": false},
+            {"input": {"bills": [5, 5, 10]}, "expected": true},
+            {"input": {"bills": [10, 10]}, "expected": false},
+            {"input": {"bills": [5, 5, 5, 5, 20, 20, 5, 5, 5, 5]}, "expected": true}
+          ],
+          "steps": [
+            {
+              "stepId": "lemonade-think",
+              "type": "THINKING_GATE",
+              "prompt": "What bills do you need to track? For a $20 bill, why should you prefer giving $10+$5 over $5+$5+$5?",
+              "hints": [
+                "Only track $5 and $10 bills (never give $20 as change)",
+                "$5 bills are more versatile - they make change for both $10 and $20",
+                "Preserve $5 bills by using $10 when possible"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies need to track $5 and $10 counts",
+                  "points": 2,
+                  "errorMappings": ["greedy_tracking_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands $5 preservation strategy",
+                  "points": 2,
+                  "errorMappings": ["greedy_local_vs_global", "lemonade_strategy_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n) time, O(1) space",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "lemonade-code",
+              "type": "CODING",
+              "prompt": "Implement the solution. Handle each bill type and prioritize using $10 bills for $20 change.",
+              "hints": [
+                "Case $5: just collect it",
+                "Case $10: need one $5",
+                "Case $20: prefer $10+$5, else use three $5s"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Handles all three bill cases correctly",
+                  "points": 2,
+                  "errorMappings": ["greedy_case_handling_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Prioritizes $10+$5 for $20 change",
+                  "points": 2,
+                  "errorMappings": ["lemonade_strategy_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Returns False immediately when change is impossible",
+                  "points": 1,
+                  "errorMappings": ["greedy_early_exit_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "lemonade-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you prove the greedy choice (prefer $10+$5) is always optimal? What if customers could pay with other denominations?",
+              "hints": [
+                "$5 is strictly more useful than $10 (works for both $10 and $20 customers)",
+                "More denominations would require tracking more counts and more complex priority"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can argue greedy correctness",
+                  "points": 2,
+                  "errorMappings": ["greedy_correctness_not_understood"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands generalization to more denominations",
+                  "points": 2,
+                  "errorMappings": ["greedy_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "More denominations = same time complexity",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rungLevel": 2,
+      "theme": "Interval and Scheduling Greedy",
+      "canonical": {
+        "problemId": "non-overlapping-intervals",
+        "title": "Non-overlapping Intervals",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 25,
+        "description": "Given an array of intervals intervals where intervals[i] = [starti, endi], return the minimum number of intervals you need to remove to make the rest of the intervals non-overlapping.",
+        "examples": [
+          {
+            "input": "intervals = [[1,2],[2,3],[3,4],[1,3]]",
+            "output": "1",
+            "explanation": "Remove [1,3] to make the rest non-overlapping."
+          },
+          {
+            "input": "intervals = [[1,2],[1,2],[1,2]]",
+            "output": "2",
+            "explanation": "You need to remove two [1,2] to make the rest non-overlapping."
+          },
+          {
+            "input": "intervals = [[1,2],[2,3]]",
+            "output": "0",
+            "explanation": "You don't need to remove any intervals since they're already non-overlapping."
+          }
+        ],
+        "constraints": [
+          "1 <= intervals.length <= 10^5",
+          "intervals[i].length == 2",
+          "-5 * 10^4 <= starti < endi <= 5 * 10^4"
+        ],
+        "starterCode": {
+          "python": "def eraseOverlapIntervals(intervals: List[List[int]]) -> int:\n    pass",
+          "typescript": "function eraseOverlapIntervals(intervals: number[][]): number {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def eraseOverlapIntervals(intervals: List[List[int]]) -> int:\n    intervals.sort(key=lambda x: x[1])\n    count = 0\n    prev_end = float('-inf')\n    for start, end in intervals:\n        if start >= prev_end:\n            prev_end = end\n        else:\n            count += 1\n    return count",
+          "typescript": "function eraseOverlapIntervals(intervals: number[][]): number {\n    intervals.sort((a, b) => a[1] - b[1]);\n    let count = 0;\n    let prevEnd = -Infinity;\n    for (const [start, end] of intervals) {\n        if (start >= prevEnd) {\n            prevEnd = end;\n        } else {\n            count++;\n        }\n    }\n    return count;\n}"
+        },
+        "testCases": [
+          {"input": {"intervals": [[1, 2], [2, 3], [3, 4], [1, 3]]}, "expected": 1},
+          {"input": {"intervals": [[1, 2], [1, 2], [1, 2]]}, "expected": 2},
+          {"input": {"intervals": [[1, 2], [2, 3]]}, "expected": 0},
+          {"input": {"intervals": [[1, 100], [11, 22], [1, 11], [2, 12]]}, "expected": 2},
+          {"input": {"intervals": [[0, 2], [1, 3], [2, 4], [3, 5], [4, 6]]}, "expected": 2}
+        ],
+        "steps": [
+          {
+            "stepId": "non-overlapping-think",
+            "type": "THINKING_GATE",
+            "prompt": "This is the classic interval scheduling problem. Should you sort by start time or end time? Why does sorting by end time lead to an optimal solution?",
+            "hints": [
+              "Sort by end time to maximize non-overlapping intervals",
+              "Early end time leaves more room for future intervals",
+              "This is the activity selection problem in disguise"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies interval scheduling / activity selection pattern",
+                "points": 2,
+                "errorMappings": ["greedy_interval_pattern_missed", "greedy_sorting_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands why sorting by end time is optimal",
+                "points": 2,
+                "errorMappings": ["greedy_sort_key_wrong", "greedy_correctness_not_understood"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(n log n) due to sorting",
+                "points": 1,
+                "errorMappings": ["greedy_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "non-overlapping-code",
+            "type": "CODING",
+            "prompt": "Sort by end time, then greedily select non-overlapping intervals. Count how many you need to remove.",
+            "hints": [
+              "Sort by interval[1] (end time)",
+              "Track prev_end, if start >= prev_end, keep interval and update prev_end",
+              "If start < prev_end, increment removal count"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Sorts by end time correctly",
+                "points": 2,
+                "errorMappings": ["greedy_sort_key_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Correctly identifies overlapping intervals",
+                "points": 2,
+                "errorMappings": ["greedy_interval_overlap_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Uses single pass after sorting",
+                "points": 1,
+                "errorMappings": ["greedy_suboptimal_solution"]
+              }
+            }
+          },
+          {
+            "stepId": "non-overlapping-reflect",
+            "type": "REFLECTION",
+            "prompt": "How does 'minimum removals' relate to 'maximum non-overlapping'? What if you sorted by start time instead?",
+            "hints": [
+              "min_removals = total - max_non_overlapping",
+              "Sorting by start time requires different logic (remove the one with later end)"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Connects removal count to selection count",
+                "points": 2,
+                "errorMappings": ["greedy_relationship_missed"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands start-time sorting alternative",
+                "points": 2,
+                "errorMappings": ["greedy_variant_not_understood"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Both approaches have same complexity",
+                "points": 1,
+                "errorMappings": ["greedy_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "merge-intervals",
+          "title": "Merge Intervals",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.",
+          "examples": [
+            {
+              "input": "intervals = [[1,3],[2,6],[8,10],[15,18]]",
+              "output": "[[1,6],[8,10],[15,18]]",
+              "explanation": "Since intervals [1,3] and [2,6] overlap, merge them into [1,6]."
+            },
+            {
+              "input": "intervals = [[1,4],[4,5]]",
+              "output": "[[1,5]]",
+              "explanation": "Intervals [1,4] and [4,5] are considered overlapping."
+            }
+          ],
+          "constraints": [
+            "1 <= intervals.length <= 10^4",
+            "intervals[i].length == 2",
+            "0 <= starti <= endi <= 10^4"
+          ],
+          "starterCode": {
+            "python": "def merge(intervals: List[List[int]]) -> List[List[int]]:\n    pass",
+            "typescript": "function merge(intervals: number[][]): number[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def merge(intervals: List[List[int]]) -> List[List[int]]:\n    intervals.sort(key=lambda x: x[0])\n    merged = []\n    for interval in intervals:\n        if not merged or merged[-1][1] < interval[0]:\n            merged.append(interval)\n        else:\n            merged[-1][1] = max(merged[-1][1], interval[1])\n    return merged",
+            "typescript": "function merge(intervals: number[][]): number[][] {\n    intervals.sort((a, b) => a[0] - b[0]);\n    const merged: number[][] = [];\n    for (const interval of intervals) {\n        if (merged.length === 0 || merged[merged.length - 1][1] < interval[0]) {\n            merged.push(interval);\n        } else {\n            merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], interval[1]);\n        }\n    }\n    return merged;\n}"
+          },
+          "testCases": [
+            {"input": {"intervals": [[1, 3], [2, 6], [8, 10], [15, 18]]}, "expected": [[1, 6], [8, 10], [15, 18]]},
+            {"input": {"intervals": [[1, 4], [4, 5]]}, "expected": [[1, 5]]},
+            {"input": {"intervals": [[1, 4], [0, 4]]}, "expected": [[0, 4]]},
+            {"input": {"intervals": [[1, 4], [2, 3]]}, "expected": [[1, 4]]},
+            {"input": {"intervals": [[1, 4]]}, "expected": [[1, 4]]}
+          ],
+          "steps": [
+            {
+              "stepId": "merge-intervals-think",
+              "type": "THINKING_GATE",
+              "prompt": "Should you sort by start or end time for merging? When do two intervals need to be merged?",
+              "hints": [
+                "Sort by start time to process intervals in order",
+                "Merge when current start <= previous end",
+                "When merging, new end = max of both ends"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies need to sort by start time",
+                  "points": 2,
+                  "errorMappings": ["greedy_sort_key_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands merge condition and how to compute new bounds",
+                  "points": 2,
+                  "errorMappings": ["greedy_interval_merge_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n log n) solution",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "merge-intervals-code",
+              "type": "CODING",
+              "prompt": "Sort by start time, then iterate and merge overlapping intervals into a result list.",
+              "hints": [
+                "Start with empty result list",
+                "If result is empty or no overlap, append interval",
+                "If overlap, update last interval's end to max of both ends"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly builds merged list",
+                  "points": 2,
+                  "errorMappings": ["greedy_interval_merge_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles contained intervals correctly (uses max for end)",
+                  "points": 2,
+                  "errorMappings": ["greedy_interval_contained_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Single pass after sorting",
+                  "points": 1,
+                  "errorMappings": ["greedy_suboptimal_solution"]
+                }
+              }
+            },
+            {
+              "stepId": "merge-intervals-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you insert a new interval into an already sorted and merged list? What about finding intersection of interval lists?",
+              "hints": [
+                "Insert Interval: find position, merge with neighbors if needed",
+                "Intersection: two-pointer approach on two sorted lists"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can extend to insert interval variant",
+                  "points": 2,
+                  "errorMappings": ["greedy_variant_not_understood"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands interval intersection approach",
+                  "points": 2,
+                  "errorMappings": ["greedy_interval_intersection_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Insert is O(n), intersection is O(m+n)",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "gas-station",
+          "title": "Gas Station",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "There are n gas stations along a circular route, where the amount of gas at the ith station is gas[i]. You have a car with an unlimited gas tank and it costs cost[i] of gas to travel from the ith station to its next (i + 1)th station. You begin the journey with an empty tank at one of the gas stations. Given two integer arrays gas and cost, return the starting gas station's index if you can travel around the circuit once in the clockwise direction, otherwise return -1. If there exists a solution, it is guaranteed to be unique.",
+          "examples": [
+            {
+              "input": "gas = [1,2,3,4,5], cost = [3,4,5,1,2]",
+              "output": "3",
+              "explanation": "Start at station 3. Tank = 0 + 4 = 4. Travel to station 4. Tank = 4 - 1 + 5 = 8. Continue around the circuit."
+            },
+            {
+              "input": "gas = [2,3,4], cost = [3,4,3]",
+              "output": "-1",
+              "explanation": "Total gas < total cost, so it's impossible to complete the circuit."
+            }
+          ],
+          "constraints": [
+            "n == gas.length == cost.length",
+            "1 <= n <= 10^5",
+            "0 <= gas[i], cost[i] <= 10^4"
+          ],
+          "starterCode": {
+            "python": "def canCompleteCircuit(gas: List[int], cost: List[int]) -> int:\n    pass",
+            "typescript": "function canCompleteCircuit(gas: number[], cost: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def canCompleteCircuit(gas: List[int], cost: List[int]) -> int:\n    total_tank = 0\n    current_tank = 0\n    start = 0\n    for i in range(len(gas)):\n        total_tank += gas[i] - cost[i]\n        current_tank += gas[i] - cost[i]\n        if current_tank < 0:\n            start = i + 1\n            current_tank = 0\n    return start if total_tank >= 0 else -1",
+            "typescript": "function canCompleteCircuit(gas: number[], cost: number[]): number {\n    let totalTank = 0;\n    let currentTank = 0;\n    let start = 0;\n    for (let i = 0; i < gas.length; i++) {\n        totalTank += gas[i] - cost[i];\n        currentTank += gas[i] - cost[i];\n        if (currentTank < 0) {\n            start = i + 1;\n            currentTank = 0;\n        }\n    }\n    return totalTank >= 0 ? start : -1;\n}"
+          },
+          "testCases": [
+            {"input": {"gas": [1, 2, 3, 4, 5], "cost": [3, 4, 5, 1, 2]}, "expected": 3},
+            {"input": {"gas": [2, 3, 4], "cost": [3, 4, 3]}, "expected": -1},
+            {"input": {"gas": [5, 1, 2, 3, 4], "cost": [4, 4, 1, 5, 1]}, "expected": 4},
+            {"input": {"gas": [3, 1, 1], "cost": [1, 2, 2]}, "expected": 0},
+            {"input": {"gas": [1], "cost": [1]}, "expected": 0}
+          ],
+          "steps": [
+            {
+              "stepId": "gas-station-think",
+              "type": "THINKING_GATE",
+              "prompt": "What determines if a solution exists at all? If you run out of gas at station i, why can't any station from start to i be the answer?",
+              "hints": [
+                "Solution exists iff total_gas >= total_cost",
+                "If you fail at i, starting from any j (start <= j <= i) would also fail at i",
+                "Reset start to i+1 when tank goes negative"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies total sum determines feasibility",
+                  "points": 2,
+                  "errorMappings": ["greedy_insight_missed", "gas_station_feasibility_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands why skipping failed range is valid",
+                  "points": 2,
+                  "errorMappings": ["gas_station_skip_logic_wrong", "greedy_correctness_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n) single pass solution",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "gas-station-code",
+              "type": "CODING",
+              "prompt": "Implement with two variables: total_tank (for feasibility check) and current_tank (for finding start position).",
+              "hints": [
+                "Track both total_tank and current_tank",
+                "When current_tank < 0, reset start and current_tank",
+                "Return start only if total_tank >= 0"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Uses two-tank tracking approach",
+                  "points": 2,
+                  "errorMappings": ["gas_station_tracking_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Correctly resets start position on failure",
+                  "points": 2,
+                  "errorMappings": ["gas_station_reset_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Single pass O(n) solution",
+                  "points": 1,
+                  "errorMappings": ["greedy_suboptimal_solution"]
+                }
+              }
+            },
+            {
+              "stepId": "gas-station-reflect",
+              "type": "REFLECTION",
+              "prompt": "Why does this work when the route is circular? How would you verify your answer is correct?",
+              "hints": [
+                "If total >= 0 and you find a start where you never go negative, circularity is handled",
+                "Verify by simulating from found start position"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands circular route handling",
+                  "points": 2,
+                  "errorMappings": ["gas_station_circular_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can verify solution correctness",
+                  "points": 2,
+                  "errorMappings": ["greedy_verification_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Verification is O(n)",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "task-scheduler",
+          "title": "Task Scheduler",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 30,
+          "description": "Given a characters array tasks, representing the tasks a CPU needs to do, where each letter represents a different task. Tasks could be done in any order. Each task is done in one unit of time. For each unit of time, the CPU could complete either one task or just be idle. However, there is a non-negative integer n that represents the cooldown period between two same tasks (the same letter in the array), that is that there must be at least n units of time between any two same tasks. Return the least number of units of times that the CPU will take to finish all the given tasks.",
+          "examples": [
+            {
+              "input": "tasks = [\"A\",\"A\",\"A\",\"B\",\"B\",\"B\"], n = 2",
+              "output": "8",
+              "explanation": "A -> B -> idle -> A -> B -> idle -> A -> B. There is at least 2 units of time between any two same tasks."
+            },
+            {
+              "input": "tasks = [\"A\",\"A\",\"A\",\"B\",\"B\",\"B\"], n = 0",
+              "output": "6",
+              "explanation": "No cooldown, so any order works and all 6 tasks take 6 units."
+            },
+            {
+              "input": "tasks = [\"A\",\"A\",\"A\",\"A\",\"A\",\"A\",\"B\",\"C\",\"D\",\"E\",\"F\",\"G\"], n = 2",
+              "output": "16",
+              "explanation": "A -> B -> C -> A -> D -> E -> A -> F -> G -> A -> idle -> idle -> A -> idle -> idle -> A"
+            }
+          ],
+          "constraints": [
+            "1 <= task.length <= 10^4",
+            "tasks[i] is upper-case English letter",
+            "0 <= n <= 100"
+          ],
+          "starterCode": {
+            "python": "def leastInterval(tasks: List[str], n: int) -> int:\n    pass",
+            "typescript": "function leastInterval(tasks: string[], n: number): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def leastInterval(tasks: List[str], n: int) -> int:\n    from collections import Counter\n    freq = Counter(tasks)\n    max_freq = max(freq.values())\n    max_count = sum(1 for f in freq.values() if f == max_freq)\n    min_time = (max_freq - 1) * (n + 1) + max_count\n    return max(min_time, len(tasks))",
+            "typescript": "function leastInterval(tasks: string[], n: number): number {\n    const freq: Map<string, number> = new Map();\n    for (const task of tasks) {\n        freq.set(task, (freq.get(task) || 0) + 1);\n    }\n    const maxFreq = Math.max(...freq.values());\n    const maxCount = [...freq.values()].filter(f => f === maxFreq).length;\n    const minTime = (maxFreq - 1) * (n + 1) + maxCount;\n    return Math.max(minTime, tasks.length);\n}"
+          },
+          "testCases": [
+            {"input": {"tasks": ["A", "A", "A", "B", "B", "B"], "n": 2}, "expected": 8},
+            {"input": {"tasks": ["A", "A", "A", "B", "B", "B"], "n": 0}, "expected": 6},
+            {"input": {"tasks": ["A", "A", "A", "A", "A", "A", "B", "C", "D", "E", "F", "G"], "n": 2}, "expected": 16},
+            {"input": {"tasks": ["A", "B", "C", "D", "E", "A", "B", "C", "D", "E"], "n": 4}, "expected": 10},
+            {"input": {"tasks": ["A"], "n": 2}, "expected": 1}
+          ],
+          "steps": [
+            {
+              "stepId": "task-scheduler-think",
+              "type": "THINKING_GATE",
+              "prompt": "Think about the most frequent task - it determines the minimum number of 'frames'. What happens if there are multiple tasks with the same max frequency?",
+              "hints": [
+                "max_freq task creates (max_freq - 1) gaps of size (n + 1)",
+                "Other tasks fill these gaps, reducing idle time",
+                "Multiple max_freq tasks all go in the last partial frame"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies max frequency determines frame structure",
+                  "points": 2,
+                  "errorMappings": ["task_scheduler_frame_missed", "greedy_insight_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands how multiple max-freq tasks affect formula",
+                  "points": 2,
+                  "errorMappings": ["task_scheduler_max_count_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n) counting solution",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "task-scheduler-code",
+              "type": "CODING",
+              "prompt": "Implement using the formula: (max_freq - 1) * (n + 1) + count_of_max_freq_tasks. Handle the case where no idle time is needed.",
+              "hints": [
+                "Count frequency of each task",
+                "Find max_freq and how many tasks have max_freq",
+                "Result = max(formula, total_tasks) to handle no-idle case"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly counts frequencies and finds max",
+                  "points": 2,
+                  "errorMappings": ["task_scheduler_counting_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Applies formula correctly with max_count",
+                  "points": 2,
+                  "errorMappings": ["task_scheduler_formula_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Takes max with len(tasks) for no-idle case",
+                  "points": 1,
+                  "errorMappings": ["task_scheduler_no_idle_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "task-scheduler-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you actually construct a valid schedule (not just count time)? Could you use a heap-based simulation approach?",
+              "hints": [
+                "Construction: use max-heap to always pick most frequent available task",
+                "Heap simulation: pop, decrement, wait n cycles, push back"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can describe construction algorithm",
+                  "points": 2,
+                  "errorMappings": ["greedy_variant_not_understood"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands heap-based simulation approach",
+                  "points": 2,
+                  "errorMappings": ["task_scheduler_simulation_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Simulation is O(n log 26) = O(n)",
+                  "points": 1,
+                  "errorMappings": ["greedy_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "microLessons": [
+    {
+      "lessonId": "greedy_definition",
+      "title": "What is Greedy?",
+      "content": "A greedy algorithm makes locally optimal choices at each step, hoping to find a global optimum. Unlike DP, it never reconsiders choices. Key properties: (1) Greedy choice property - local optimum leads to global optimum. (2) Optimal substructure - optimal solution contains optimal solutions to subproblems. Greedy is simpler and faster than DP when it works, but doesn't work for all problems.",
+      "triggerErrorIds": ["greedy_vs_dp_confusion"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "greedy_when_works",
+      "title": "When Does Greedy Work?",
+      "content": "Greedy works when: (1) Making the locally best choice doesn't prevent finding the globally best solution. (2) You can prove that no other choice could be better. Common greedy-friendly problems: interval scheduling, minimum spanning trees, Huffman coding, fractional knapsack. Greedy fails for: 0/1 knapsack, coin change with arbitrary denominations, longest path.",
+      "triggerErrorIds": ["greedy_correctness_not_understood"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_proof_techniques",
+      "title": "Proving Greedy Correctness",
+      "content": "Two main proof techniques: (1) Greedy stays ahead - show that after each step, greedy's solution is at least as good as any alternative. (2) Exchange argument - show that any non-greedy solution can be transformed into the greedy solution without making it worse. If you can't prove correctness, test with counterexamples or consider DP instead.",
+      "triggerErrorIds": ["greedy_correctness_not_understood"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_vs_dp",
+      "title": "Greedy vs Dynamic Programming",
+      "content": "Greedy: make one choice per step, never reconsider. O(n) or O(n log n) typical. DP: consider all choices, combine subproblem solutions. O(n²) or more typical. Use greedy when you can prove it's optimal. Use DP when greedy fails (e.g., coin change with non-standard coins). DP is always safe but slower; greedy is faster when correct.",
+      "triggerErrorIds": ["greedy_vs_dp_confusion"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_sorting",
+      "title": "The Role of Sorting in Greedy",
+      "content": "Many greedy algorithms require sorting first to enable the greedy choice. Examples: sort intervals by end time for scheduling, sort items by value/weight ratio for knapsack, sort children and cookies for assignment. The sort key determines what 'best' means. Wrong sort key = wrong answer. Sorting adds O(n log n) to complexity.",
+      "triggerErrorIds": ["greedy_sorting_missed", "greedy_sort_key_wrong"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_interval_scheduling",
+      "title": "Interval Scheduling: The Classic Greedy Problem",
+      "content": "Goal: select maximum non-overlapping intervals. Greedy strategy: always pick the interval that ends earliest (among those that don't overlap with already selected). Why? Early end time leaves maximum room for future intervals. Sort by end time, then greedily select. This is provably optimal via exchange argument.",
+      "triggerErrorIds": ["greedy_interval_pattern_missed", "greedy_sorting_wrong"],
+      "prerequisites": ["greedy_sorting"]
+    },
+    {
+      "lessonId": "greedy_interval_merging",
+      "title": "Merging Overlapping Intervals",
+      "content": "Different from scheduling: here we combine overlapping intervals. Sort by start time (not end). If current start <= previous end, they overlap - extend previous end to max of both. If no overlap, add new interval to result. Key insight: after sorting by start, we only need to compare with the last interval in our result.",
+      "triggerErrorIds": ["greedy_interval_merge_wrong", "greedy_interval_contained_wrong"],
+      "prerequisites": ["greedy_sorting"]
+    },
+    {
+      "lessonId": "greedy_reachability",
+      "title": "Greedy Reachability: Jump Game Pattern",
+      "content": "In reachability problems (can you reach the end?), track the farthest reachable position. At each step: (1) Check if current position is reachable (i <= max_reach). (2) Update max_reach = max(max_reach, i + jump[i]). If you can't reach current position, answer is no. This greedy approach works because we only care about reachability, not the path.",
+      "triggerErrorIds": ["greedy_insight_missed", "greedy_tracking_wrong"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_stock_trading",
+      "title": "Stock Trading: Capturing All Gains",
+      "content": "For unlimited transactions (Stock II), the greedy insight is: capture every upward movement. If price goes up today, buy yesterday and sell today. Mathematically: sum all positive (prices[i] - prices[i-1]). This equals buying at every valley and selling at every peak. Greedy works because transactions are unlimited and we want maximum total profit.",
+      "triggerErrorIds": ["stock_peak_valley_confusion"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_assignment",
+      "title": "Greedy Assignment: Matching with Constraints",
+      "content": "Assignment problems (like Assign Cookies): match items from two sets. Strategy: sort both sets, use two pointers. For minimizing waste: match smallest acceptable option. Process in order of constraint (e.g., least greedy child first). The sorting enables efficient matching in O(n log n) total.",
+      "triggerErrorIds": ["greedy_matching_wrong", "greedy_two_pointer_wrong"],
+      "prerequisites": ["greedy_sorting"]
+    },
+    {
+      "lessonId": "greedy_change_making",
+      "title": "Change Making: When Greedy Works",
+      "content": "For standard coin systems (1, 5, 10, 25 cents), greedy works: always use the largest coin possible. But greedy fails for non-canonical systems! Counter-example: coins [1, 3, 4], amount 6. Greedy: 4+1+1 = 3 coins. Optimal: 3+3 = 2 coins. When coins aren't designed for greedy, use DP instead.",
+      "triggerErrorIds": ["greedy_vs_dp_confusion", "lemonade_strategy_wrong"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_gas_station",
+      "title": "Gas Station: Circular Route Greedy",
+      "content": "Key insights: (1) If total_gas >= total_cost, a solution exists. (2) If you fail at station i starting from start, then no station in [start, i] can be the answer (all would fail at or before i). (3) Reset start to i+1 when tank goes negative. Track both total (for feasibility) and current (for finding start). Single pass O(n).",
+      "triggerErrorIds": ["gas_station_feasibility_missed", "gas_station_skip_logic_wrong"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_task_scheduling",
+      "title": "Task Scheduling with Cooldowns",
+      "content": "When tasks have cooldown constraints, the most frequent task determines minimum time. Formula: (max_freq - 1) * (n + 1) + count_of_max_freq_tasks. This creates 'frames' of size n+1, with the most frequent task anchoring each frame. Other tasks fill the gaps. If tasks fill all gaps, answer is just len(tasks).",
+      "triggerErrorIds": ["task_scheduler_frame_missed", "task_scheduler_formula_wrong"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_local_vs_global",
+      "title": "Local vs Global Optimality",
+      "content": "Greedy makes locally optimal choices. The key question: does local optimality guarantee global optimality? For interval scheduling: choosing earliest end is locally best AND globally optimal (proven). For coin change: choosing largest coin is locally best but may NOT be globally optimal. Always verify that local choices don't prevent better global solutions.",
+      "triggerErrorIds": ["greedy_local_vs_global"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_invariant",
+      "title": "Maintaining Greedy Invariants",
+      "content": "A greedy invariant is a property maintained throughout the algorithm that guarantees correctness. For Jump Game: 'max_reach is the farthest reachable index so far.' For interval scheduling: 'selected intervals are non-overlapping and end as early as possible.' Identify the invariant, prove it's maintained, and prove it leads to the optimal solution.",
+      "triggerErrorIds": ["greedy_invariant_wrong"],
+      "prerequisites": ["greedy_definition"]
+    },
+    {
+      "lessonId": "greedy_early_exit",
+      "title": "Early Termination in Greedy",
+      "content": "Greedy algorithms often allow early termination. Once you know the answer (can't reach, ran out of change, etc.), return immediately. This doesn't affect worst-case complexity but improves average case. Examples: return False when max_reach < i in Jump Game, return False when change is impossible in Lemonade.",
+      "triggerErrorIds": ["greedy_early_exit_missed"],
+      "prerequisites": ["greedy_definition"]
+    }
+  ],
+  "errorMappings": [
+    {
+      "errorId": "greedy_insight_missed",
+      "pattern": "(what's the greedy|key insight|main idea|how to approach)",
+      "lessonIds": ["greedy_definition", "greedy_when_works"],
+      "feedbackTemplate": "Look for the greedy insight: what single choice at each step leads to the optimal solution? Track a running maximum, minimum, or count that captures the essential information."
+    },
+    {
+      "errorId": "greedy_vs_dp_confusion",
+      "pattern": "(should I use dp|greedy or dp|when to use which|need to reconsider)",
+      "lessonIds": ["greedy_vs_dp", "greedy_when_works"],
+      "feedbackTemplate": "Greedy: one choice per step, no backtracking. DP: consider all choices. Use greedy if you can prove local optimum = global optimum. If unsure, check with counterexamples or use DP."
+    },
+    {
+      "errorId": "greedy_correctness_not_understood",
+      "pattern": "(why does this work|how is this optimal|prove.*correct)",
+      "lessonIds": ["greedy_proof_techniques", "greedy_when_works"],
+      "feedbackTemplate": "Prove greedy works using: (1) 'Greedy stays ahead' - show greedy is never worse than alternatives. (2) Exchange argument - show any solution can be transformed to greedy without getting worse."
+    },
+    {
+      "errorId": "greedy_sorting_missed",
+      "pattern": "(need to sort|should I sort|order matters)",
+      "lessonIds": ["greedy_sorting"],
+      "feedbackTemplate": "Most greedy algorithms require sorting first! Sort to enable the greedy choice. The key is choosing the RIGHT sort key (start time? end time? ratio?). Wrong sort key = wrong answer."
+    },
+    {
+      "errorId": "greedy_sort_key_wrong",
+      "pattern": "(sort by start|sort by end|wrong sort|sort.*wrong)",
+      "lessonIds": ["greedy_sorting", "greedy_interval_scheduling"],
+      "feedbackTemplate": "Check your sort key! For max non-overlapping intervals: sort by END time. For merging intervals: sort by START time. The sort key determines what 'greedy best choice' means."
+    },
+    {
+      "errorId": "greedy_interval_pattern_missed",
+      "pattern": "(interval.*problem|scheduling|activity selection)",
+      "lessonIds": ["greedy_interval_scheduling"],
+      "feedbackTemplate": "This is an interval scheduling problem! Classic greedy: sort by end time, always pick the interval that ends earliest and doesn't conflict. This maximizes the number of non-overlapping intervals."
+    },
+    {
+      "errorId": "greedy_sorting_wrong",
+      "pattern": "(sorted.*wrong|wrong order|should be sorted)",
+      "lessonIds": ["greedy_sorting"],
+      "feedbackTemplate": "Sorting error! Make sure you're sorting by the right key. In Python: sort(key=lambda x: x[1]) for end time. In TypeScript: sort((a, b) => a[1] - b[1]). Check ascending vs descending too."
+    },
+    {
+      "errorId": "greedy_interval_overlap_wrong",
+      "pattern": "(overlap.*condition|when.*overlap|overlap check)",
+      "lessonIds": ["greedy_interval_scheduling", "greedy_interval_merging"],
+      "feedbackTemplate": "Overlap condition: intervals [a,b] and [c,d] overlap if c < b (assuming a <= c after sorting). They DON'T overlap if c >= b. The equal case (c == b) depends on problem definition."
+    },
+    {
+      "errorId": "greedy_interval_merge_wrong",
+      "pattern": "(merge.*wrong|combining intervals|merged.*end)",
+      "lessonIds": ["greedy_interval_merging"],
+      "feedbackTemplate": "When merging overlapping intervals: new_end = max(end1, end2). This handles the case where one interval contains another. Don't just take the later end - use max!"
+    },
+    {
+      "errorId": "greedy_interval_contained_wrong",
+      "pattern": "(contained|one inside another|fully within)",
+      "lessonIds": ["greedy_interval_merging"],
+      "feedbackTemplate": "When one interval is fully contained in another (e.g., [1,10] contains [2,3]), the merged result should be [1,10]. Using max(end1, end2) handles this correctly."
+    },
+    {
+      "errorId": "greedy_tracking_wrong",
+      "pattern": "(what to track|wrong variable|not tracking)",
+      "lessonIds": ["greedy_reachability", "greedy_invariant"],
+      "feedbackTemplate": "Identify what to track: for reachability, track max_reach. For profit, track running total. For change, track counts of each denomination. The tracked value should capture all you need to make greedy choices."
+    },
+    {
+      "errorId": "greedy_update_order_wrong",
+      "pattern": "(update.*first|check.*before update|order of operations)",
+      "lessonIds": ["greedy_reachability"],
+      "feedbackTemplate": "Order matters! In Jump Game: first check if current position is reachable (i <= max_reach), then update max_reach. If you update first, you might use an unreachable position's value."
+    },
+    {
+      "errorId": "greedy_check_order_wrong",
+      "pattern": "(check first|validate before|reachable before)",
+      "lessonIds": ["greedy_reachability"],
+      "feedbackTemplate": "Always validate before processing. In Jump Game: check if i > max_reach (unreachable) before updating max_reach. Processing an unreachable position leads to wrong answers."
+    },
+    {
+      "errorId": "greedy_suboptimal_solution",
+      "pattern": "(too slow|extra pass|unnecessary|could be simpler)",
+      "lessonIds": ["greedy_definition"],
+      "feedbackTemplate": "Good greedy algorithms are typically single-pass O(n) or O(n log n) with sorting. If you're making multiple passes or using extra data structures, see if you can simplify."
+    },
+    {
+      "errorId": "greedy_complexity_wrong",
+      "pattern": "(time complexity|space complexity|big-?O)",
+      "lessonIds": ["greedy_definition"],
+      "feedbackTemplate": "Greedy complexity: Usually O(n) single pass, or O(n log n) if sorting is needed. Space is typically O(1) or O(n) for output. The key advantage of greedy over DP is often better complexity."
+    },
+    {
+      "errorId": "greedy_variant_not_understood",
+      "pattern": "(what if|different version|modify for|extend to)",
+      "lessonIds": ["greedy_when_works"],
+      "feedbackTemplate": "Consider how the variant changes the greedy choice. Sometimes the same strategy works; sometimes you need different tracking or a completely different approach (maybe DP)."
+    },
+    {
+      "errorId": "stock_peak_valley_confusion",
+      "pattern": "(peak.*valley|buy.*sell|when to trade)",
+      "lessonIds": ["greedy_stock_trading"],
+      "feedbackTemplate": "For unlimited transactions: capture every upward price movement. If prices[i] > prices[i-1], add the difference. This equals buying at valleys and selling at peaks, but is simpler to implement."
+    },
+    {
+      "errorId": "greedy_matching_wrong",
+      "pattern": "(match.*wrong|assign.*wrong|pairing)",
+      "lessonIds": ["greedy_assignment"],
+      "feedbackTemplate": "For greedy matching: sort both sets, use two pointers. Match smallest available item that satisfies the constraint. Don't waste a large item on something that could use a smaller one."
+    },
+    {
+      "errorId": "greedy_two_pointer_wrong",
+      "pattern": "(two pointer|pointer movement|which pointer)",
+      "lessonIds": ["greedy_assignment"],
+      "feedbackTemplate": "Two-pointer for matching: if match found, advance both pointers. If no match (item too small), advance item pointer only. Don't advance constraint pointer without a match."
+    },
+    {
+      "errorId": "greedy_pointer_movement_wrong",
+      "pattern": "(move.*pointer|increment.*wrong|advance.*which)",
+      "lessonIds": ["greedy_assignment"],
+      "feedbackTemplate": "Pointer logic: if current item satisfies current constraint, move BOTH pointers. If item is too small, move only item pointer (try next item). If item is too big, you might be using wrong sort order."
+    },
+    {
+      "errorId": "greedy_edge_case_missed",
+      "pattern": "(empty|single element|edge case|special case)",
+      "lessonIds": ["greedy_definition"],
+      "feedbackTemplate": "Check edge cases: empty input, single element, all same values, all increasing/decreasing. Greedy algorithms often need special handling for boundary conditions."
+    },
+    {
+      "errorId": "lemonade_strategy_wrong",
+      "pattern": "(which bill|give.*change|prefer.*10)",
+      "lessonIds": ["greedy_change_making"],
+      "feedbackTemplate": "For $20 change: prefer $10+$5 over $5+$5+$5. Why? $5 bills are more versatile (work for both $10 and $20 customers). Preserve $5 bills by using $10 when possible."
+    },
+    {
+      "errorId": "greedy_case_handling_wrong",
+      "pattern": "(case.*wrong|missing case|handle.*bill)",
+      "lessonIds": ["greedy_change_making"],
+      "feedbackTemplate": "Handle all cases: $5 (just collect), $10 (need one $5), $20 (prefer $10+$5, else three $5s). For $20, try the preferred option first, fall back to alternative, return False if neither works."
+    },
+    {
+      "errorId": "greedy_early_exit_missed",
+      "pattern": "(return early|stop.*when|fail fast)",
+      "lessonIds": ["greedy_early_exit"],
+      "feedbackTemplate": "Return False as soon as you know it's impossible (can't make change, can't reach position). Don't continue processing after a failure condition is detected."
+    },
+    {
+      "errorId": "greedy_relationship_missed",
+      "pattern": "(removal.*selection|min.*max|inverse relationship)",
+      "lessonIds": ["greedy_interval_scheduling"],
+      "feedbackTemplate": "Key relationship: minimum_removals = total_intervals - maximum_non_overlapping. You can compute either one. For interval scheduling, it's often easier to count what you KEEP."
+    },
+    {
+      "errorId": "greedy_local_vs_global",
+      "pattern": "(local.*global|locally optimal|best choice now)",
+      "lessonIds": ["greedy_local_vs_global"],
+      "feedbackTemplate": "Ask: does my local choice prevent a better global solution? If choosing X now might block a better overall outcome, greedy may not work. Try to prove or disprove with examples."
+    },
+    {
+      "errorId": "greedy_invariant_wrong",
+      "pattern": "(invariant|maintain.*property|always true)",
+      "lessonIds": ["greedy_invariant"],
+      "feedbackTemplate": "Identify your greedy invariant: what property is maintained at each step? For Jump Game: 'max_reach is farthest reachable so far.' Verify this property holds and leads to correct answer."
+    },
+    {
+      "errorId": "gas_station_feasibility_missed",
+      "pattern": "(total gas|total cost|possible at all|feasibility)",
+      "lessonIds": ["greedy_gas_station"],
+      "feedbackTemplate": "First check feasibility: sum(gas) >= sum(cost)? If not, return -1 immediately. If yes, a solution exists (and is unique per problem). This is a separate concern from finding the starting point."
+    },
+    {
+      "errorId": "gas_station_skip_logic_wrong",
+      "pattern": "(skip.*station|reset.*start|why skip range)",
+      "lessonIds": ["greedy_gas_station"],
+      "feedbackTemplate": "If you fail at station i starting from start, then ALL stations in [start, i] fail too. Why? They all run out of gas at or before i. So reset start = i + 1 and continue. This is the key greedy insight."
+    },
+    {
+      "errorId": "gas_station_tracking_wrong",
+      "pattern": "(two tank|total.*current|track both)",
+      "lessonIds": ["greedy_gas_station"],
+      "feedbackTemplate": "Track TWO values: total_tank (sum of all gas-cost, for feasibility check) and current_tank (from current start, for finding position). Reset only current_tank when you fail."
+    },
+    {
+      "errorId": "gas_station_reset_wrong",
+      "pattern": "(reset.*wrong|start.*wrong|when to reset)",
+      "lessonIds": ["greedy_gas_station"],
+      "feedbackTemplate": "Reset when current_tank < 0: set start = i + 1 and current_tank = 0. Don't reset total_tank (we need it for feasibility). The new start is the station AFTER where we failed."
+    },
+    {
+      "errorId": "gas_station_circular_wrong",
+      "pattern": "(circular|wrap around|complete.*circuit)",
+      "lessonIds": ["greedy_gas_station"],
+      "feedbackTemplate": "The circular nature is handled by: if total_tank >= 0, we're guaranteed to complete from the start we found. We don't need to simulate the full circle - the math guarantees it works."
+    },
+    {
+      "errorId": "greedy_verification_missed",
+      "pattern": "(verify|check.*answer|confirm.*correct)",
+      "lessonIds": ["greedy_definition"],
+      "feedbackTemplate": "To verify a greedy solution, you can simulate from the answer. For gas station: start from found index, verify you never go negative through the full circuit. Verification is O(n)."
+    },
+    {
+      "errorId": "task_scheduler_frame_missed",
+      "pattern": "(frame|chunk|gap between|cooldown structure)",
+      "lessonIds": ["greedy_task_scheduling"],
+      "feedbackTemplate": "Think in 'frames' of size n+1. The most frequent task anchors each frame (appears once per frame). Between its occurrences, we have n slots to fill with other tasks or idle."
+    },
+    {
+      "errorId": "task_scheduler_max_count_wrong",
+      "pattern": "(multiple max|same frequency|count.*max)",
+      "lessonIds": ["greedy_task_scheduling"],
+      "feedbackTemplate": "Multiple tasks might have max frequency! Count how many: max_count = number of tasks with frequency == max_freq. These all need to appear in the last (partial) frame."
+    },
+    {
+      "errorId": "task_scheduler_counting_wrong",
+      "pattern": "(count.*wrong|frequency.*wrong|max freq)",
+      "lessonIds": ["greedy_task_scheduling"],
+      "feedbackTemplate": "Count task frequencies using a map or Counter. Find max_freq = highest frequency. Find max_count = how many tasks have that frequency. Both are needed for the formula."
+    },
+    {
+      "errorId": "task_scheduler_formula_wrong",
+      "pattern": "(formula.*wrong|calculation|\\(.*-.*1\\).*\\*)",
+      "lessonIds": ["greedy_task_scheduling"],
+      "feedbackTemplate": "Formula: (max_freq - 1) * (n + 1) + max_count. The -1 is because the last occurrence doesn't need a cooldown after it. The +max_count accounts for tasks that fill the last partial frame."
+    },
+    {
+      "errorId": "task_scheduler_no_idle_missed",
+      "pattern": "(no idle|enough tasks|fill all gaps)",
+      "lessonIds": ["greedy_task_scheduling"],
+      "feedbackTemplate": "If there are enough tasks to fill all gaps, answer = len(tasks) (no idle time). Take max(formula, len(tasks)) to handle this case. When tasks > formula result, we need no idle."
+    },
+    {
+      "errorId": "task_scheduler_simulation_wrong",
+      "pattern": "(simulate|heap|actual schedule|construct)",
+      "lessonIds": ["greedy_task_scheduling"],
+      "feedbackTemplate": "To construct the actual schedule, use a max-heap. Each step: pop the most frequent available task, schedule it, decrement its count, add to 'cooling' queue. After n+1 steps, tasks return to heap."
+    },
+    {
+      "errorId": "greedy_interval_intersection_wrong",
+      "pattern": "(intersection|common|both intervals)",
+      "lessonIds": ["greedy_interval_merging"],
+      "feedbackTemplate": "Interval intersection: given two sorted lists, use two pointers. At each step, if intervals overlap, add the intersection (max of starts, min of ends). Advance the pointer with the earlier end."
+    }
+  ]
+}

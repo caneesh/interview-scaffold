@@ -81,7 +81,7 @@ export function createLLMClient(apiKey: string): LLMClient {
   return {
     async generateHint(params: GenerateHintParams): Promise<GenerateHintResult> {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
         messages: [
           {
@@ -107,7 +107,7 @@ Respond with JSON: { "hint": "...", "nextAction": "..." }`,
 
     async generateReflection(params: GenerateReflectionParams): Promise<GenerateReflectionResult> {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 500,
         messages: [
           {
@@ -131,7 +131,7 @@ Respond with JSON: { "question": "...", "options": [{ "id": "A", "text": "...", 
 
     async evaluateThinkingGate(params: EvaluateThinkingGateParams): Promise<EvaluateThinkingGateResult> {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
         messages: [
           {
@@ -163,7 +163,7 @@ Respond with JSON: { "patternCorrect": true/false, "invariantQuality": "good"|"p
         : 'None';
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 800,
         messages: [
           {

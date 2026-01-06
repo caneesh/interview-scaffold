@@ -1,0 +1,1410 @@
+{
+  "packId": "heap-v1",
+  "pattern": "HEAP",
+  "version": "1.0.0",
+  "rungs": [
+    {
+      "rungLevel": 1,
+      "theme": "Basic Heap Operations",
+      "canonical": {
+        "problemId": "kth-largest-element",
+        "title": "Kth Largest Element in an Array",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 20,
+        "description": "Given an integer array nums and an integer k, return the kth largest element in the array. Note that it is the kth largest element in the sorted order, not the kth distinct element. Can you solve it without sorting?",
+        "examples": [
+          {
+            "input": "nums = [3,2,1,5,6,4], k = 2",
+            "output": "5",
+            "explanation": "The sorted array is [1,2,3,4,5,6]. The 2nd largest is 5."
+          },
+          {
+            "input": "nums = [3,2,3,1,2,4,5,5,6], k = 4",
+            "output": "4",
+            "explanation": "The sorted array is [1,2,2,3,3,4,5,5,6]. The 4th largest is 4."
+          }
+        ],
+        "constraints": [
+          "1 <= k <= nums.length <= 10^5",
+          "-10^4 <= nums[i] <= 10^4"
+        ],
+        "starterCode": {
+          "python": "def findKthLargest(nums: List[int], k: int) -> int:\n    pass",
+          "typescript": "function findKthLargest(nums: number[], k: number): number {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "import heapq\n\ndef findKthLargest(nums: List[int], k: int) -> int:\n    min_heap = []\n    for num in nums:\n        heapq.heappush(min_heap, num)\n        if len(min_heap) > k:\n            heapq.heappop(min_heap)\n    return min_heap[0]",
+          "typescript": "function findKthLargest(nums: number[], k: number): number {\n    // Using a simple approach since JS lacks built-in heap\n    // In practice, use a MinHeap class\n    const minHeap: number[] = [];\n    \n    const push = (val: number) => {\n        minHeap.push(val);\n        minHeap.sort((a, b) => a - b);\n    };\n    \n    const pop = () => minHeap.shift();\n    \n    for (const num of nums) {\n        push(num);\n        if (minHeap.length > k) pop();\n    }\n    return minHeap[0];\n}"
+        },
+        "testCases": [
+          {"input": {"nums": [3, 2, 1, 5, 6, 4], "k": 2}, "expected": 5},
+          {"input": {"nums": [3, 2, 3, 1, 2, 4, 5, 5, 6], "k": 4}, "expected": 4},
+          {"input": {"nums": [1], "k": 1}, "expected": 1},
+          {"input": {"nums": [7, 6, 5, 4, 3, 2, 1], "k": 5}, "expected": 3},
+          {"input": {"nums": [1, 2, 3, 4, 5], "k": 1}, "expected": 5}
+        ],
+        "steps": [
+          {
+            "stepId": "kth-largest-think",
+            "type": "THINKING_GATE",
+            "prompt": "Why use a min-heap of size k instead of a max-heap? What does the top of a size-k min-heap represent after processing all elements?",
+            "hints": [
+              "A min-heap of size k keeps the k largest elements seen so far",
+              "The smallest among those k largest IS the kth largest overall",
+              "If we used a max-heap, we'd need to store all elements"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies min-heap of size k as the optimal approach",
+                "points": 2,
+                "errorMappings": ["heap_wrong_type", "heap_kth_element_pattern"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands that heap top is kth largest after processing",
+                "points": 2,
+                "errorMappings": ["heap_invariant_wrong", "heap_size_k_logic"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(n log k) time, O(k) space",
+                "points": 1,
+                "errorMappings": ["heap_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "kth-largest-code",
+            "type": "CODING",
+            "prompt": "Implement using a min-heap. Push each element, and if heap size exceeds k, pop the minimum. The answer is at the heap top.",
+            "hints": [
+              "Use heapq in Python (min-heap by default)",
+              "Push all elements, maintaining size <= k",
+              "Return heap[0] (the minimum of k largest = kth largest)"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly uses min-heap operations",
+                "points": 2,
+                "errorMappings": ["heap_operations_wrong", "heap_wrong_type"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Maintains heap size at k by popping when exceeded",
+                "points": 2,
+                "errorMappings": ["heap_size_maintenance_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Returns correct value from heap top",
+                "points": 1,
+                "errorMappings": ["heap_return_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "kth-largest-reflect",
+            "type": "REFLECTION",
+            "prompt": "What's the QuickSelect alternative? When would you prefer heap vs QuickSelect? How would you find kth smallest instead?",
+            "hints": [
+              "QuickSelect: O(n) average, O(n²) worst case",
+              "Heap: O(n log k) guaranteed - better when k is small",
+              "Kth smallest: use max-heap of size k, or negate values with min-heap"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Knows QuickSelect as alternative approach",
+                "points": 2,
+                "errorMappings": ["heap_alternative_unknown"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Can adapt for kth smallest",
+                "points": 2,
+                "errorMappings": ["heap_variant_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Compares heap vs QuickSelect tradeoffs",
+                "points": 1,
+                "errorMappings": ["heap_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "last-stone-weight",
+          "title": "Last Stone Weight",
+          "difficulty": "EASY",
+          "estimatedMinutes": 15,
+          "description": "You are given an array of integers stones where stones[i] is the weight of the ith stone. We are playing a game with the stones. On each turn, we choose the heaviest two stones and smash them together. Suppose the heaviest two stones have weights x and y with x <= y. If x == y, both stones are destroyed. If x != y, the stone of weight x is destroyed, and the stone of weight y has new weight y - x. At the end of the game, there is at most one stone left. Return the weight of the last remaining stone. If there are no stones left, return 0.",
+          "examples": [
+            {
+              "input": "stones = [2,7,4,1,8,1]",
+              "output": "1",
+              "explanation": "Smash 7 and 8 to get 1, then 2 and 4 to get 2, then 1 and 2 to get 1, then 1 and 1 to get 0. One stone of weight 1 remains."
+            },
+            {
+              "input": "stones = [1]",
+              "output": "1",
+              "explanation": "Only one stone, nothing to smash."
+            }
+          ],
+          "constraints": [
+            "1 <= stones.length <= 30",
+            "1 <= stones[i] <= 1000"
+          ],
+          "starterCode": {
+            "python": "def lastStoneWeight(stones: List[int]) -> int:\n    pass",
+            "typescript": "function lastStoneWeight(stones: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "import heapq\n\ndef lastStoneWeight(stones: List[int]) -> int:\n    max_heap = [-s for s in stones]\n    heapq.heapify(max_heap)\n    while len(max_heap) > 1:\n        y = -heapq.heappop(max_heap)\n        x = -heapq.heappop(max_heap)\n        if y != x:\n            heapq.heappush(max_heap, -(y - x))\n    return -max_heap[0] if max_heap else 0",
+            "typescript": "function lastStoneWeight(stones: number[]): number {\n    // Simulate max-heap with sorted array\n    const heap = [...stones];\n    heap.sort((a, b) => b - a);\n    \n    while (heap.length > 1) {\n        const y = heap.shift()!;\n        const x = heap.shift()!;\n        if (y !== x) {\n            const diff = y - x;\n            // Insert in sorted position\n            const idx = heap.findIndex(s => s < diff);\n            heap.splice(idx === -1 ? heap.length : idx, 0, diff);\n        }\n    }\n    return heap.length ? heap[0] : 0;\n}"
+          },
+          "testCases": [
+            {"input": {"stones": [2, 7, 4, 1, 8, 1]}, "expected": 1},
+            {"input": {"stones": [1]}, "expected": 1},
+            {"input": {"stones": [2, 2]}, "expected": 0},
+            {"input": {"stones": [10, 4, 2, 10]}, "expected": 2},
+            {"input": {"stones": [3, 7, 8]}, "expected": 2}
+          ],
+          "steps": [
+            {
+              "stepId": "last-stone-think",
+              "type": "THINKING_GATE",
+              "prompt": "Why is a max-heap the right data structure? How do you simulate a max-heap in Python (which only has min-heap)?",
+              "hints": [
+                "Need to repeatedly get the two largest stones",
+                "Max-heap gives O(log n) access to maximum",
+                "Python: negate values to turn min-heap into max-heap"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies need for max-heap to get largest stones",
+                  "points": 2,
+                  "errorMappings": ["heap_wrong_type", "heap_simulation_needed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands negation trick for max-heap in Python",
+                  "points": 2,
+                  "errorMappings": ["heap_max_heap_simulation"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n log n) time complexity",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "last-stone-code",
+              "type": "CODING",
+              "prompt": "Implement using a max-heap. Repeatedly pop two largest, push back difference if non-zero.",
+              "hints": [
+                "Negate values when pushing/popping",
+                "Pop two, compute difference, push if > 0",
+                "Return 0 if heap is empty at end"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly implements max-heap with negation",
+                  "points": 2,
+                  "errorMappings": ["heap_max_heap_simulation", "heap_operations_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles equal stones (both destroyed) correctly",
+                  "points": 2,
+                  "errorMappings": ["heap_smash_logic_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles empty heap case",
+                  "points": 1,
+                  "errorMappings": ["heap_empty_case_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "last-stone-reflect",
+              "type": "REFLECTION",
+              "prompt": "How is this related to partition problems? What if you wanted to return the sequence of smashes?",
+              "hints": [
+                "Related to subset sum: can remaining stone be minimized to 0?",
+                "For sequence: store which stones were smashed with each operation"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Connects to partition/subset sum problem",
+                  "points": 2,
+                  "errorMappings": ["heap_variant_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can extend to track smash sequence",
+                  "points": 2,
+                  "errorMappings": ["heap_tracking_variant"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Understands Last Stone Weight II is NP-hard",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "top-k-frequent-elements",
+          "title": "Top K Frequent Elements",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.",
+          "examples": [
+            {
+              "input": "nums = [1,1,1,2,2,3], k = 2",
+              "output": "[1,2]",
+              "explanation": "1 appears 3 times, 2 appears 2 times. These are the 2 most frequent."
+            },
+            {
+              "input": "nums = [1], k = 1",
+              "output": "[1]",
+              "explanation": "Only one element."
+            }
+          ],
+          "constraints": [
+            "1 <= nums.length <= 10^5",
+            "-10^4 <= nums[i] <= 10^4",
+            "k is in the range [1, the number of unique elements]",
+            "The answer is guaranteed to be unique"
+          ],
+          "starterCode": {
+            "python": "def topKFrequent(nums: List[int], k: int) -> List[int]:\n    pass",
+            "typescript": "function topKFrequent(nums: number[], k: number): number[] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "from collections import Counter\nimport heapq\n\ndef topKFrequent(nums: List[int], k: int) -> List[int]:\n    count = Counter(nums)\n    min_heap = []\n    for num, freq in count.items():\n        heapq.heappush(min_heap, (freq, num))\n        if len(min_heap) > k:\n            heapq.heappop(min_heap)\n    return [num for freq, num in min_heap]",
+            "typescript": "function topKFrequent(nums: number[], k: number): number[] {\n    const count = new Map<number, number>();\n    for (const num of nums) {\n        count.set(num, (count.get(num) || 0) + 1);\n    }\n    \n    // Sort by frequency and take top k\n    return [...count.entries()]\n        .sort((a, b) => b[1] - a[1])\n        .slice(0, k)\n        .map(([num]) => num);\n}"
+          },
+          "testCases": [
+            {"input": {"nums": [1, 1, 1, 2, 2, 3], "k": 2}, "expected": [1, 2]},
+            {"input": {"nums": [1], "k": 1}, "expected": [1]},
+            {"input": {"nums": [4, 1, -1, 2, -1, 2, 3], "k": 2}, "expected": [-1, 2]},
+            {"input": {"nums": [1, 2], "k": 2}, "expected": [1, 2]},
+            {"input": {"nums": [3, 0, 1, 0], "k": 1}, "expected": [0]}
+          ],
+          "steps": [
+            {
+              "stepId": "top-k-frequent-think",
+              "type": "THINKING_GATE",
+              "prompt": "This combines counting with finding top k. What two steps are needed? Why use a min-heap keyed by frequency?",
+              "hints": [
+                "Step 1: Count frequencies using a hash map",
+                "Step 2: Use min-heap of size k to find top k frequencies",
+                "Min-heap of size k keeps the k highest frequencies seen"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies two-phase approach: count then heap",
+                  "points": 2,
+                  "errorMappings": ["heap_two_phase_missed", "heap_kth_element_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands heap is keyed by frequency",
+                  "points": 2,
+                  "errorMappings": ["heap_key_wrong", "heap_tuple_ordering"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n log k) for heap approach",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "top-k-frequent-code",
+              "type": "CODING",
+              "prompt": "First count frequencies, then use a min-heap of size k with (frequency, element) tuples.",
+              "hints": [
+                "Use Counter or dict for frequency counting",
+                "Push (freq, num) tuples - Python compares by first element",
+                "Extract just the numbers from the final heap"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly counts frequencies first",
+                  "points": 2,
+                  "errorMappings": ["heap_counting_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Uses (freq, num) tuple ordering correctly",
+                  "points": 2,
+                  "errorMappings": ["heap_tuple_ordering", "heap_size_maintenance_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Extracts correct result from heap",
+                  "points": 1,
+                  "errorMappings": ["heap_return_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "top-k-frequent-reflect",
+              "type": "REFLECTION",
+              "prompt": "What's the bucket sort approach for O(n) time? When is heap approach preferred?",
+              "hints": [
+                "Bucket sort: buckets[freq] = list of elements with that frequency",
+                "Iterate from highest frequency bucket to collect k elements",
+                "Heap better when k << unique elements"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Knows bucket sort alternative",
+                  "points": 2,
+                  "errorMappings": ["heap_alternative_unknown"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands bucket sort gives O(n) time",
+                  "points": 2,
+                  "errorMappings": ["heap_bucket_sort_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Compares O(n) bucket vs O(n log k) heap",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "k-closest-points-to-origin",
+          "title": "K Closest Points to Origin",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "Given an array of points where points[i] = [xi, yi] represents a point on the X-Y plane and an integer k, return the k closest points to the origin (0, 0). The distance between two points on the X-Y plane is the Euclidean distance (sqrt(x1^2 + y1^2)). You may return the answer in any order. The answer is guaranteed to be unique (except for the order that it is in).",
+          "examples": [
+            {
+              "input": "points = [[1,3],[-2,2]], k = 1",
+              "output": "[[-2,2]]",
+              "explanation": "Distance of (1,3) is sqrt(10). Distance of (-2,2) is sqrt(8). So (-2,2) is closer."
+            },
+            {
+              "input": "points = [[3,3],[5,-1],[-2,4]], k = 2",
+              "output": "[[3,3],[-2,4]]",
+              "explanation": "The two closest points to origin."
+            }
+          ],
+          "constraints": [
+            "1 <= k <= points.length <= 10^4",
+            "-10^4 <= xi, yi <= 10^4"
+          ],
+          "starterCode": {
+            "python": "def kClosest(points: List[List[int]], k: int) -> List[List[int]]:\n    pass",
+            "typescript": "function kClosest(points: number[][], k: number): number[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "import heapq\n\ndef kClosest(points: List[List[int]], k: int) -> List[List[int]]:\n    max_heap = []\n    for x, y in points:\n        dist = x*x + y*y\n        heapq.heappush(max_heap, (-dist, [x, y]))\n        if len(max_heap) > k:\n            heapq.heappop(max_heap)\n    return [point for dist, point in max_heap]",
+            "typescript": "function kClosest(points: number[][], k: number): number[][] {\n    const dist = (p: number[]) => p[0] * p[0] + p[1] * p[1];\n    return points\n        .sort((a, b) => dist(a) - dist(b))\n        .slice(0, k);\n}"
+          },
+          "testCases": [
+            {"input": {"points": [[1, 3], [-2, 2]], "k": 1}, "expected": [[-2, 2]]},
+            {"input": {"points": [[3, 3], [5, -1], [-2, 4]], "k": 2}, "expected": [[3, 3], [-2, 4]]},
+            {"input": {"points": [[0, 1], [1, 0]], "k": 2}, "expected": [[0, 1], [1, 0]]},
+            {"input": {"points": [[1, 1]], "k": 1}, "expected": [[1, 1]]},
+            {"input": {"points": [[1, 1], [2, 2], [3, 3]], "k": 1}, "expected": [[1, 1]]}
+          ],
+          "steps": [
+            {
+              "stepId": "k-closest-think",
+              "type": "THINKING_GATE",
+              "prompt": "For k closest (smallest distances), should you use min-heap or max-heap of size k? Do you need to compute actual sqrt for distances?",
+              "hints": [
+                "Use MAX-heap of size k to keep k smallest distances",
+                "Max-heap lets you evict the largest (farthest) when exceeding k",
+                "No sqrt needed - comparing x²+y² preserves ordering"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies max-heap for k smallest pattern",
+                  "points": 2,
+                  "errorMappings": ["heap_wrong_type", "heap_k_smallest_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands sqrt is unnecessary for comparison",
+                  "points": 2,
+                  "errorMappings": ["heap_distance_calculation"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n log k) complexity",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "k-closest-code",
+              "type": "CODING",
+              "prompt": "Use a max-heap of size k, keyed by distance (negated for Python). Store points along with their distances.",
+              "hints": [
+                "Push (-dist, point) to simulate max-heap",
+                "Pop when size > k (removes farthest point)",
+                "Extract points from remaining heap entries"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly implements max-heap with negation",
+                  "points": 2,
+                  "errorMappings": ["heap_max_heap_simulation", "heap_operations_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Stores point data along with distance key",
+                  "points": 2,
+                  "errorMappings": ["heap_tuple_ordering", "heap_data_association"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Returns list of points, not distances",
+                  "points": 1,
+                  "errorMappings": ["heap_return_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "k-closest-reflect",
+              "type": "REFLECTION",
+              "prompt": "What if k is close to n? Would a different approach be better? How does QuickSelect apply here?",
+              "hints": [
+                "If k ≈ n, simple sort is O(n log n) which may be acceptable",
+                "QuickSelect can find k closest in O(n) average time",
+                "Heap excels when k << n"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Recognizes when sorting beats heap",
+                  "points": 2,
+                  "errorMappings": ["heap_vs_sort_tradeoff"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands QuickSelect alternative",
+                  "points": 2,
+                  "errorMappings": ["heap_alternative_unknown"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Compares O(n log k) vs O(n log n) vs O(n)",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rungLevel": 2,
+      "theme": "Advanced Heap Applications",
+      "canonical": {
+        "problemId": "merge-k-sorted-lists",
+        "title": "Merge K Sorted Lists",
+        "difficulty": "HARD",
+        "estimatedMinutes": 30,
+        "description": "You are given an array of k linked-lists lists, each linked-list is sorted in ascending order. Merge all the linked-lists into one sorted linked-list and return it.",
+        "examples": [
+          {
+            "input": "lists = [[1,4,5],[1,3,4],[2,6]]",
+            "output": "[1,1,2,3,4,4,5,6]",
+            "explanation": "Merging [1,4,5], [1,3,4], and [2,6] gives [1,1,2,3,4,4,5,6]."
+          },
+          {
+            "input": "lists = []",
+            "output": "[]",
+            "explanation": "No lists to merge."
+          },
+          {
+            "input": "lists = [[]]",
+            "output": "[]",
+            "explanation": "One empty list."
+          }
+        ],
+        "constraints": [
+          "k == lists.length",
+          "0 <= k <= 10^4",
+          "0 <= lists[i].length <= 500",
+          "-10^4 <= lists[i][j] <= 10^4",
+          "lists[i] is sorted in ascending order",
+          "The sum of lists[i].length will not exceed 10^4"
+        ],
+        "starterCode": {
+          "python": "# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef mergeKLists(lists: List[Optional[ListNode]]) -> Optional[ListNode]:\n    pass",
+          "typescript": "// class ListNode {\n//     val: number\n//     next: ListNode | null\n//     constructor(val?: number, next?: ListNode | null) {\n//         this.val = (val===undefined ? 0 : val)\n//         this.next = (next===undefined ? null : next)\n//     }\n// }\n\nfunction mergeKLists(lists: Array<ListNode | null>): ListNode | null {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "import heapq\n\ndef mergeKLists(lists: List[Optional[ListNode]]) -> Optional[ListNode]:\n    heap = []\n    for i, lst in enumerate(lists):\n        if lst:\n            heapq.heappush(heap, (lst.val, i, lst))\n    \n    dummy = ListNode(0)\n    curr = dummy\n    \n    while heap:\n        val, i, node = heapq.heappop(heap)\n        curr.next = node\n        curr = curr.next\n        if node.next:\n            heapq.heappush(heap, (node.next.val, i, node.next))\n    \n    return dummy.next",
+          "typescript": "function mergeKLists(lists: Array<ListNode | null>): ListNode | null {\n    const filtered = lists.filter(l => l !== null) as ListNode[];\n    if (filtered.length === 0) return null;\n    \n    // Simple approach: collect all values, sort, rebuild\n    const values: number[] = [];\n    for (const list of filtered) {\n        let curr: ListNode | null = list;\n        while (curr) {\n            values.push(curr.val);\n            curr = curr.next;\n        }\n    }\n    \n    values.sort((a, b) => a - b);\n    \n    const dummy = new ListNode(0);\n    let curr = dummy;\n    for (const val of values) {\n        curr.next = new ListNode(val);\n        curr = curr.next;\n    }\n    return dummy.next;\n}"
+        },
+        "testCases": [
+          {"input": {"lists": [[1, 4, 5], [1, 3, 4], [2, 6]]}, "expected": [1, 1, 2, 3, 4, 4, 5, 6]},
+          {"input": {"lists": []}, "expected": []},
+          {"input": {"lists": [[]]}, "expected": []},
+          {"input": {"lists": [[1], [2], [3]]}, "expected": [1, 2, 3]},
+          {"input": {"lists": [[1, 2, 3]]}, "expected": [1, 2, 3]}
+        ],
+        "steps": [
+          {
+            "stepId": "merge-k-think",
+            "type": "THINKING_GATE",
+            "prompt": "Why is a heap ideal for merging k sorted lists? What should you store in the heap? How do you handle duplicate values in the heap?",
+            "hints": [
+              "Heap efficiently finds minimum among k candidates in O(log k)",
+              "Store (value, list_index, node) - index breaks ties for comparison",
+              "Always have at most k nodes in heap (one per list)"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies min-heap for k-way merge",
+                "points": 2,
+                "errorMappings": ["heap_k_way_merge_pattern", "heap_wrong_type"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands need for tie-breaker in tuple",
+                "points": 2,
+                "errorMappings": ["heap_comparison_error", "heap_tuple_ordering"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(n log k) where n is total elements",
+                "points": 1,
+                "errorMappings": ["heap_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "merge-k-code",
+            "type": "CODING",
+            "prompt": "Initialize heap with first node of each list. Pop minimum, add to result, push next node from that list.",
+            "hints": [
+              "Use dummy head for result list",
+              "Tuple: (value, index, node) for proper comparison",
+              "Only push next node if it exists"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly initializes heap with first nodes",
+                "points": 2,
+                "errorMappings": ["heap_initialization_wrong", "heap_null_handling"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Properly advances through each list",
+                "points": 2,
+                "errorMappings": ["heap_merge_advance_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Uses dummy head pattern for linked list",
+                "points": 1,
+                "errorMappings": ["heap_linked_list_construction"]
+              }
+            }
+          },
+          {
+            "stepId": "merge-k-reflect",
+            "type": "REFLECTION",
+            "prompt": "What's the divide-and-conquer alternative? How does it compare in complexity? Which approach is better when?",
+            "hints": [
+              "D&C: recursively merge pairs of lists",
+              "D&C is O(n log k) too, but may have better constants",
+              "Heap better for streaming; D&C better for parallel processing"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Knows divide-and-conquer merge alternative",
+                "points": 2,
+                "errorMappings": ["heap_alternative_unknown"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands heap advantage for streaming",
+                "points": 2,
+                "errorMappings": ["heap_streaming_advantage"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Both are O(n log k) with different constants",
+                "points": 1,
+                "errorMappings": ["heap_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "find-median-from-data-stream",
+          "title": "Find Median from Data Stream",
+          "difficulty": "HARD",
+          "estimatedMinutes": 35,
+          "description": "The median is the middle value in an ordered integer list. If the size of the list is even, there is no middle value, and the median is the mean of the two middle values. Implement the MedianFinder class: MedianFinder() initializes the MedianFinder object. void addNum(int num) adds the integer num from the data stream to the data structure. double findMedian() returns the median of all elements so far.",
+          "examples": [
+            {
+              "input": "[\"MedianFinder\", \"addNum\", \"addNum\", \"findMedian\", \"addNum\", \"findMedian\"]\n[[], [1], [2], [], [3], []]",
+              "output": "[null, null, null, 1.5, null, 2.0]",
+              "explanation": "After adding 1 and 2, median is (1+2)/2 = 1.5. After adding 3, median is 2."
+            }
+          ],
+          "constraints": [
+            "-10^5 <= num <= 10^5",
+            "There will be at least one element before calling findMedian",
+            "At most 5 * 10^4 calls will be made to addNum and findMedian"
+          ],
+          "starterCode": {
+            "python": "class MedianFinder:\n    def __init__(self):\n        pass\n\n    def addNum(self, num: int) -> None:\n        pass\n\n    def findMedian(self) -> float:\n        pass",
+            "typescript": "class MedianFinder {\n    constructor() {\n        \n    }\n\n    addNum(num: number): void {\n        \n    }\n\n    findMedian(): number {\n        \n    }\n}"
+          },
+          "referenceSolution": {
+            "python": "import heapq\n\nclass MedianFinder:\n    def __init__(self):\n        self.small = []  # max-heap (negated)\n        self.large = []  # min-heap\n\n    def addNum(self, num: int) -> None:\n        heapq.heappush(self.small, -num)\n        heapq.heappush(self.large, -heapq.heappop(self.small))\n        if len(self.large) > len(self.small):\n            heapq.heappush(self.small, -heapq.heappop(self.large))\n\n    def findMedian(self) -> float:\n        if len(self.small) > len(self.large):\n            return -self.small[0]\n        return (-self.small[0] + self.large[0]) / 2",
+            "typescript": "class MedianFinder {\n    private small: number[] = []; // max-heap (negated)\n    private large: number[] = []; // min-heap (sorted array simulation)\n\n    addNum(num: number): void {\n        // Simplified: maintain two sorted halves\n        if (this.small.length === 0 || num <= -this.small[0]) {\n            this.small.push(-num);\n            this.small.sort((a, b) => a - b);\n        } else {\n            this.large.push(num);\n            this.large.sort((a, b) => a - b);\n        }\n        // Rebalance\n        while (this.small.length > this.large.length + 1) {\n            this.large.unshift(-this.small.shift()!);\n        }\n        while (this.large.length > this.small.length) {\n            this.small.unshift(-this.large.shift()!);\n            this.small.sort((a, b) => a - b);\n        }\n    }\n\n    findMedian(): number {\n        if (this.small.length > this.large.length) {\n            return -this.small[0];\n        }\n        return (-this.small[0] + this.large[0]) / 2;\n    }\n}"
+          },
+          "testCases": [
+            {"input": {"operations": ["MedianFinder", "addNum", "addNum", "findMedian", "addNum", "findMedian"], "values": [[], [1], [2], [], [3], []]}, "expected": [null, null, null, 1.5, null, 2.0]},
+            {"input": {"operations": ["MedianFinder", "addNum", "findMedian"], "values": [[], [1], []]}, "expected": [null, null, 1.0]},
+            {"input": {"operations": ["MedianFinder", "addNum", "addNum", "addNum", "addNum", "findMedian"], "values": [[], [1], [2], [3], [4], []]}, "expected": [null, null, null, null, null, 2.5]}
+          ],
+          "steps": [
+            {
+              "stepId": "median-finder-think",
+              "type": "THINKING_GATE",
+              "prompt": "Why use two heaps? What does each heap represent? How do you maintain the size invariant?",
+              "hints": [
+                "Max-heap for smaller half, min-heap for larger half",
+                "Median is at the top(s) of the heaps",
+                "Keep sizes balanced: small.size = large.size or small.size = large.size + 1"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies two-heap pattern for streaming median",
+                  "points": 2,
+                  "errorMappings": ["heap_two_heap_pattern", "heap_median_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands size balancing invariant",
+                  "points": 2,
+                  "errorMappings": ["heap_balance_invariant", "heap_size_maintenance_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(log n) add, O(1) find",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "median-finder-code",
+              "type": "CODING",
+              "prompt": "Implement with two heaps. On add: push to small, rebalance to large, then balance sizes. On find: return top(s).",
+              "hints": [
+                "Always push to small first, then move largest to large",
+                "If large becomes bigger, move smallest back to small",
+                "This ensures all elements in small <= all elements in large"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly implements two-heap structure",
+                  "points": 2,
+                  "errorMappings": ["heap_two_heap_implementation", "heap_max_heap_simulation"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Maintains ordering invariant (small <= large)",
+                  "points": 2,
+                  "errorMappings": ["heap_ordering_invariant_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles odd/even count correctly in findMedian",
+                  "points": 1,
+                  "errorMappings": ["heap_median_calculation_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "median-finder-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you handle if numbers could be removed? What about finding other percentiles (not just median)?",
+              "hints": [
+                "Removal: use lazy deletion with hash map tracking deleted counts",
+                "Percentiles: adjust the size ratio between heaps"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands deletion requires lazy approach",
+                  "points": 2,
+                  "errorMappings": ["heap_deletion_handling"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can generalize to other percentiles",
+                  "points": 2,
+                  "errorMappings": ["heap_variant_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Lazy deletion maintains amortized complexity",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "meeting-rooms-ii",
+          "title": "Meeting Rooms II",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "Given an array of meeting time intervals intervals where intervals[i] = [starti, endi], return the minimum number of conference rooms required.",
+          "examples": [
+            {
+              "input": "intervals = [[0,30],[5,10],[15,20]]",
+              "output": "2",
+              "explanation": "Meeting 1 [0,30] overlaps with both others. We need one room for [0,30] and another for [5,10] and [15,20] (which don't overlap with each other)."
+            },
+            {
+              "input": "intervals = [[7,10],[2,4]]",
+              "output": "1",
+              "explanation": "The meetings don't overlap, so one room suffices."
+            }
+          ],
+          "constraints": [
+            "1 <= intervals.length <= 10^4",
+            "0 <= starti < endi <= 10^6"
+          ],
+          "starterCode": {
+            "python": "def minMeetingRooms(intervals: List[List[int]]) -> int:\n    pass",
+            "typescript": "function minMeetingRooms(intervals: number[][]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "import heapq\n\ndef minMeetingRooms(intervals: List[List[int]]) -> int:\n    if not intervals:\n        return 0\n    \n    intervals.sort(key=lambda x: x[0])\n    end_times = []\n    \n    for start, end in intervals:\n        if end_times and end_times[0] <= start:\n            heapq.heappop(end_times)\n        heapq.heappush(end_times, end)\n    \n    return len(end_times)",
+            "typescript": "function minMeetingRooms(intervals: number[][]): number {\n    if (intervals.length === 0) return 0;\n    \n    intervals.sort((a, b) => a[0] - b[0]);\n    const endTimes: number[] = [];\n    \n    for (const [start, end] of intervals) {\n        endTimes.sort((a, b) => a - b);\n        if (endTimes.length > 0 && endTimes[0] <= start) {\n            endTimes.shift();\n        }\n        endTimes.push(end);\n    }\n    \n    return endTimes.length;\n}"
+          },
+          "testCases": [
+            {"input": {"intervals": [[0, 30], [5, 10], [15, 20]]}, "expected": 2},
+            {"input": {"intervals": [[7, 10], [2, 4]]}, "expected": 1},
+            {"input": {"intervals": [[1, 5], [2, 6], [3, 7], [4, 8]]}, "expected": 4},
+            {"input": {"intervals": [[1, 2], [2, 3], [3, 4]]}, "expected": 1},
+            {"input": {"intervals": [[1, 10]]}, "expected": 1}
+          ],
+          "steps": [
+            {
+              "stepId": "meeting-rooms-think",
+              "type": "THINKING_GATE",
+              "prompt": "What does the heap represent? Why track end times? When can you reuse a room?",
+              "hints": [
+                "Heap tracks end times of ongoing meetings (one per room)",
+                "Heap size = number of rooms in use",
+                "Reuse room when earliest end time <= new meeting start"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies heap of end times pattern",
+                  "points": 2,
+                  "errorMappings": ["heap_meeting_rooms_pattern", "heap_interval_tracking"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands room reuse condition",
+                  "points": 2,
+                  "errorMappings": ["heap_room_reuse_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n log n) complexity",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "meeting-rooms-code",
+              "type": "CODING",
+              "prompt": "Sort by start time. For each meeting, check if earliest ending room is available. Push new end time.",
+              "hints": [
+                "Sort intervals by start time first",
+                "If heap[0] <= current start, pop (free that room)",
+                "Always push current end time (new room or reused room)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Sorts by start time before processing",
+                  "points": 2,
+                  "errorMappings": ["heap_sorting_missed", "heap_sort_key_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Correctly checks and updates room availability",
+                  "points": 2,
+                  "errorMappings": ["heap_room_reuse_wrong", "heap_comparison_error"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Returns heap size as answer",
+                  "points": 1,
+                  "errorMappings": ["heap_return_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "meeting-rooms-reflect",
+              "type": "REFLECTION",
+              "prompt": "What's the sweep line alternative? How would you track which specific room each meeting uses?",
+              "hints": [
+                "Sweep line: +1 at starts, -1 at ends, find max concurrent",
+                "For room assignment: maintain heap of (end_time, room_id)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Knows sweep line alternative",
+                  "points": 2,
+                  "errorMappings": ["heap_alternative_unknown"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can extend to track room assignments",
+                  "points": 2,
+                  "errorMappings": ["heap_variant_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both approaches are O(n log n)",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "reorganize-string",
+          "title": "Reorganize String",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "Given a string s, rearrange the characters of s so that any two adjacent characters are not the same. Return any possible rearrangement of s or return an empty string if not possible.",
+          "examples": [
+            {
+              "input": "s = \"aab\"",
+              "output": "\"aba\"",
+              "explanation": "Rearranged so no two adjacent characters are the same."
+            },
+            {
+              "input": "s = \"aaab\"",
+              "output": "\"\"",
+              "explanation": "No valid arrangement exists."
+            }
+          ],
+          "constraints": [
+            "1 <= s.length <= 500",
+            "s consists of lowercase English letters"
+          ],
+          "starterCode": {
+            "python": "def reorganizeString(s: str) -> str:\n    pass",
+            "typescript": "function reorganizeString(s: string): string {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "from collections import Counter\nimport heapq\n\ndef reorganizeString(s: str) -> str:\n    count = Counter(s)\n    max_heap = [(-freq, char) for char, freq in count.items()]\n    heapq.heapify(max_heap)\n    \n    result = []\n    prev_freq, prev_char = 0, ''\n    \n    while max_heap:\n        freq, char = heapq.heappop(max_heap)\n        result.append(char)\n        \n        if prev_freq < 0:\n            heapq.heappush(max_heap, (prev_freq, prev_char))\n        \n        prev_freq, prev_char = freq + 1, char\n    \n    result_str = ''.join(result)\n    return result_str if len(result_str) == len(s) else ''",
+            "typescript": "function reorganizeString(s: string): string {\n    const count = new Map<string, number>();\n    for (const c of s) {\n        count.set(c, (count.get(c) || 0) + 1);\n    }\n    \n    // Check feasibility\n    const maxFreq = Math.max(...count.values());\n    if (maxFreq > Math.ceil(s.length / 2)) return '';\n    \n    // Sort by frequency descending\n    const sorted = [...count.entries()].sort((a, b) => b[1] - a[1]);\n    \n    const result: string[] = new Array(s.length);\n    let idx = 0;\n    \n    for (const [char, freq] of sorted) {\n        for (let i = 0; i < freq; i++) {\n            result[idx] = char;\n            idx += 2;\n            if (idx >= s.length) idx = 1;\n        }\n    }\n    \n    return result.join('');\n}"
+          },
+          "testCases": [
+            {"input": {"s": "aab"}, "expected": "aba"},
+            {"input": {"s": "aaab"}, "expected": ""},
+            {"input": {"s": "vvvlo"}, "expected": "vlvov"},
+            {"input": {"s": "a"}, "expected": "a"},
+            {"input": {"s": "aabb"}, "expected": "abab"}
+          ],
+          "steps": [
+            {
+              "stepId": "reorganize-think",
+              "type": "THINKING_GATE",
+              "prompt": "Why is a max-heap by frequency useful? What's the greedy insight? When is it impossible to reorganize?",
+              "hints": [
+                "Always place the most frequent character that isn't the previous one",
+                "Use max-heap to efficiently get most frequent available",
+                "Impossible if max_freq > (n + 1) / 2"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies greedy frequency-based placement",
+                  "points": 2,
+                  "errorMappings": ["heap_reorganize_pattern", "heap_greedy_placement"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands impossibility condition",
+                  "points": 2,
+                  "errorMappings": ["heap_feasibility_check"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n log k) where k is unique chars",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "reorganize-code",
+              "type": "CODING",
+              "prompt": "Use max-heap of (frequency, char). Pop most frequent, append to result, push back previous char if it still has remaining count.",
+              "hints": [
+                "Track previous (freq, char) to push back after using current",
+                "Don't push previous if freq would be 0",
+                "Check result length equals input length for validity"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Implements max-heap with delayed re-insertion",
+                  "points": 2,
+                  "errorMappings": ["heap_delayed_insertion", "heap_max_heap_simulation"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Prevents consecutive same characters",
+                  "points": 2,
+                  "errorMappings": ["heap_adjacent_prevention_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Validates result before returning",
+                  "points": 1,
+                  "errorMappings": ["heap_validation_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "reorganize-reflect",
+              "type": "REFLECTION",
+              "prompt": "What's the interleaving (even/odd index) alternative? How does this relate to Task Scheduler?",
+              "hints": [
+                "Interleaving: place most frequent at even indices, then odd",
+                "Task Scheduler: same core idea - distribute most frequent"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Knows interleaving alternative",
+                  "points": 2,
+                  "errorMappings": ["heap_alternative_unknown"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Connects to Task Scheduler pattern",
+                  "points": 2,
+                  "errorMappings": ["heap_pattern_connection"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Interleaving is O(n), heap is O(n log k)",
+                  "points": 1,
+                  "errorMappings": ["heap_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "microLessons": [
+    {
+      "lessonId": "heap_fundamentals",
+      "title": "Heap Data Structure Fundamentals",
+      "content": "A heap is a complete binary tree satisfying the heap property: in a min-heap, parent <= children; in a max-heap, parent >= children. Key operations: insert O(log n), extract-min/max O(log n), peek O(1). Heaps are typically stored as arrays: parent at i, children at 2i+1 and 2i+2. Python's heapq is a min-heap. For max-heap, negate values.",
+      "triggerErrorIds": ["heap_fundamentals_missing"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "heap_min_vs_max",
+      "title": "Choosing Min-Heap vs Max-Heap",
+      "content": "Min-heap: get smallest element efficiently. Use for: k largest (keep k largest, evict smallest), merge k sorted lists (always get global minimum). Max-heap: get largest element efficiently. Use for: k smallest (keep k smallest, evict largest), last stone weight (get two largest). The counter-intuitive rule: for 'k largest', use min-heap; for 'k smallest', use max-heap.",
+      "triggerErrorIds": ["heap_wrong_type", "heap_k_smallest_pattern"],
+      "prerequisites": ["heap_fundamentals"]
+    },
+    {
+      "lessonId": "heap_python_max_heap",
+      "title": "Simulating Max-Heap in Python",
+      "content": "Python's heapq only provides min-heap. To simulate max-heap: negate values when pushing and popping. Push: heappush(heap, -value). Pop: value = -heappop(heap). Peek: value = -heap[0]. For tuples, negate the comparison key: heappush(heap, (-priority, item)). Remember to negate back when extracting!",
+      "triggerErrorIds": ["heap_max_heap_simulation"],
+      "prerequisites": ["heap_fundamentals"]
+    },
+    {
+      "lessonId": "heap_kth_element",
+      "title": "Finding Kth Largest/Smallest Element",
+      "content": "For kth largest: use min-heap of size k. After processing all elements, heap top is kth largest (smallest among the k largest). For kth smallest: use max-heap of size k. Complexity: O(n log k). Alternative: QuickSelect is O(n) average but O(n²) worst case. Heap is preferred when k is small or guaranteed complexity is needed.",
+      "triggerErrorIds": ["heap_kth_element_pattern", "heap_size_k_logic"],
+      "prerequisites": ["heap_min_vs_max"]
+    },
+    {
+      "lessonId": "heap_size_maintenance",
+      "title": "Maintaining Heap Size",
+      "content": "Many heap problems require maintaining a fixed size k. Pattern: push new element, if size > k, pop. This keeps the k 'best' elements where 'best' depends on heap type. For k largest (min-heap): pop removes smallest, keeping k largest. For k smallest (max-heap): pop removes largest, keeping k smallest. Always check size AFTER push.",
+      "triggerErrorIds": ["heap_size_maintenance_wrong"],
+      "prerequisites": ["heap_kth_element"]
+    },
+    {
+      "lessonId": "heap_tuple_comparison",
+      "title": "Heap with Tuple Keys",
+      "content": "Python heaps compare tuples lexicographically: first element first, then second if tied, etc. Use this for: (priority, data) where priority determines order. Problem: if priorities are equal and data isn't comparable, Python raises error. Solution: add a unique tie-breaker: (priority, counter, data) where counter is incrementing integer.",
+      "triggerErrorIds": ["heap_tuple_ordering", "heap_comparison_error"],
+      "prerequisites": ["heap_fundamentals"]
+    },
+    {
+      "lessonId": "heap_k_way_merge",
+      "title": "K-Way Merge with Heap",
+      "content": "To merge k sorted sequences: use min-heap containing one element from each sequence. Repeatedly: extract minimum (global min), add to result, push next element from that sequence. Heap size is always <= k. Complexity: O(n log k) where n is total elements. This is optimal for merging when k is large.",
+      "triggerErrorIds": ["heap_k_way_merge_pattern"],
+      "prerequisites": ["heap_min_vs_max"]
+    },
+    {
+      "lessonId": "heap_two_heaps",
+      "title": "Two-Heap Pattern for Median",
+      "content": "To track median of a stream: use two heaps. Max-heap (small) holds smaller half, min-heap (large) holds larger half. Invariants: (1) All elements in small <= all in large. (2) Sizes differ by at most 1. Median is: small.top if sizes differ, else average of both tops. On insert: add to small, rebalance to large, then fix sizes.",
+      "triggerErrorIds": ["heap_two_heap_pattern", "heap_median_wrong"],
+      "prerequisites": ["heap_max_heap_simulation"]
+    },
+    {
+      "lessonId": "heap_balance_invariant",
+      "title": "Maintaining Two-Heap Balance",
+      "content": "For streaming median, maintain: |small.size - large.size| <= 1. After each insert: (1) Push to small (max-heap). (2) Move small's max to large (ensures ordering). (3) If large is bigger, move large's min to small. This guarantees small.size >= large.size and small.size <= large.size + 1.",
+      "triggerErrorIds": ["heap_balance_invariant", "heap_ordering_invariant_wrong"],
+      "prerequisites": ["heap_two_heaps"]
+    },
+    {
+      "lessonId": "heap_meeting_rooms",
+      "title": "Meeting Rooms / Interval Scheduling with Heap",
+      "content": "To find minimum rooms for meetings: heap tracks end times of ongoing meetings. Sort by start time. For each meeting: if heap.top <= current.start, a room freed up (pop). Always push current.end. Heap size = rooms in use. Final heap size = minimum rooms needed. This simulates room allocation greedily.",
+      "triggerErrorIds": ["heap_meeting_rooms_pattern", "heap_room_reuse_wrong"],
+      "prerequisites": ["heap_fundamentals"]
+    },
+    {
+      "lessonId": "heap_greedy_selection",
+      "title": "Heap for Greedy Selection Problems",
+      "content": "Many greedy problems need 'select best available' repeatedly. Heap provides O(log n) selection. Examples: Task Scheduler (most frequent task), Reorganize String (most frequent char), Huffman coding (two lowest frequencies). The heap efficiently maintains the 'best' candidate as elements are added/removed.",
+      "triggerErrorIds": ["heap_greedy_placement"],
+      "prerequisites": ["heap_fundamentals"]
+    },
+    {
+      "lessonId": "heap_delayed_insertion",
+      "title": "Delayed Re-insertion Pattern",
+      "content": "In some problems (Reorganize String, Task Scheduler), you can't immediately reuse what you just picked. Pattern: (1) Pop best item, use it. (2) Store it aside (don't push back yet). (3) After using current, push back the PREVIOUS item. This creates a one-step delay preventing consecutive use of same item.",
+      "triggerErrorIds": ["heap_delayed_insertion", "heap_adjacent_prevention_wrong"],
+      "prerequisites": ["heap_greedy_selection"]
+    },
+    {
+      "lessonId": "heap_vs_sort",
+      "title": "Heap vs Sorting Trade-offs",
+      "content": "Heap: O(n log k) for top k problems, O(n log n) for full heap sort. Sorting: O(n log n) always. Use heap when: k << n (finding k elements), streaming data (can't sort all at once), need dynamic updates. Use sorting when: k ≈ n, need all elements ordered, or simpler code is preferred.",
+      "triggerErrorIds": ["heap_vs_sort_tradeoff"],
+      "prerequisites": ["heap_fundamentals"]
+    },
+    {
+      "lessonId": "heap_streaming",
+      "title": "Heap for Streaming Data",
+      "content": "Heaps excel at streaming scenarios where you process elements one by one. Unlike sorting (needs all data upfront), heap operations work incrementally. Applications: running median, top k in data stream, merge k streams. Each new element is O(log n) to process, giving O(n log n) total for n elements.",
+      "triggerErrorIds": ["heap_streaming_advantage"],
+      "prerequisites": ["heap_fundamentals"]
+    },
+    {
+      "lessonId": "heap_frequency_problems",
+      "title": "Frequency-Based Heap Problems",
+      "content": "Pattern for 'top k frequent': (1) Count frequencies using hash map. (2) Use heap on (frequency, element) pairs. For top k: use min-heap of size k, keyed by frequency. Alternative: bucket sort by frequency is O(n) but uses O(n) space. Choose based on constraints.",
+      "triggerErrorIds": ["heap_two_phase_missed", "heap_counting_wrong"],
+      "prerequisites": ["heap_kth_element"]
+    },
+    {
+      "lessonId": "heap_complexity",
+      "title": "Heap Operation Complexity",
+      "content": "Single operations: push O(log n), pop O(log n), peek O(1), heapify O(n). For n elements: building heap is O(n) with heapify, O(n log n) with n pushes. K-element operations: finding k largest/smallest is O(n log k). Full heap sort is O(n log n). Space: O(n) for heap, O(k) for size-k heap.",
+      "triggerErrorIds": ["heap_complexity_wrong"],
+      "prerequisites": ["heap_fundamentals"]
+    }
+  ],
+  "errorMappings": [
+    {
+      "errorId": "heap_wrong_type",
+      "pattern": "(min.*should be max|max.*should be min|wrong type of heap)",
+      "lessonIds": ["heap_min_vs_max"],
+      "feedbackTemplate": "Check your heap type! For k largest elements, use a MIN-heap of size k (evict smallest). For k smallest elements, use a MAX-heap of size k (evict largest). Counter-intuitive but correct."
+    },
+    {
+      "errorId": "heap_max_heap_simulation",
+      "pattern": "(max heap.*python|negate|how to.*max heap)",
+      "lessonIds": ["heap_python_max_heap"],
+      "feedbackTemplate": "Python only has min-heap. Simulate max-heap by negating values: push(-val), and negate when popping: val = -heappop(heap). Remember to negate back when using the value!"
+    },
+    {
+      "errorId": "heap_kth_element_pattern",
+      "pattern": "(kth largest|kth smallest|find.*k.*element)",
+      "lessonIds": ["heap_kth_element"],
+      "feedbackTemplate": "For kth largest: use min-heap of size k. After processing all elements, heap[0] is the kth largest (it's the smallest among the k largest). This is O(n log k)."
+    },
+    {
+      "errorId": "heap_size_k_logic",
+      "pattern": "(why size k|heap.*represents|what.*heap top)",
+      "lessonIds": ["heap_kth_element", "heap_size_maintenance"],
+      "feedbackTemplate": "A min-heap of size k keeps the k largest elements seen so far. The heap top (minimum of those k) is the kth largest. When you add an element and size exceeds k, pop to evict the smallest."
+    },
+    {
+      "errorId": "heap_size_maintenance_wrong",
+      "pattern": "(size.*wrong|when to pop|heap.*too big|overflow)",
+      "lessonIds": ["heap_size_maintenance"],
+      "feedbackTemplate": "Maintain heap size by checking AFTER push: if len(heap) > k: heappop(heap). This keeps exactly k elements. Don't check before push - that would miss adding the new element."
+    },
+    {
+      "errorId": "heap_operations_wrong",
+      "pattern": "(push.*wrong|pop.*wrong|heappush|heappop)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "Python heap operations: heappush(heap, item) to add, heappop(heap) to remove and return smallest, heap[0] to peek at smallest. Don't use append/pop - they don't maintain heap property!"
+    },
+    {
+      "errorId": "heap_return_wrong",
+      "pattern": "(return.*wrong|extract.*result|final answer)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "Check what you're returning! For kth element: return heap[0]. For top k elements: return [item for item in heap] or iterate to extract. For median: compute from heap top(s)."
+    },
+    {
+      "errorId": "heap_invariant_wrong",
+      "pattern": "(invariant|property.*heap|maintain.*order)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "Heap invariant: in min-heap, parent <= children (so root is minimum). Operations maintain this automatically. If you're manually manipulating the heap array, you'll break the invariant!"
+    },
+    {
+      "errorId": "heap_tuple_ordering",
+      "pattern": "(tuple.*comparison|compare.*tuple|ordering.*pair)",
+      "lessonIds": ["heap_tuple_comparison"],
+      "feedbackTemplate": "Python compares tuples lexicographically: (1, 'a') < (1, 'b') < (2, 'a'). Put the comparison key first: (frequency, value). If keys can be equal and values aren't comparable, add a tie-breaker: (freq, id, value)."
+    },
+    {
+      "errorId": "heap_comparison_error",
+      "pattern": "(cannot compare|comparison.*error|TypeError.*<)",
+      "lessonIds": ["heap_tuple_comparison"],
+      "feedbackTemplate": "Heap comparison error! When heap elements have equal priority and the secondary elements aren't comparable (like ListNode), add a unique tie-breaker: (priority, counter, element) where counter increments."
+    },
+    {
+      "errorId": "heap_k_way_merge_pattern",
+      "pattern": "(merge.*sorted|k sorted lists|k-way merge)",
+      "lessonIds": ["heap_k_way_merge"],
+      "feedbackTemplate": "For k-way merge: use min-heap with one element from each list. Pop minimum (global min), add to result, push next from that list. Heap size stays <= k, giving O(n log k) total."
+    },
+    {
+      "errorId": "heap_initialization_wrong",
+      "pattern": "(initialize.*heap|starting.*heap|first elements)",
+      "lessonIds": ["heap_k_way_merge"],
+      "feedbackTemplate": "Initialize heap correctly! For k-way merge: add the first element of each list (if not empty). Don't add all elements at once - that defeats the purpose of the heap approach."
+    },
+    {
+      "errorId": "heap_null_handling",
+      "pattern": "(null|None|empty list|edge case)",
+      "lessonIds": ["heap_k_way_merge"],
+      "feedbackTemplate": "Handle null/empty cases! Check if list is not None/null before adding to heap. Skip empty lists during initialization. Return empty result if all inputs are empty."
+    },
+    {
+      "errorId": "heap_merge_advance_wrong",
+      "pattern": "(advance.*list|next element|move pointer)",
+      "lessonIds": ["heap_k_way_merge"],
+      "feedbackTemplate": "After popping from heap, push the NEXT element from that list (if it exists). Track which list each element came from: store (value, list_index, node) in heap."
+    },
+    {
+      "errorId": "heap_linked_list_construction",
+      "pattern": "(build.*list|construct.*linked|dummy head)",
+      "lessonIds": ["heap_k_way_merge"],
+      "feedbackTemplate": "Use dummy head for linked list construction: dummy = ListNode(0), curr = dummy. In loop: curr.next = new_node, curr = curr.next. Return dummy.next."
+    },
+    {
+      "errorId": "heap_two_heap_pattern",
+      "pattern": "(two heap|median.*stream|streaming median)",
+      "lessonIds": ["heap_two_heaps"],
+      "feedbackTemplate": "Streaming median uses two heaps: max-heap (small) for lower half, min-heap (large) for upper half. Median is at the tops. Maintain: small.size >= large.size and small.size <= large.size + 1."
+    },
+    {
+      "errorId": "heap_two_heap_implementation",
+      "pattern": "(implement.*two heap|max.*min heap|small.*large)",
+      "lessonIds": ["heap_two_heaps", "heap_balance_invariant"],
+      "feedbackTemplate": "Two-heap implementation: (1) Push to small (max-heap, so negate). (2) Move max of small to large: heappush(large, -heappop(small)). (3) If large bigger, move min of large to small."
+    },
+    {
+      "errorId": "heap_balance_invariant",
+      "pattern": "(balance.*heap|size.*invariant|rebalance)",
+      "lessonIds": ["heap_balance_invariant"],
+      "feedbackTemplate": "Keep heaps balanced: after each operation, ensure len(small) >= len(large) and len(small) <= len(large) + 1. This keeps median at small's top (odd count) or average of both tops (even count)."
+    },
+    {
+      "errorId": "heap_ordering_invariant_wrong",
+      "pattern": "(ordering.*wrong|small.*large.*order|elements.*wrong heap)",
+      "lessonIds": ["heap_balance_invariant"],
+      "feedbackTemplate": "Ordering invariant: all elements in small must be <= all elements in large. Enforce by: always push to small first, then move small's maximum to large. This guarantees proper partitioning."
+    },
+    {
+      "errorId": "heap_median_calculation_wrong",
+      "pattern": "(median.*wrong|calculate.*median|average.*tops)",
+      "lessonIds": ["heap_two_heaps"],
+      "feedbackTemplate": "Median calculation: if small is bigger, median = -small[0] (negate for max-heap). If sizes equal, median = (-small[0] + large[0]) / 2. Don't forget to negate when reading from max-heap!"
+    },
+    {
+      "errorId": "heap_median_wrong",
+      "pattern": "(median|middle.*value|streaming.*middle)",
+      "lessonIds": ["heap_two_heaps"],
+      "feedbackTemplate": "For streaming median, two heaps partition data into halves. Max-heap holds smaller half (so its max is accessible). Min-heap holds larger half (so its min is accessible). Median is at/between the tops."
+    },
+    {
+      "errorId": "heap_deletion_handling",
+      "pattern": "(delete.*heap|remove.*element|lazy deletion)",
+      "lessonIds": ["heap_two_heaps"],
+      "feedbackTemplate": "Standard heaps don't support efficient deletion of arbitrary elements. For this, use lazy deletion: mark elements as deleted (hash map), skip them when popping. Or use a balanced BST instead."
+    },
+    {
+      "errorId": "heap_meeting_rooms_pattern",
+      "pattern": "(meeting rooms|conference|minimum rooms)",
+      "lessonIds": ["heap_meeting_rooms"],
+      "feedbackTemplate": "Meeting Rooms II: heap tracks end times of rooms in use. Sort meetings by start. For each meeting: if heap[0] <= start, pop (room freed). Push current end. Heap size = rooms needed."
+    },
+    {
+      "errorId": "heap_room_reuse_wrong",
+      "pattern": "(reuse.*room|free.*room|room.*available)",
+      "lessonIds": ["heap_meeting_rooms"],
+      "feedbackTemplate": "Room reuse condition: if earliest ending meeting (heap[0]) ends at or before current meeting starts, that room is free. Pop it, then push current end time (reusing that room)."
+    },
+    {
+      "errorId": "heap_interval_tracking",
+      "pattern": "(end time|track.*interval|interval.*heap)",
+      "lessonIds": ["heap_meeting_rooms"],
+      "feedbackTemplate": "For meeting rooms, the heap tracks END times, not intervals. Each entry represents a room and when it becomes free. Heap size = number of simultaneous meetings = rooms needed."
+    },
+    {
+      "errorId": "heap_sorting_missed",
+      "pattern": "(need to sort|sort first|order.*matters)",
+      "lessonIds": ["heap_meeting_rooms"],
+      "feedbackTemplate": "Sort meetings by start time before using the heap! This ensures you process meetings in chronological order. Without sorting, you can't determine room reuse correctly."
+    },
+    {
+      "errorId": "heap_sort_key_wrong",
+      "pattern": "(sort.*wrong|sort by end|wrong.*sort key)",
+      "lessonIds": ["heap_meeting_rooms"],
+      "feedbackTemplate": "For Meeting Rooms II, sort by START time (process meetings chronologically). The heap manages END times for room availability. Don't confuse sorting order with heap ordering."
+    },
+    {
+      "errorId": "heap_reorganize_pattern",
+      "pattern": "(reorganize|rearrange|no adjacent same)",
+      "lessonIds": ["heap_greedy_selection", "heap_delayed_insertion"],
+      "feedbackTemplate": "Reorganize String: greedily place most frequent character (not same as previous). Use max-heap of (freq, char). After using a char, delay its re-insertion by one step to prevent adjacency."
+    },
+    {
+      "errorId": "heap_greedy_placement",
+      "pattern": "(greedy.*place|most frequent|best available)",
+      "lessonIds": ["heap_greedy_selection"],
+      "feedbackTemplate": "Greedy placement: always choose the 'best' available option. Heap makes this O(log n) instead of O(n). For Reorganize String, 'best' = most frequent character that isn't the previous one."
+    },
+    {
+      "errorId": "heap_feasibility_check",
+      "pattern": "(impossible|can't.*reorganize|feasibility)",
+      "lessonIds": ["heap_greedy_selection"],
+      "feedbackTemplate": "Check feasibility first! For Reorganize String: if max_frequency > (n + 1) / 2, it's impossible. This means the most frequent character can't be spaced out enough."
+    },
+    {
+      "errorId": "heap_delayed_insertion",
+      "pattern": "(delay.*push|previous.*char|push back.*after)",
+      "lessonIds": ["heap_delayed_insertion"],
+      "feedbackTemplate": "Delayed re-insertion pattern: after using an element, don't push it back immediately. Store it. Push back the PREVIOUS element after processing current. This creates a one-step gap preventing consecutive use."
+    },
+    {
+      "errorId": "heap_adjacent_prevention_wrong",
+      "pattern": "(adjacent|consecutive|same.*twice|repeated)",
+      "lessonIds": ["heap_delayed_insertion"],
+      "feedbackTemplate": "To prevent adjacent same characters: use element, store it, push back the PREVIOUS element (if it has remaining count). This ensures at least one different element between same characters."
+    },
+    {
+      "errorId": "heap_validation_missed",
+      "pattern": "(validate|check.*result|verify.*output)",
+      "lessonIds": ["heap_greedy_selection"],
+      "feedbackTemplate": "Validate your result! For Reorganize String: check if result length equals input length. If not, the reorganization failed (should return empty string)."
+    },
+    {
+      "errorId": "heap_alternative_unknown",
+      "pattern": "(other approach|alternative|different way)",
+      "lessonIds": ["heap_vs_sort", "heap_fundamentals"],
+      "feedbackTemplate": "Know the alternatives! QuickSelect for kth element (O(n) average). Bucket sort for top k frequent (O(n)). Divide-and-conquer for merge k lists. Sweep line for meeting rooms. Each has different trade-offs."
+    },
+    {
+      "errorId": "heap_vs_sort_tradeoff",
+      "pattern": "(heap vs sort|when to use|sort instead)",
+      "lessonIds": ["heap_vs_sort"],
+      "feedbackTemplate": "Heap vs Sort: Heap is better when k << n or for streaming data. Sort is simpler when k ≈ n or you need all elements ordered. Heap: O(n log k), Sort: O(n log n). Choose based on k and constraints."
+    },
+    {
+      "errorId": "heap_complexity_wrong",
+      "pattern": "(complexity|big-?O|time.*space)",
+      "lessonIds": ["heap_complexity"],
+      "feedbackTemplate": "Heap complexity: push/pop are O(log n). For k largest in n elements: O(n log k) with size-k heap. Building heap: O(n) with heapify, O(n log n) with repeated pushes. Space: O(k) for size-k heap."
+    },
+    {
+      "errorId": "heap_fundamentals_missing",
+      "pattern": "(what is heap|heap.*basics|heap property)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "A heap is a complete binary tree where parent <= children (min-heap) or parent >= children (max-heap). Stored as array: children of i at 2i+1 and 2i+2. Key ops: O(log n) insert/extract, O(1) peek."
+    },
+    {
+      "errorId": "heap_two_phase_missed",
+      "pattern": "(count first|frequency.*then|two step)",
+      "lessonIds": ["heap_frequency_problems"],
+      "feedbackTemplate": "For 'top k frequent': two phases. (1) Count frequencies using hash map - O(n). (2) Find top k frequencies using heap - O(unique * log k). Don't put raw elements in heap - put (frequency, element) pairs."
+    },
+    {
+      "errorId": "heap_counting_wrong",
+      "pattern": "(count.*wrong|frequency.*error|Counter)",
+      "lessonIds": ["heap_frequency_problems"],
+      "feedbackTemplate": "Count frequencies first with hash map or Counter. Then iterate through (element, frequency) pairs to build heap. Don't count while heaping - that mixes the two phases incorrectly."
+    },
+    {
+      "errorId": "heap_bucket_sort_wrong",
+      "pattern": "(bucket|frequency bucket|O\\(n\\) alternative)",
+      "lessonIds": ["heap_frequency_problems"],
+      "feedbackTemplate": "Bucket sort alternative: create buckets where index = frequency. buckets[freq] = list of elements with that frequency. Iterate from highest frequency bucket to get top k. This is O(n) but uses O(n) space."
+    },
+    {
+      "errorId": "heap_k_smallest_pattern",
+      "pattern": "(k smallest|k minimum|smallest k)",
+      "lessonIds": ["heap_min_vs_max"],
+      "feedbackTemplate": "For k smallest: use MAX-heap of size k. When size > k, pop (evicts largest). After all elements, heap contains k smallest. Counter-intuitive: max-heap for smallest, min-heap for largest!"
+    },
+    {
+      "errorId": "heap_distance_calculation",
+      "pattern": "(distance|sqrt|euclidean|closest)",
+      "lessonIds": ["heap_kth_element"],
+      "feedbackTemplate": "For distance comparisons, you don't need sqrt! Compare x²+y² directly since sqrt is monotonic. This avoids floating-point issues and is faster. Same relative ordering is preserved."
+    },
+    {
+      "errorId": "heap_data_association",
+      "pattern": "(store.*data|keep.*original|associated data)",
+      "lessonIds": ["heap_tuple_comparison"],
+      "feedbackTemplate": "When heap key differs from data you need, store both: (key, data). For k closest points: (-distance, point). For merge k lists: (value, list_index, node). Extract the data part when needed."
+    },
+    {
+      "errorId": "heap_smash_logic_wrong",
+      "pattern": "(smash|destroy|both.*equal|difference)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "Last Stone Weight logic: if stones are equal, both destroyed (don't push anything). If unequal, push the difference (y - x where y > x). Only push if difference > 0 (which it always is when unequal)."
+    },
+    {
+      "errorId": "heap_empty_case_missed",
+      "pattern": "(empty.*heap|no elements|heap.*empty)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "Handle empty heap! Check 'if heap:' before accessing heap[0]. For Last Stone Weight, return 0 if heap is empty at end. For merge k lists, handle empty input list."
+    },
+    {
+      "errorId": "heap_variant_wrong",
+      "pattern": "(variant|modification|what if|extend)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "Consider how the variant changes the approach. Kth smallest instead of largest? Use opposite heap type. Track actual elements instead of count? Store more data in tuples. Handle deletions? Consider lazy deletion or different data structure."
+    },
+    {
+      "errorId": "heap_tracking_variant",
+      "pattern": "(track.*sequence|record.*operations|which.*elements)",
+      "lessonIds": ["heap_fundamentals"],
+      "feedbackTemplate": "To track which elements were used (not just final result), maintain additional data: store IDs with elements, keep a log of operations, or use a wrapper object that records history."
+    },
+    {
+      "errorId": "heap_streaming_advantage",
+      "pattern": "(streaming|online|one by one|can't.*all)",
+      "lessonIds": ["heap_streaming"],
+      "feedbackTemplate": "Heap advantage for streaming: you can process elements one at a time without storing all of them. Sorting requires all data upfront. For top k in stream, heap uses O(k) space regardless of stream length."
+    },
+    {
+      "errorId": "heap_pattern_connection",
+      "pattern": "(related.*to|similar.*problem|same pattern)",
+      "lessonIds": ["heap_greedy_selection"],
+      "feedbackTemplate": "Many heap problems share patterns! Reorganize String and Task Scheduler both use 'most frequent with delay'. Top K Frequent and K Closest both use 'size-k heap'. Recognizing patterns speeds up problem solving."
+    },
+    {
+      "errorId": "heap_simulation_needed",
+      "pattern": "(simulate|how to implement|language.*heap)",
+      "lessonIds": ["heap_python_max_heap"],
+      "feedbackTemplate": "If your language lacks a heap (like JavaScript), options: (1) Use a sorted array with binary search insert - O(log n) find, O(n) insert. (2) Import a heap library. (3) Implement heap yourself for practice."
+    },
+    {
+      "errorId": "heap_key_wrong",
+      "pattern": "(key.*wrong|sort.*by|heap.*on what)",
+      "lessonIds": ["heap_tuple_comparison"],
+      "feedbackTemplate": "Heap sorts by the comparison key. For frequency problems, key = frequency. For distance, key = distance. For meeting rooms, key = end time. Put the key FIRST in your tuple: (key, data)."
+    }
+  ]
+}

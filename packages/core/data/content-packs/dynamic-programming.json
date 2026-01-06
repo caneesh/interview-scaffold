@@ -1,0 +1,1379 @@
+{
+  "packId": "dynamic-programming-v1",
+  "pattern": "DYNAMIC_PROGRAMMING",
+  "version": "1.0.0",
+  "rungs": [
+    {
+      "rungLevel": 1,
+      "theme": "1D Dynamic Programming",
+      "canonical": {
+        "problemId": "climbing-stairs",
+        "title": "Climbing Stairs",
+        "difficulty": "EASY",
+        "estimatedMinutes": 15,
+        "description": "You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
+        "examples": [
+          {
+            "input": "n = 2",
+            "output": "2",
+            "explanation": "There are two ways to climb to the top: 1. 1 step + 1 step, 2. 2 steps"
+          },
+          {
+            "input": "n = 3",
+            "output": "3",
+            "explanation": "There are three ways: 1. 1+1+1, 2. 1+2, 3. 2+1"
+          }
+        ],
+        "constraints": [
+          "1 <= n <= 45"
+        ],
+        "starterCode": {
+          "python": "def climbStairs(n: int) -> int:\n    pass",
+          "typescript": "function climbStairs(n: number): number {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def climbStairs(n: int) -> int:\n    if n <= 2:\n        return n\n    dp = [0] * (n + 1)\n    dp[1] = 1\n    dp[2] = 2\n    for i in range(3, n + 1):\n        dp[i] = dp[i-1] + dp[i-2]\n    return dp[n]",
+          "typescript": "function climbStairs(n: number): number {\n    if (n <= 2) return n;\n    const dp: number[] = new Array(n + 1).fill(0);\n    dp[1] = 1;\n    dp[2] = 2;\n    for (let i = 3; i <= n; i++) {\n        dp[i] = dp[i-1] + dp[i-2];\n    }\n    return dp[n];\n}"
+        },
+        "testCases": [
+          {"input": {"n": 2}, "expected": 2},
+          {"input": {"n": 3}, "expected": 3},
+          {"input": {"n": 4}, "expected": 5},
+          {"input": {"n": 5}, "expected": 8},
+          {"input": {"n": 10}, "expected": 89},
+          {"input": {"n": 1}, "expected": 1}
+        ],
+        "steps": [
+          {
+            "stepId": "climbing-stairs-think",
+            "type": "THINKING_GATE",
+            "prompt": "Before coding, identify: 1) What is the state? (what changes as we solve subproblems) 2) What is the recurrence relation? (how does the current state depend on previous states) 3) What are the base cases?",
+            "hints": [
+              "Think about reaching step n - where could you have come from?",
+              "The state is dp[i] = number of ways to reach step i",
+              "To reach step i, you could have taken 1 step from i-1 or 2 steps from i-2"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies this as a 1D DP problem with Fibonacci-like recurrence",
+                "points": 2,
+                "errorMappings": ["dp_no_subproblem_identification", "dp_missing_recurrence"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Recognizes dp[i] = dp[i-1] + dp[i-2] captures all ways to reach step i",
+                "points": 2,
+                "errorMappings": ["dp_incorrect_recurrence", "dp_missing_base_case"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(n) time and O(n) space (or O(1) with optimization)",
+                "points": 1,
+                "errorMappings": ["dp_suboptimal_space"]
+              }
+            }
+          },
+          {
+            "stepId": "climbing-stairs-code",
+            "type": "CODING",
+            "prompt": "Implement your solution. Define the DP array, set base cases, and fill using the recurrence relation.",
+            "hints": [
+              "Create dp array of size n+1",
+              "Set dp[1] = 1, dp[2] = 2",
+              "Loop from 3 to n, filling dp[i] = dp[i-1] + dp[i-2]"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly implements bottom-up DP with proper array indexing",
+                "points": 2,
+                "errorMappings": ["dp_wrong_array_size", "dp_off_by_one"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Handles base cases correctly (n=1 and n=2)",
+                "points": 2,
+                "errorMappings": ["dp_missing_base_case", "dp_incorrect_base_value"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Avoids unnecessary recomputation",
+                "points": 1,
+                "errorMappings": ["dp_redundant_computation"]
+              }
+            }
+          },
+          {
+            "stepId": "climbing-stairs-reflect",
+            "type": "REFLECTION",
+            "prompt": "How could you optimize space to O(1)? What other problems have this same Fibonacci-like structure?",
+            "hints": [
+              "You only need the previous two values at any point",
+              "House Robber, Fibonacci, and Tribonacci have similar patterns"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Recognizes the Fibonacci pattern family",
+                "points": 2,
+                "errorMappings": ["dp_pattern_not_generalized"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands space optimization using rolling variables",
+                "points": 2,
+                "errorMappings": ["dp_suboptimal_space"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Can articulate O(n) time, O(1) space optimization",
+                "points": 1,
+                "errorMappings": ["complexity_analysis_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "house-robber",
+          "title": "House Robber",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed, the only constraint stopping you from robbing each of them is that adjacent houses have security systems connected and it will automatically contact the police if two adjacent houses were broken into on the same night. Given an integer array nums representing the amount of money of each house, return the maximum amount of money you can rob tonight without alerting the police.",
+          "examples": [
+            {
+              "input": "nums = [1,2,3,1]",
+              "output": "4",
+              "explanation": "Rob house 1 (money = 1) and then rob house 3 (money = 3). Total = 1 + 3 = 4."
+            },
+            {
+              "input": "nums = [2,7,9,3,1]",
+              "output": "12",
+              "explanation": "Rob house 1 (money = 2), rob house 3 (money = 9) and rob house 5 (money = 1). Total = 2 + 9 + 1 = 12."
+            }
+          ],
+          "constraints": [
+            "1 <= nums.length <= 100",
+            "0 <= nums[i] <= 400"
+          ],
+          "starterCode": {
+            "python": "def rob(nums: List[int]) -> int:\n    pass",
+            "typescript": "function rob(nums: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def rob(nums: List[int]) -> int:\n    if len(nums) == 1:\n        return nums[0]\n    dp = [0] * len(nums)\n    dp[0] = nums[0]\n    dp[1] = max(nums[0], nums[1])\n    for i in range(2, len(nums)):\n        dp[i] = max(dp[i-1], dp[i-2] + nums[i])\n    return dp[-1]",
+            "typescript": "function rob(nums: number[]): number {\n    if (nums.length === 1) return nums[0];\n    const dp: number[] = new Array(nums.length).fill(0);\n    dp[0] = nums[0];\n    dp[1] = Math.max(nums[0], nums[1]);\n    for (let i = 2; i < nums.length; i++) {\n        dp[i] = Math.max(dp[i-1], dp[i-2] + nums[i]);\n    }\n    return dp[dp.length - 1];\n}"
+          },
+          "testCases": [
+            {"input": {"nums": [1, 2, 3, 1]}, "expected": 4},
+            {"input": {"nums": [2, 7, 9, 3, 1]}, "expected": 12},
+            {"input": {"nums": [2, 1, 1, 2]}, "expected": 4},
+            {"input": {"nums": [1]}, "expected": 1},
+            {"input": {"nums": [1, 2]}, "expected": 2},
+            {"input": {"nums": [0, 0, 0]}, "expected": 0}
+          ],
+          "steps": [
+            {
+              "stepId": "house-robber-think",
+              "type": "THINKING_GATE",
+              "prompt": "What decision do you make at each house? How does the constraint about adjacent houses affect your recurrence relation?",
+              "hints": [
+                "At each house, you choose to rob it or skip it",
+                "If you rob house i, you can't rob house i-1",
+                "dp[i] = max(skip this house, rob this house)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies the rob/skip decision at each step",
+                  "points": 2,
+                  "errorMappings": ["dp_no_subproblem_identification", "dp_missing_recurrence"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Recognizes dp[i] = max(dp[i-1], dp[i-2] + nums[i])",
+                  "points": 2,
+                  "errorMappings": ["dp_incorrect_recurrence", "dp_missing_constraint"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n) time complexity",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "house-robber-code",
+              "type": "CODING",
+              "prompt": "Implement the solution with proper base cases for 1 and 2 houses.",
+              "hints": [
+                "dp[0] = nums[0] (only option is to rob first house)",
+                "dp[1] = max(nums[0], nums[1]) (rob the more valuable of first two)",
+                "Handle edge case of single house"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly sets up DP array and iteration",
+                  "points": 2,
+                  "errorMappings": ["dp_wrong_array_size", "dp_off_by_one"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles base cases for 1 and 2 houses correctly",
+                  "points": 2,
+                  "errorMappings": ["dp_missing_base_case", "dp_incorrect_base_value"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Returns correct final value",
+                  "points": 1,
+                  "errorMappings": ["dp_wrong_return_value"]
+                }
+              }
+            },
+            {
+              "stepId": "house-robber-reflect",
+              "type": "REFLECTION",
+              "prompt": "How does this differ from Climbing Stairs? What if the houses were arranged in a circle?",
+              "hints": [
+                "This adds the max() decision at each step",
+                "House Robber II (circular) requires handling the wrap-around constraint"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands the max() adds a decision dimension",
+                  "points": 2,
+                  "errorMappings": ["dp_pattern_not_generalized"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can explain circular variant strategy",
+                  "points": 2,
+                  "errorMappings": ["dp_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Recognizes circular case needs two DP passes",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "coin-change",
+          "title": "Coin Change",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money. Return the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return -1. You may assume that you have an infinite number of each kind of coin.",
+          "examples": [
+            {
+              "input": "coins = [1,2,5], amount = 11",
+              "output": "3",
+              "explanation": "11 = 5 + 5 + 1"
+            },
+            {
+              "input": "coins = [2], amount = 3",
+              "output": "-1",
+              "explanation": "No combination of coins can make 3"
+            },
+            {
+              "input": "coins = [1], amount = 0",
+              "output": "0",
+              "explanation": "0 coins needed for amount 0"
+            }
+          ],
+          "constraints": [
+            "1 <= coins.length <= 12",
+            "1 <= coins[i] <= 2^31 - 1",
+            "0 <= amount <= 10^4"
+          ],
+          "starterCode": {
+            "python": "def coinChange(coins: List[int], amount: int) -> int:\n    pass",
+            "typescript": "function coinChange(coins: number[], amount: number): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def coinChange(coins: List[int], amount: int) -> int:\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for i in range(1, amount + 1):\n        for coin in coins:\n            if coin <= i:\n                dp[i] = min(dp[i], dp[i - coin] + 1)\n    return dp[amount] if dp[amount] != float('inf') else -1",
+            "typescript": "function coinChange(coins: number[], amount: number): number {\n    const dp: number[] = new Array(amount + 1).fill(Infinity);\n    dp[0] = 0;\n    for (let i = 1; i <= amount; i++) {\n        for (const coin of coins) {\n            if (coin <= i) {\n                dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n            }\n        }\n    }\n    return dp[amount] === Infinity ? -1 : dp[amount];\n}"
+          },
+          "testCases": [
+            {"input": {"coins": [1, 2, 5], "amount": 11}, "expected": 3},
+            {"input": {"coins": [2], "amount": 3}, "expected": -1},
+            {"input": {"coins": [1], "amount": 0}, "expected": 0},
+            {"input": {"coins": [1], "amount": 2}, "expected": 2},
+            {"input": {"coins": [1, 2, 5], "amount": 100}, "expected": 20},
+            {"input": {"coins": [186, 419, 83, 408], "amount": 6249}, "expected": 20}
+          ],
+          "steps": [
+            {
+              "stepId": "coin-change-think",
+              "type": "THINKING_GATE",
+              "prompt": "What does dp[i] represent? How do you use each coin to build up to amount? What should the initial values be?",
+              "hints": [
+                "dp[i] = minimum coins to make amount i",
+                "For each amount, try using each coin and take minimum",
+                "Initialize with infinity (impossible), except dp[0] = 0"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies unbounded knapsack pattern",
+                  "points": 2,
+                  "errorMappings": ["dp_no_subproblem_identification", "dp_wrong_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Recognizes dp[i] = min(dp[i-coin] + 1) for all valid coins",
+                  "points": 2,
+                  "errorMappings": ["dp_incorrect_recurrence", "dp_missing_min_max"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(amount * coins) time",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "coin-change-code",
+              "type": "CODING",
+              "prompt": "Implement bottom-up DP. Be careful with initialization and handling impossible cases.",
+              "hints": [
+                "Use infinity for initialization to represent 'impossible'",
+                "Only consider coin if coin <= current amount",
+                "Return -1 if final answer is still infinity"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Uses nested loop: amounts then coins",
+                  "points": 2,
+                  "errorMappings": ["dp_wrong_loop_order", "dp_off_by_one"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Correctly initializes with infinity and checks bounds",
+                  "points": 2,
+                  "errorMappings": ["dp_wrong_initialization", "dp_missing_bound_check"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles impossible case correctly",
+                  "points": 1,
+                  "errorMappings": ["dp_missing_impossible_case"]
+                }
+              }
+            },
+            {
+              "stepId": "coin-change-reflect",
+              "type": "REFLECTION",
+              "prompt": "Why doesn't greedy (always pick largest coin) work here? When would greedy work?",
+              "hints": [
+                "Greedy fails: coins=[1,3,4], amount=6. Greedy: 4+1+1=3 coins. Optimal: 3+3=2 coins",
+                "Greedy works when coins are canonical (like US currency)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can provide counterexample for greedy",
+                  "points": 2,
+                  "errorMappings": ["greedy_vs_dp_confusion"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands when greedy suffices",
+                  "points": 2,
+                  "errorMappings": ["dp_when_needed_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Compares greedy O(n) vs DP O(n*m)",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "maximum-subarray",
+          "title": "Maximum Subarray",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "Given an integer array nums, find the subarray with the largest sum, and return its sum.",
+          "examples": [
+            {
+              "input": "nums = [-2,1,-3,4,-1,2,1,-5,4]",
+              "output": "6",
+              "explanation": "The subarray [4,-1,2,1] has the largest sum 6."
+            },
+            {
+              "input": "nums = [1]",
+              "output": "1",
+              "explanation": "The subarray [1] has the largest sum 1."
+            },
+            {
+              "input": "nums = [5,4,-1,7,8]",
+              "output": "23",
+              "explanation": "The subarray [5,4,-1,7,8] has the largest sum 23."
+            }
+          ],
+          "constraints": [
+            "1 <= nums.length <= 10^5",
+            "-10^4 <= nums[i] <= 10^4"
+          ],
+          "starterCode": {
+            "python": "def maxSubArray(nums: List[int]) -> int:\n    pass",
+            "typescript": "function maxSubArray(nums: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def maxSubArray(nums: List[int]) -> int:\n    max_sum = nums[0]\n    current_sum = nums[0]\n    for i in range(1, len(nums)):\n        current_sum = max(nums[i], current_sum + nums[i])\n        max_sum = max(max_sum, current_sum)\n    return max_sum",
+            "typescript": "function maxSubArray(nums: number[]): number {\n    let maxSum = nums[0];\n    let currentSum = nums[0];\n    for (let i = 1; i < nums.length; i++) {\n        currentSum = Math.max(nums[i], currentSum + nums[i]);\n        maxSum = Math.max(maxSum, currentSum);\n    }\n    return maxSum;\n}"
+          },
+          "testCases": [
+            {"input": {"nums": [-2, 1, -3, 4, -1, 2, 1, -5, 4]}, "expected": 6},
+            {"input": {"nums": [1]}, "expected": 1},
+            {"input": {"nums": [5, 4, -1, 7, 8]}, "expected": 23},
+            {"input": {"nums": [-1]}, "expected": -1},
+            {"input": {"nums": [-2, -1]}, "expected": -1},
+            {"input": {"nums": [1, 2, 3, 4, 5]}, "expected": 15}
+          ],
+          "steps": [
+            {
+              "stepId": "maximum-subarray-think",
+              "type": "THINKING_GATE",
+              "prompt": "This is Kadane's algorithm. At each position, what decision do you make? What does 'current_sum' represent?",
+              "hints": [
+                "At each position: start fresh or extend the previous subarray",
+                "current_sum = max sum of subarray ending at current position",
+                "If previous sum is negative, better to start fresh"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies Kadane's algorithm / maximum subarray ending at i",
+                  "points": 2,
+                  "errorMappings": ["dp_no_subproblem_identification", "kadane_not_recognized"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands the extend vs restart decision",
+                  "points": 2,
+                  "errorMappings": ["dp_incorrect_recurrence", "kadane_decision_unclear"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n) time, O(1) space",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "maximum-subarray-code",
+              "type": "CODING",
+              "prompt": "Implement Kadane's algorithm tracking both current subarray sum and global maximum.",
+              "hints": [
+                "Initialize both with nums[0]",
+                "current_sum = max(nums[i], current_sum + nums[i])",
+                "Update max_sum after each step"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly implements single-pass algorithm",
+                  "points": 2,
+                  "errorMappings": ["dp_wrong_loop_structure", "kadane_wrong_implementation"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles all-negative arrays correctly",
+                  "points": 2,
+                  "errorMappings": ["kadane_all_negative_fail", "dp_incorrect_base_value"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Uses O(1) space",
+                  "points": 1,
+                  "errorMappings": ["dp_suboptimal_space"]
+                }
+              }
+            },
+            {
+              "stepId": "maximum-subarray-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you modify this to return the actual subarray, not just the sum? What about maximum product subarray?",
+              "hints": [
+                "Track start and end indices, update when max_sum changes",
+                "Maximum product needs to track both max and min (negative * negative = positive)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can extend to track indices",
+                  "points": 2,
+                  "errorMappings": ["dp_variant_not_understood"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands product variant needs min tracking",
+                  "points": 2,
+                  "errorMappings": ["kadane_product_variant_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both variants remain O(n)",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rungLevel": 2,
+      "theme": "2D Dynamic Programming",
+      "canonical": {
+        "problemId": "longest-common-subsequence",
+        "title": "Longest Common Subsequence",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 25,
+        "description": "Given two strings text1 and text2, return the length of their longest common subsequence. If there is no common subsequence, return 0. A subsequence of a string is a new string generated from the original string with some characters (can be none) deleted without changing the relative order of the remaining characters.",
+        "examples": [
+          {
+            "input": "text1 = \"abcde\", text2 = \"ace\"",
+            "output": "3",
+            "explanation": "The longest common subsequence is \"ace\" and its length is 3."
+          },
+          {
+            "input": "text1 = \"abc\", text2 = \"abc\"",
+            "output": "3",
+            "explanation": "The longest common subsequence is \"abc\" and its length is 3."
+          },
+          {
+            "input": "text1 = \"abc\", text2 = \"def\"",
+            "output": "0",
+            "explanation": "There is no such common subsequence, so the result is 0."
+          }
+        ],
+        "constraints": [
+          "1 <= text1.length, text2.length <= 1000",
+          "text1 and text2 consist of only lowercase English characters"
+        ],
+        "starterCode": {
+          "python": "def longestCommonSubsequence(text1: str, text2: str) -> int:\n    pass",
+          "typescript": "function longestCommonSubsequence(text1: string, text2: string): number {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def longestCommonSubsequence(text1: str, text2: str) -> int:\n    m, n = len(text1), len(text2)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if text1[i-1] == text2[j-1]:\n                dp[i][j] = dp[i-1][j-1] + 1\n            else:\n                dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n    return dp[m][n]",
+          "typescript": "function longestCommonSubsequence(text1: string, text2: string): number {\n    const m = text1.length, n = text2.length;\n    const dp: number[][] = Array.from({length: m + 1}, () => Array(n + 1).fill(0));\n    for (let i = 1; i <= m; i++) {\n        for (let j = 1; j <= n; j++) {\n            if (text1[i-1] === text2[j-1]) {\n                dp[i][j] = dp[i-1][j-1] + 1;\n            } else {\n                dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);\n            }\n        }\n    }\n    return dp[m][n];\n}"
+        },
+        "testCases": [
+          {"input": {"text1": "abcde", "text2": "ace"}, "expected": 3},
+          {"input": {"text1": "abc", "text2": "abc"}, "expected": 3},
+          {"input": {"text1": "abc", "text2": "def"}, "expected": 0},
+          {"input": {"text1": "bl", "text2": "yby"}, "expected": 1},
+          {"input": {"text1": "oxcpqrsvwf", "text2": "shmtulqrypy"}, "expected": 2},
+          {"input": {"text1": "a", "text2": "a"}, "expected": 1}
+        ],
+        "steps": [
+          {
+            "stepId": "lcs-think",
+            "type": "THINKING_GATE",
+            "prompt": "What does dp[i][j] represent? What are the two cases based on whether characters match? Draw out a small example.",
+            "hints": [
+              "dp[i][j] = LCS of text1[0..i-1] and text2[0..j-1]",
+              "If chars match: take diagonal + 1",
+              "If chars don't match: take max of left or top"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies classic 2D DP on two sequences",
+                "points": 2,
+                "errorMappings": ["dp_no_subproblem_identification", "dp_wrong_dimensions"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Correctly states both cases of the recurrence",
+                "points": 2,
+                "errorMappings": ["dp_incorrect_recurrence", "dp_2d_case_missing"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(m*n) time and space",
+                "points": 1,
+                "errorMappings": ["complexity_analysis_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "lcs-code",
+            "type": "CODING",
+            "prompt": "Implement the 2D DP solution. Pay attention to indexing (0-indexed strings vs 1-indexed DP table).",
+            "hints": [
+              "Create (m+1) x (n+1) table initialized to 0",
+              "First row and column are base cases (empty string)",
+              "text1[i-1] and text2[j-1] for 1-indexed DP"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Creates correct 2D DP table with proper dimensions",
+                "points": 2,
+                "errorMappings": ["dp_wrong_array_size", "dp_2d_initialization_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Handles index offset between strings and DP table",
+                "points": 2,
+                "errorMappings": ["dp_off_by_one", "dp_2d_index_mismatch"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Iterates through all cells correctly",
+                "points": 1,
+                "errorMappings": ["dp_wrong_loop_bounds"]
+              }
+            }
+          },
+          {
+            "stepId": "lcs-reflect",
+            "type": "REFLECTION",
+            "prompt": "How would you optimize space to O(min(m,n))? How would you reconstruct the actual LCS string?",
+            "hints": [
+              "Only need previous row to compute current row",
+              "For reconstruction: trace back from dp[m][n] following the decisions"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Understands row-by-row space optimization",
+                "points": 2,
+                "errorMappings": ["dp_suboptimal_space", "dp_2d_space_optimization_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Can trace back through DP table for reconstruction",
+                "points": 2,
+                "errorMappings": ["dp_reconstruction_not_understood"]
+              },
+              "complexityAnalysis": {
+                "criteria": "O(m+n) for reconstruction path",
+                "points": 1,
+                "errorMappings": ["complexity_analysis_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "edit-distance",
+          "title": "Edit Distance",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 30,
+          "description": "Given two strings word1 and word2, return the minimum number of operations required to convert word1 to word2. You have the following three operations permitted on a word: Insert a character, Delete a character, Replace a character.",
+          "examples": [
+            {
+              "input": "word1 = \"horse\", word2 = \"ros\"",
+              "output": "3",
+              "explanation": "horse -> rorse (replace 'h' with 'r') -> rose (remove 'r') -> ros (remove 'e')"
+            },
+            {
+              "input": "word1 = \"intention\", word2 = \"execution\"",
+              "output": "5",
+              "explanation": "intention -> inention -> enention -> exention -> exection -> execution"
+            }
+          ],
+          "constraints": [
+            "0 <= word1.length, word2.length <= 500",
+            "word1 and word2 consist of lowercase English letters"
+          ],
+          "starterCode": {
+            "python": "def minDistance(word1: str, word2: str) -> int:\n    pass",
+            "typescript": "function minDistance(word1: string, word2: string): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def minDistance(word1: str, word2: str) -> int:\n    m, n = len(word1), len(word2)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(m + 1):\n        dp[i][0] = i\n    for j in range(n + 1):\n        dp[0][j] = j\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if word1[i-1] == word2[j-1]:\n                dp[i][j] = dp[i-1][j-1]\n            else:\n                dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1])\n    return dp[m][n]",
+            "typescript": "function minDistance(word1: string, word2: string): number {\n    const m = word1.length, n = word2.length;\n    const dp: number[][] = Array.from({length: m + 1}, () => Array(n + 1).fill(0));\n    for (let i = 0; i <= m; i++) dp[i][0] = i;\n    for (let j = 0; j <= n; j++) dp[0][j] = j;\n    for (let i = 1; i <= m; i++) {\n        for (let j = 1; j <= n; j++) {\n            if (word1[i-1] === word2[j-1]) {\n                dp[i][j] = dp[i-1][j-1];\n            } else {\n                dp[i][j] = 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);\n            }\n        }\n    }\n    return dp[m][n];\n}"
+          },
+          "testCases": [
+            {"input": {"word1": "horse", "word2": "ros"}, "expected": 3},
+            {"input": {"word1": "intention", "word2": "execution"}, "expected": 5},
+            {"input": {"word1": "", "word2": "a"}, "expected": 1},
+            {"input": {"word1": "a", "word2": ""}, "expected": 1},
+            {"input": {"word1": "", "word2": ""}, "expected": 0},
+            {"input": {"word1": "abc", "word2": "abc"}, "expected": 0}
+          ],
+          "steps": [
+            {
+              "stepId": "edit-distance-think",
+              "type": "THINKING_GATE",
+              "prompt": "What does dp[i][j] represent? What are the three operations and how do they map to cells in the DP table?",
+              "hints": [
+                "dp[i][j] = min edits to convert word1[0..i-1] to word2[0..j-1]",
+                "Insert: dp[i][j-1] + 1, Delete: dp[i-1][j] + 1, Replace: dp[i-1][j-1] + 1",
+                "Base cases: converting to/from empty string"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies edit distance as classic 2D DP",
+                  "points": 2,
+                  "errorMappings": ["dp_no_subproblem_identification", "dp_wrong_dimensions"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Maps all three operations to correct DP transitions",
+                  "points": 2,
+                  "errorMappings": ["dp_incorrect_recurrence", "edit_distance_ops_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(m*n) time and space",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "edit-distance-code",
+              "type": "CODING",
+              "prompt": "Implement the solution with proper base cases for empty strings.",
+              "hints": [
+                "dp[i][0] = i (delete all chars from word1)",
+                "dp[0][j] = j (insert all chars of word2)",
+                "If chars match, no operation needed"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Sets up DP table with correct base cases",
+                  "points": 2,
+                  "errorMappings": ["dp_missing_base_case", "dp_2d_base_case_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles character match case (no cost)",
+                  "points": 2,
+                  "errorMappings": ["edit_distance_match_case_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Takes minimum of all three operations",
+                  "points": 1,
+                  "errorMappings": ["dp_missing_min_max"]
+                }
+              }
+            },
+            {
+              "stepId": "edit-distance-reflect",
+              "type": "REFLECTION",
+              "prompt": "What if operations have different costs? How is this related to LCS?",
+              "hints": [
+                "Replace min() with weighted sum based on costs",
+                "LCS + edit distance: edits = m + n - 2*LCS"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can adapt for weighted operations",
+                  "points": 2,
+                  "errorMappings": ["dp_variant_not_understood"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands relationship with LCS",
+                  "points": 2,
+                  "errorMappings": ["dp_pattern_relationship_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Weighted version has same complexity",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "unique-paths",
+          "title": "Unique Paths",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "There is a robot on an m x n grid. The robot is initially located at the top-left corner (i.e., grid[0][0]). The robot tries to move to the bottom-right corner (i.e., grid[m - 1][n - 1]). The robot can only move either down or right at any point in time. Given the two integers m and n, return the number of possible unique paths that the robot can take to reach the bottom-right corner.",
+          "examples": [
+            {
+              "input": "m = 3, n = 7",
+              "output": "28",
+              "explanation": "From the top-left to bottom-right, there are 28 unique paths."
+            },
+            {
+              "input": "m = 3, n = 2",
+              "output": "3",
+              "explanation": "There are three ways: Right->Down->Down, Down->Right->Down, Down->Down->Right"
+            }
+          ],
+          "constraints": [
+            "1 <= m, n <= 100"
+          ],
+          "starterCode": {
+            "python": "def uniquePaths(m: int, n: int) -> int:\n    pass",
+            "typescript": "function uniquePaths(m: number, n: number): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def uniquePaths(m: int, n: int) -> int:\n    dp = [[1] * n for _ in range(m)]\n    for i in range(1, m):\n        for j in range(1, n):\n            dp[i][j] = dp[i-1][j] + dp[i][j-1]\n    return dp[m-1][n-1]",
+            "typescript": "function uniquePaths(m: number, n: number): number {\n    const dp: number[][] = Array.from({length: m}, () => Array(n).fill(1));\n    for (let i = 1; i < m; i++) {\n        for (let j = 1; j < n; j++) {\n            dp[i][j] = dp[i-1][j] + dp[i][j-1];\n        }\n    }\n    return dp[m-1][n-1];\n}"
+          },
+          "testCases": [
+            {"input": {"m": 3, "n": 7}, "expected": 28},
+            {"input": {"m": 3, "n": 2}, "expected": 3},
+            {"input": {"m": 1, "n": 1}, "expected": 1},
+            {"input": {"m": 2, "n": 2}, "expected": 2},
+            {"input": {"m": 3, "n": 3}, "expected": 6},
+            {"input": {"m": 10, "n": 10}, "expected": 48620}
+          ],
+          "steps": [
+            {
+              "stepId": "unique-paths-think",
+              "type": "THINKING_GATE",
+              "prompt": "How many ways can you reach cell (i,j)? What are the base cases for first row and first column?",
+              "hints": [
+                "Can only come from top or left",
+                "dp[i][j] = dp[i-1][j] + dp[i][j-1]",
+                "First row and column are all 1s (only one path)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies grid DP pattern",
+                  "points": 2,
+                  "errorMappings": ["dp_no_subproblem_identification", "dp_grid_pattern_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands paths sum from two directions",
+                  "points": 2,
+                  "errorMappings": ["dp_incorrect_recurrence"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(m*n) time",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "unique-paths-code",
+              "type": "CODING",
+              "prompt": "Implement the grid DP solution. Initialize the first row and column appropriately.",
+              "hints": [
+                "Initialize entire grid to 1 (handles base cases)",
+                "Start loops from index 1",
+                "Return bottom-right cell"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Creates correct grid with proper initialization",
+                  "points": 2,
+                  "errorMappings": ["dp_2d_initialization_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Fills grid in correct order (top-left to bottom-right)",
+                  "points": 2,
+                  "errorMappings": ["dp_wrong_fill_order"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Avoids redundant computation",
+                  "points": 1,
+                  "errorMappings": ["dp_redundant_computation"]
+                }
+              }
+            },
+            {
+              "stepId": "unique-paths-reflect",
+              "type": "REFLECTION",
+              "prompt": "Can this be solved mathematically? How would you handle obstacles (Unique Paths II)?",
+              "hints": [
+                "Combinatorics: C(m+n-2, m-1) = choosing m-1 downs from m+n-2 moves",
+                "Obstacles: set dp[i][j] = 0 if obstacle at (i,j)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Recognizes combinatorial solution",
+                  "points": 2,
+                  "errorMappings": ["dp_math_alternative_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can adapt for obstacles variant",
+                  "points": 2,
+                  "errorMappings": ["dp_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Combinatorial is O(m+n), DP is O(m*n)",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "minimum-path-sum",
+          "title": "Minimum Path Sum",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "Given a m x n grid filled with non-negative numbers, find a path from top left to bottom right, which minimizes the sum of all numbers along its path. Note: You can only move either down or right at any point in time.",
+          "examples": [
+            {
+              "input": "grid = [[1,3,1],[1,5,1],[4,2,1]]",
+              "output": "7",
+              "explanation": "The path 1 → 3 → 1 → 1 → 1 minimizes the sum."
+            },
+            {
+              "input": "grid = [[1,2,3],[4,5,6]]",
+              "output": "12",
+              "explanation": "The path 1 → 2 → 3 → 6 minimizes the sum."
+            }
+          ],
+          "constraints": [
+            "m == grid.length",
+            "n == grid[i].length",
+            "1 <= m, n <= 200",
+            "0 <= grid[i][j] <= 200"
+          ],
+          "starterCode": {
+            "python": "def minPathSum(grid: List[List[int]]) -> int:\n    pass",
+            "typescript": "function minPathSum(grid: number[][]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def minPathSum(grid: List[List[int]]) -> int:\n    m, n = len(grid), len(grid[0])\n    dp = [[0] * n for _ in range(m)]\n    dp[0][0] = grid[0][0]\n    for j in range(1, n):\n        dp[0][j] = dp[0][j-1] + grid[0][j]\n    for i in range(1, m):\n        dp[i][0] = dp[i-1][0] + grid[i][0]\n    for i in range(1, m):\n        for j in range(1, n):\n            dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]\n    return dp[m-1][n-1]",
+            "typescript": "function minPathSum(grid: number[][]): number {\n    const m = grid.length, n = grid[0].length;\n    const dp: number[][] = Array.from({length: m}, () => Array(n).fill(0));\n    dp[0][0] = grid[0][0];\n    for (let j = 1; j < n; j++) dp[0][j] = dp[0][j-1] + grid[0][j];\n    for (let i = 1; i < m; i++) dp[i][0] = dp[i-1][0] + grid[i][0];\n    for (let i = 1; i < m; i++) {\n        for (let j = 1; j < n; j++) {\n            dp[i][j] = Math.min(dp[i-1][j], dp[i][j-1]) + grid[i][j];\n        }\n    }\n    return dp[m-1][n-1];\n}"
+          },
+          "testCases": [
+            {"input": {"grid": [[1, 3, 1], [1, 5, 1], [4, 2, 1]]}, "expected": 7},
+            {"input": {"grid": [[1, 2, 3], [4, 5, 6]]}, "expected": 12},
+            {"input": {"grid": [[1]]}, "expected": 1},
+            {"input": {"grid": [[1, 2], [1, 1]]}, "expected": 3},
+            {"input": {"grid": [[5, 4, 2, 1], [1, 9, 9, 9], [1, 1, 1, 1]]}, "expected": 13},
+            {"input": {"grid": [[1, 2, 3, 4, 5]]}, "expected": 15}
+          ],
+          "steps": [
+            {
+              "stepId": "min-path-sum-think",
+              "type": "THINKING_GATE",
+              "prompt": "How does this differ from Unique Paths? What changes in the recurrence relation?",
+              "hints": [
+                "Instead of counting paths, we minimize cost",
+                "dp[i][j] = min(from top, from left) + current cell value",
+                "Base cases: cumulative sums along first row and column"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies min-cost grid DP pattern",
+                  "points": 2,
+                  "errorMappings": ["dp_no_subproblem_identification"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Uses min() instead of sum in recurrence",
+                  "points": 2,
+                  "errorMappings": ["dp_incorrect_recurrence", "dp_sum_vs_min_confusion"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(m*n) time",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "min-path-sum-code",
+              "type": "CODING",
+              "prompt": "Implement the solution. First row and column need cumulative sums as base cases.",
+              "hints": [
+                "First row: can only come from left",
+                "First column: can only come from top",
+                "Interior cells: min of top and left, plus current value"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly initializes first row and column with cumulative sums",
+                  "points": 2,
+                  "errorMappings": ["dp_2d_base_case_wrong", "dp_cumulative_sum_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Adds current cell value after taking min",
+                  "points": 2,
+                  "errorMappings": ["dp_incorrect_recurrence"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Fills grid in correct order",
+                  "points": 1,
+                  "errorMappings": ["dp_wrong_fill_order"]
+                }
+              }
+            },
+            {
+              "stepId": "min-path-sum-reflect",
+              "type": "REFLECTION",
+              "prompt": "Can you solve this in-place using the input grid? What about maximum path sum?",
+              "hints": [
+                "Yes, modify grid directly to save space",
+                "Maximum path: change min() to max()"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands in-place modification possibility",
+                  "points": 2,
+                  "errorMappings": ["dp_suboptimal_space"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can adapt for maximum variant",
+                  "points": 2,
+                  "errorMappings": ["dp_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "In-place achieves O(1) extra space",
+                  "points": 1,
+                  "errorMappings": ["complexity_analysis_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "microLessons": [
+    {
+      "lessonId": "dp_subproblem_definition",
+      "title": "Defining DP Subproblems",
+      "content": "The key to DP is defining what dp[i] (or dp[i][j]) represents. Ask: 'What is the answer to my problem for a smaller input?' For sequences, dp[i] often means 'answer for first i elements' or 'answer ending at index i'. For two sequences, dp[i][j] means 'answer for first i elements of A and first j elements of B'.",
+      "triggerErrorIds": ["dp_no_subproblem_identification"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "dp_recurrence_relation",
+      "title": "Writing Recurrence Relations",
+      "content": "A recurrence relation expresses dp[i] in terms of smaller subproblems. Think about the last decision: for Climbing Stairs, you either took 1 step from i-1 or 2 steps from i-2, so dp[i] = dp[i-1] + dp[i-2]. For House Robber, you either skip (dp[i-1]) or rob (dp[i-2] + nums[i]), so dp[i] = max(dp[i-1], dp[i-2] + nums[i]).",
+      "triggerErrorIds": ["dp_missing_recurrence", "dp_incorrect_recurrence"],
+      "prerequisites": ["dp_subproblem_definition"]
+    },
+    {
+      "lessonId": "dp_base_cases",
+      "title": "Identifying Base Cases",
+      "content": "Base cases are the smallest subproblems you can solve directly without the recurrence. For sequences, this is usually dp[0] or dp[0] and dp[1]. For 2D problems, it's often the first row and column. Ask: 'What's the answer when input size is 0 or 1?' Common mistake: forgetting to handle base cases or setting wrong initial values.",
+      "triggerErrorIds": ["dp_missing_base_case", "dp_incorrect_base_value"],
+      "prerequisites": ["dp_recurrence_relation"]
+    },
+    {
+      "lessonId": "dp_1d_vs_2d",
+      "title": "1D vs 2D DP",
+      "content": "Use 1D DP when the problem involves a single sequence/array and subproblems depend on previous elements in that sequence. Use 2D DP when: (1) you have two sequences (LCS, Edit Distance), (2) you need to track two dimensions of state (grid problems), or (3) 1D state isn't enough to capture all necessary information. The dimension of DP equals the number of changing parameters in your subproblem.",
+      "triggerErrorIds": ["dp_wrong_dimensions"],
+      "prerequisites": ["dp_subproblem_definition"]
+    },
+    {
+      "lessonId": "dp_fibonacci_family",
+      "title": "The Fibonacci Family of Problems",
+      "content": "Many problems have the form dp[i] = dp[i-1] + dp[i-2] (or a variation). Climbing Stairs is exactly Fibonacci. House Robber adds a max() decision. Tribonacci uses three previous values. Recognizing this pattern lets you immediately know: O(n) time, can be optimized to O(1) space using rolling variables.",
+      "triggerErrorIds": ["dp_pattern_not_generalized"],
+      "prerequisites": ["dp_recurrence_relation"]
+    },
+    {
+      "lessonId": "dp_space_optimization",
+      "title": "Space Optimization in DP",
+      "content": "If dp[i] only depends on the previous k values, you can reduce space from O(n) to O(k). For Fibonacci-like problems, keep only prev2 and prev1. For 2D DP where dp[i][j] depends only on row i-1, keep only two rows. For LCS, you can use a single row plus one extra variable for the diagonal.",
+      "triggerErrorIds": ["dp_suboptimal_space"],
+      "prerequisites": ["dp_recurrence_relation"]
+    },
+    {
+      "lessonId": "dp_off_by_one",
+      "title": "Avoiding Off-by-One Errors in DP",
+      "content": "Common sources of off-by-one: (1) Array size: if dp[i] represents 'for first i elements', you need size n+1 to include dp[n]. (2) Index mapping: text[i-1] when dp uses 1-indexing but string uses 0-indexing. (3) Loop bounds: should you start from 0, 1, or 2? Should you go to n or n-1? Always trace through a small example to verify.",
+      "triggerErrorIds": ["dp_off_by_one", "dp_wrong_array_size"],
+      "prerequisites": ["dp_base_cases"]
+    },
+    {
+      "lessonId": "dp_initialization",
+      "title": "DP Array Initialization",
+      "content": "Initialization depends on what you're computing. For counting problems (Climbing Stairs): start with 0s, set dp[0]=1 (one way to do nothing). For minimization (Coin Change): start with infinity, set dp[0]=0. For maximization: start with -infinity or 0 depending on constraints. For boolean (can we reach?): start with false, set dp[0]=true.",
+      "triggerErrorIds": ["dp_wrong_initialization"],
+      "prerequisites": ["dp_base_cases"]
+    },
+    {
+      "lessonId": "dp_kadane",
+      "title": "Kadane's Algorithm Pattern",
+      "content": "Kadane's algorithm solves 'maximum subarray ending at each position'. The key insight: at each position, either extend the previous subarray or start fresh. current = max(nums[i], current + nums[i]). If previous sum is negative, starting fresh is better. This pattern extends to maximum product (track both max and min) and other problems.",
+      "triggerErrorIds": ["kadane_not_recognized", "kadane_decision_unclear"],
+      "prerequisites": ["dp_subproblem_definition"]
+    },
+    {
+      "lessonId": "dp_greedy_vs_dp",
+      "title": "When Greedy Fails and DP Helps",
+      "content": "Greedy makes locally optimal choices hoping for global optimum. It fails when local choices can't guarantee global optimum. Coin Change example: coins=[1,3,4], amount=6. Greedy picks 4+1+1=3 coins, but optimal is 3+3=2 coins. DP works because it considers ALL possibilities. Use DP when: choices affect future options, or you need to try multiple paths.",
+      "triggerErrorIds": ["greedy_vs_dp_confusion", "dp_when_needed_not_understood"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "dp_two_sequences",
+      "title": "DP on Two Sequences",
+      "content": "When comparing/combining two sequences (strings, arrays), use 2D DP where dp[i][j] represents the answer for prefixes text1[0..i-1] and text2[0..j-1]. Common patterns: (1) chars match: often dp[i-1][j-1] + something, (2) chars don't match: combine dp[i-1][j] and dp[i][j-1]. First row/column are base cases for empty prefix.",
+      "triggerErrorIds": ["dp_2d_case_missing", "dp_2d_index_mismatch"],
+      "prerequisites": ["dp_1d_vs_2d"]
+    },
+    {
+      "lessonId": "dp_grid_traversal",
+      "title": "Grid DP Patterns",
+      "content": "For grid problems where you can only move right/down: dp[i][j] depends on dp[i-1][j] (from above) and dp[i][j-1] (from left). For counting paths: dp[i][j] = dp[i-1][j] + dp[i][j-1]. For min cost: dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + grid[i][j]. Base case: first row and column have only one path to reach them.",
+      "triggerErrorIds": ["dp_grid_pattern_missed", "dp_wrong_fill_order"],
+      "prerequisites": ["dp_1d_vs_2d"]
+    },
+    {
+      "lessonId": "dp_edit_distance_ops",
+      "title": "Edit Distance Operations",
+      "content": "Edit distance has three operations mapping to DP transitions: (1) Insert: dp[i][j-1] + 1 (add char to word1 to match word2[j]), (2) Delete: dp[i-1][j] + 1 (remove char from word1), (3) Replace: dp[i-1][j-1] + 1 (change word1[i] to word2[j]). If chars match, no operation needed: dp[i][j] = dp[i-1][j-1].",
+      "triggerErrorIds": ["edit_distance_ops_wrong", "edit_distance_match_case_wrong"],
+      "prerequisites": ["dp_two_sequences"]
+    },
+    {
+      "lessonId": "dp_reconstruction",
+      "title": "Reconstructing DP Solutions",
+      "content": "To find the actual solution (not just optimal value), trace back through the DP table. From dp[m][n], check which choice led to that value and move to the corresponding cell. For LCS: if chars matched, add to result and go diagonal; else, go to larger of top/left. Time: O(m+n) for reconstruction after O(m*n) DP.",
+      "triggerErrorIds": ["dp_reconstruction_not_understood"],
+      "prerequisites": ["dp_two_sequences"]
+    },
+    {
+      "lessonId": "dp_unbounded_knapsack",
+      "title": "Unbounded Knapsack Pattern",
+      "content": "In unbounded knapsack (like Coin Change), you can use each item unlimited times. The key difference from 0/1 knapsack: when you use an item, you stay in the same 'row' (can use it again). For coin change: dp[i] = min(dp[i-coin] + 1) for all coins. The inner loop tries each coin for each amount.",
+      "triggerErrorIds": ["dp_wrong_pattern", "dp_wrong_loop_order"],
+      "prerequisites": ["dp_recurrence_relation"]
+    },
+    {
+      "lessonId": "dp_impossible_cases",
+      "title": "Handling Impossible Cases in DP",
+      "content": "For optimization problems, use sentinel values for impossible states. Minimization: initialize with infinity, check at end if still infinity (impossible). Maximization: initialize with -infinity. For counting: 0 means impossible. Always handle the sentinel at the end: 'return dp[n] if dp[n] != infinity else -1'. Don't forget to check bounds before accessing dp[i-k].",
+      "triggerErrorIds": ["dp_missing_impossible_case", "dp_missing_bound_check"],
+      "prerequisites": ["dp_initialization"]
+    },
+    {
+      "lessonId": "dp_top_down_vs_bottom_up",
+      "title": "Top-Down vs Bottom-Up DP",
+      "content": "Bottom-up: fill DP table iteratively from base cases. Pro: no recursion overhead, easier to optimize space. Top-down (memoization): recursive with caching. Pro: only computes needed subproblems, often easier to write. Both have same time complexity. Bottom-up is usually preferred in interviews for clarity and space optimization potential.",
+      "triggerErrorIds": ["dp_redundant_computation"],
+      "prerequisites": ["dp_recurrence_relation"]
+    },
+    {
+      "lessonId": "dp_2d_space_optimization",
+      "title": "Space Optimization for 2D DP",
+      "content": "For 2D DP where row i only depends on row i-1: use two 1D arrays (prev, curr) instead of full 2D grid. For LCS, you need: previous row, and diagonal value (before it's overwritten). Save diagonal before updating: temp = prev[j], prev[j] = curr[j], use temp as diagonal. This reduces O(m*n) space to O(min(m,n)).",
+      "triggerErrorIds": ["dp_2d_space_optimization_wrong"],
+      "prerequisites": ["dp_space_optimization", "dp_two_sequences"]
+    }
+  ],
+  "errorMappings": [
+    {
+      "errorId": "dp_no_subproblem_identification",
+      "pattern": "(don't know what dp\\[|not sure what to store|what should the state be)",
+      "lessonIds": ["dp_subproblem_definition"],
+      "feedbackTemplate": "Start by defining what dp[i] represents. Ask yourself: 'What is the answer to my problem for just the first i elements?' This definition guides everything else."
+    },
+    {
+      "errorId": "dp_missing_recurrence",
+      "pattern": "(how do I fill|what's the formula|how to compute dp)",
+      "lessonIds": ["dp_recurrence_relation"],
+      "feedbackTemplate": "Think about the last step/decision. For Climbing Stairs: to reach step i, you came from i-1 (1 step) or i-2 (2 steps). This gives dp[i] = dp[i-1] + dp[i-2]."
+    },
+    {
+      "errorId": "dp_incorrect_recurrence",
+      "pattern": "(dp\\[i\\]\\s*=\\s*dp\\[i-1\\]\\s*\\+\\s*1|wrong formula|incorrect transition)",
+      "lessonIds": ["dp_recurrence_relation"],
+      "feedbackTemplate": "Trace through your recurrence with a small example. Does dp[3] computed from dp[2] and dp[1] give the right answer? Verify each transition makes logical sense."
+    },
+    {
+      "errorId": "dp_missing_base_case",
+      "pattern": "(undefined|index.*-1|forgot.*base|base case)",
+      "lessonIds": ["dp_base_cases"],
+      "feedbackTemplate": "You need base cases! What's the answer when n=0 or n=1? These are values you know directly without using the recurrence."
+    },
+    {
+      "errorId": "dp_incorrect_base_value",
+      "pattern": "(dp\\[0\\]\\s*=\\s*0.*should be 1|dp\\[1\\]\\s*=\\s*0|wrong initial)",
+      "lessonIds": ["dp_base_cases", "dp_initialization"],
+      "feedbackTemplate": "Check your base case values. For counting problems, there's usually '1 way to do nothing' (dp[0]=1). For Climbing Stairs, dp[1]=1 (one step) and dp[2]=2 (two ways)."
+    },
+    {
+      "errorId": "dp_off_by_one",
+      "pattern": "(off by one|index out|array index|wrong size|n-1 instead of n)",
+      "lessonIds": ["dp_off_by_one"],
+      "feedbackTemplate": "Off-by-one error! If dp[i] represents 'first i elements', you need dp[n] to include all n elements, so array size is n+1. Also check: are you using 0-indexed or 1-indexed?"
+    },
+    {
+      "errorId": "dp_wrong_array_size",
+      "pattern": "(Array.*length n|size.*n(?!\\+)|\\[n\\].*out of bounds)",
+      "lessonIds": ["dp_off_by_one"],
+      "feedbackTemplate": "Array size issue. If you want dp[n] to be accessible, create array of size n+1. Common pattern: dp = [0] * (n + 1)."
+    },
+    {
+      "errorId": "dp_suboptimal_space",
+      "pattern": "(O\\(n\\) space|can.*optimize space|using full array)",
+      "lessonIds": ["dp_space_optimization"],
+      "feedbackTemplate": "Good observation about space. If dp[i] only uses dp[i-1] and dp[i-2], you only need two variables: prev1, prev2. Update them in a rolling fashion."
+    },
+    {
+      "errorId": "dp_pattern_not_generalized",
+      "pattern": "(different from fibonacci|similar problems|other examples)",
+      "lessonIds": ["dp_fibonacci_family"],
+      "feedbackTemplate": "This belongs to the Fibonacci family! Many problems have form dp[i] = f(dp[i-1], dp[i-2]). House Robber, Tribonacci, and decode ways are all variations."
+    },
+    {
+      "errorId": "dp_wrong_initialization",
+      "pattern": "(initialized to 0.*should be|infinity|wrong starting value)",
+      "lessonIds": ["dp_initialization"],
+      "feedbackTemplate": "Initialization depends on the problem type. Minimization: use infinity. Maximization: use -infinity. Counting: use 0 (with dp[0]=1 for 'one way to do nothing')."
+    },
+    {
+      "errorId": "dp_redundant_computation",
+      "pattern": "(exponential|recomputing|too slow|timeout)",
+      "lessonIds": ["dp_top_down_vs_bottom_up"],
+      "feedbackTemplate": "You're recomputing subproblems! Use either memoization (cache recursive results) or bottom-up DP (iterative table filling). This reduces exponential to polynomial time."
+    },
+    {
+      "errorId": "kadane_not_recognized",
+      "pattern": "(max subarray|maximum.*ending at|contiguous sum)",
+      "lessonIds": ["dp_kadane"],
+      "feedbackTemplate": "This is Kadane's algorithm! At each position, decide: extend the previous subarray or start fresh? current = max(nums[i], current + nums[i])."
+    },
+    {
+      "errorId": "kadane_decision_unclear",
+      "pattern": "(why start fresh|when to reset|extend or start)",
+      "lessonIds": ["dp_kadane"],
+      "feedbackTemplate": "Start fresh when the previous sum is negative (it can only hurt). max(nums[i], current + nums[i]) automatically makes this decision - if current is negative, nums[i] alone is better."
+    },
+    {
+      "errorId": "kadane_all_negative_fail",
+      "pattern": "(all negative|returns 0.*should be negative|empty subarray)",
+      "lessonIds": ["dp_kadane"],
+      "feedbackTemplate": "Handle all-negative arrays! Initialize max_sum and current_sum to nums[0], not 0. The problem asks for at least one element, so empty subarray isn't valid."
+    },
+    {
+      "errorId": "greedy_vs_dp_confusion",
+      "pattern": "(why not greedy|greedy fails|largest coin first)",
+      "lessonIds": ["dp_greedy_vs_dp"],
+      "feedbackTemplate": "Greedy doesn't work here. Counterexample for coins: [1,3,4], amount=6. Greedy: 4+1+1=3 coins. Optimal: 3+3=2 coins. DP tries all possibilities."
+    },
+    {
+      "errorId": "dp_when_needed_not_understood",
+      "pattern": "(when to use dp|dp vs greedy|why dp here)",
+      "lessonIds": ["dp_greedy_vs_dp"],
+      "feedbackTemplate": "Use DP when: (1) optimal substructure exists (optimal solution contains optimal sub-solutions), (2) overlapping subproblems (same subproblems solved multiple times), (3) greedy doesn't work."
+    },
+    {
+      "errorId": "dp_wrong_dimensions",
+      "pattern": "(1D.*should be 2D|need 2D|second dimension)",
+      "lessonIds": ["dp_1d_vs_2d"],
+      "feedbackTemplate": "Count the changing parameters in your subproblem. One sequence = 1D (index i). Two sequences = 2D (indices i, j). Grid with row and column = 2D."
+    },
+    {
+      "errorId": "dp_2d_initialization_wrong",
+      "pattern": "(2D.*initialize|first row|first column|base.*2D)",
+      "lessonIds": ["dp_grid_traversal", "dp_two_sequences"],
+      "feedbackTemplate": "For 2D DP, base cases are the first row and first column. They represent comparing with an empty prefix. For LCS: dp[i][0]=dp[0][j]=0. For edit distance: dp[i][0]=i, dp[0][j]=j."
+    },
+    {
+      "errorId": "dp_2d_case_missing",
+      "pattern": "(forgot.*case|match.*no match|two cases)",
+      "lessonIds": ["dp_two_sequences"],
+      "feedbackTemplate": "For two-sequence DP, there are typically two cases: (1) characters match - often use diagonal dp[i-1][j-1], (2) characters don't match - combine dp[i-1][j] and dp[i][j-1]."
+    },
+    {
+      "errorId": "dp_2d_index_mismatch",
+      "pattern": "(text1\\[i\\].*text2\\[j\\]|wrong index|string.*dp index)",
+      "lessonIds": ["dp_off_by_one", "dp_two_sequences"],
+      "feedbackTemplate": "Index mismatch! If dp uses 1-indexing (dp[i][j] = LCS for first i and j chars), then strings are 0-indexed: text1[i-1] and text2[j-1]."
+    },
+    {
+      "errorId": "dp_grid_pattern_missed",
+      "pattern": "(grid problem|2D grid|paths in grid)",
+      "lessonIds": ["dp_grid_traversal"],
+      "feedbackTemplate": "Grid DP pattern: dp[i][j] = f(dp[i-1][j], dp[i][j-1]) + something. You can only come from top or left. First row/column are base cases with only one path."
+    },
+    {
+      "errorId": "dp_wrong_fill_order",
+      "pattern": "(wrong order|fill.*before|dependency.*computed)",
+      "lessonIds": ["dp_grid_traversal"],
+      "feedbackTemplate": "Fill order matters! For grid DP going right/down, fill top-to-bottom, left-to-right. This ensures dp[i-1][j] and dp[i][j-1] are computed before dp[i][j]."
+    },
+    {
+      "errorId": "edit_distance_ops_wrong",
+      "pattern": "(insert.*delete.*replace|which operation|operation mapping)",
+      "lessonIds": ["dp_edit_distance_ops"],
+      "feedbackTemplate": "Edit distance operations: Insert (add to word1) = dp[i][j-1]+1. Delete (remove from word1) = dp[i-1][j]+1. Replace = dp[i-1][j-1]+1. Think about what each does to align strings."
+    },
+    {
+      "errorId": "edit_distance_match_case_wrong",
+      "pattern": "(chars match|same character|no operation)",
+      "lessonIds": ["dp_edit_distance_ops"],
+      "feedbackTemplate": "When characters match, no operation needed! dp[i][j] = dp[i-1][j-1] (just move both pointers). Only when chars differ do you need to add 1 for an operation."
+    },
+    {
+      "errorId": "dp_wrong_pattern",
+      "pattern": "(wrong approach|not the right pattern|different type of dp)",
+      "lessonIds": ["dp_unbounded_knapsack"],
+      "feedbackTemplate": "Identify the pattern: Coin Change is unbounded knapsack (unlimited use of each item). The recurrence tries all coins: dp[i] = min(dp[i], dp[i-coin]+1) for each coin."
+    },
+    {
+      "errorId": "dp_wrong_loop_order",
+      "pattern": "(loop order|coins first|amount first)",
+      "lessonIds": ["dp_unbounded_knapsack"],
+      "feedbackTemplate": "For unbounded knapsack (Coin Change), loop amounts then coins: for each amount, try all coins. This is different from 0/1 knapsack where loop order matters for correctness."
+    },
+    {
+      "errorId": "dp_missing_impossible_case",
+      "pattern": "(infinity|-1|impossible|no solution)",
+      "lessonIds": ["dp_impossible_cases"],
+      "feedbackTemplate": "Handle impossible cases! If dp[amount] is still infinity after DP, return -1. Make sure to initialize with infinity and check at the end."
+    },
+    {
+      "errorId": "dp_missing_bound_check",
+      "pattern": "(negative index|i-coin < 0|out of bounds)",
+      "lessonIds": ["dp_impossible_cases"],
+      "feedbackTemplate": "Add bound checks! Before accessing dp[i-coin], check that coin <= i. This prevents negative indices and invalid states."
+    },
+    {
+      "errorId": "dp_reconstruction_not_understood",
+      "pattern": "(actual.*string|return.*sequence|reconstruct|trace back)",
+      "lessonIds": ["dp_reconstruction"],
+      "feedbackTemplate": "To reconstruct the solution, trace back from dp[m][n]. At each cell, check which transition was used (match/diagonal, or max of top/left) and build the answer backwards."
+    },
+    {
+      "errorId": "dp_variant_not_understood",
+      "pattern": "(what if|variant|modification|different version)",
+      "lessonIds": ["dp_reconstruction"],
+      "feedbackTemplate": "Good question about variants! Most DP problems have standard modifications: weighted costs (change +1 to +cost), circular (run DP twice), reconstruction (trace back through table)."
+    },
+    {
+      "errorId": "dp_sum_vs_min_confusion",
+      "pattern": "(sum.*should be min|count vs optimize|adding instead of min)",
+      "lessonIds": ["dp_grid_traversal"],
+      "feedbackTemplate": "Counting vs optimization! Unique Paths counts paths (sum transitions). Min Path Sum finds optimal path (min of transitions + current). Same structure, different aggregation."
+    },
+    {
+      "errorId": "dp_math_alternative_missed",
+      "pattern": "(combinatorics|math solution|binomial|factorial)",
+      "lessonIds": ["dp_grid_traversal"],
+      "feedbackTemplate": "Some DP problems have mathematical solutions! Unique Paths = C(m+n-2, m-1) since you make exactly m-1 down moves and n-1 right moves in any order. But DP is more generalizable."
+    },
+    {
+      "errorId": "dp_2d_space_optimization_wrong",
+      "pattern": "(space.*2D|two rows|rolling array.*2D)",
+      "lessonIds": ["dp_2d_space_optimization"],
+      "feedbackTemplate": "2D to 1D space optimization: use two arrays (prev, curr) if row i only depends on row i-1. For diagonal dependency (LCS), save the diagonal value before overwriting."
+    },
+    {
+      "errorId": "dp_pattern_relationship_missed",
+      "pattern": "(related to|connection between|similar to)",
+      "lessonIds": ["dp_two_sequences"],
+      "feedbackTemplate": "Many DP problems are related! LCS and Edit Distance: edits = m + n - 2*LCS. Unique Paths and Min Path Sum: same grid structure. Recognizing relationships helps solve new problems."
+    },
+    {
+      "errorId": "dp_wrong_return_value",
+      "pattern": "(return dp\\[|wrong.*return|last element)",
+      "lessonIds": ["dp_off_by_one"],
+      "feedbackTemplate": "Check what to return! Usually dp[n] for 'first n elements' problems, dp[n-1] for 'at index n-1' problems, dp[m][n] for 2D. Trace through to verify which cell has your answer."
+    },
+    {
+      "errorId": "dp_missing_constraint",
+      "pattern": "(constraint|condition|can't.*adjacent|skip rule)",
+      "lessonIds": ["dp_recurrence_relation"],
+      "feedbackTemplate": "Incorporate the constraint into your recurrence! For House Robber, the 'no adjacent' constraint means: rob house i = dp[i-2] + nums[i] (skip i-1). Skip house i = dp[i-1]."
+    },
+    {
+      "errorId": "complexity_analysis_wrong",
+      "pattern": "(time complexity|space complexity|O\\(|big-?o)",
+      "lessonIds": ["dp_top_down_vs_bottom_up"],
+      "feedbackTemplate": "For DP complexity: Time = number of states × time per state. Space = number of states (or optimized). 1D: O(n) time/space. 2D: O(m*n) time/space. Coin Change: O(amount*coins)."
+    },
+    {
+      "errorId": "dp_cumulative_sum_wrong",
+      "pattern": "(cumulative.*sum|prefix.*wrong|first row.*column)",
+      "lessonIds": ["dp_grid_traversal"],
+      "feedbackTemplate": "For grid min/max problems, first row and column need cumulative values. First row: dp[0][j] = dp[0][j-1] + grid[0][j]. First column: dp[i][0] = dp[i-1][0] + grid[i][0]."
+    },
+    {
+      "errorId": "kadane_wrong_implementation",
+      "pattern": "(kadane.*wrong|max subarray.*bug|current.*update)",
+      "lessonIds": ["dp_kadane"],
+      "feedbackTemplate": "Kadane's implementation: current = max(nums[i], current + nums[i]); global_max = max(global_max, current). Initialize both with nums[0]. Update current first, then global_max."
+    },
+    {
+      "errorId": "kadane_product_variant_wrong",
+      "pattern": "(max product|product subarray|negative.*product)",
+      "lessonIds": ["dp_kadane"],
+      "feedbackTemplate": "For max product subarray, track both max and min at each position. A negative number can flip min to max! max_here = max(nums[i], max_here*nums[i], min_here*nums[i])."
+    },
+    {
+      "errorId": "dp_2d_base_case_wrong",
+      "pattern": "(empty string|dp\\[0\\]\\[|dp\\[\\]\\[0\\]|first row.*first col)",
+      "lessonIds": ["dp_two_sequences", "dp_grid_traversal"],
+      "feedbackTemplate": "2D base cases represent empty prefixes. For LCS: comparing with empty string gives 0 matches. For edit distance: converting to/from empty string needs i or j operations. For grids: first row/column have only one path."
+    }
+  ]
+}

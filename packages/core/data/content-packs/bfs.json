@@ -1,0 +1,1059 @@
+{
+  "$schema": "./content-pack.schema.json",
+  "packId": "bfs",
+  "pattern": "BFS",
+  "version": "1.0.0",
+  "rungs": {
+    "1": {
+      "level": 1,
+      "name": "Grid and Graph BFS",
+      "description": "BFS for shortest path in grids and graphs with uniform edge weights",
+      "canonical": {
+        "problemId": "bfs-r1-canonical",
+        "title": "Shortest Path in Binary Matrix",
+        "statement": "Given an `n x n` binary matrix `grid`, return the length of the shortest clear path in the matrix. If there is no clear path, return `-1`.\n\nA clear path in a binary matrix is a path from the top-left cell (0, 0) to the bottom-right cell (n - 1, n - 1) such that:\n- All the visited cells of the path are `0`.\n- All the adjacent cells of the path are 8-directionally connected (they differ in at most one row and one column).\n\nThe length of a clear path is the number of visited cells of this path.\n\n**Example 1:**\n```\nInput: grid = [[0,1],[1,0]]\nOutput: 2\n```\n\n**Example 2:**\n```\nInput: grid = [[0,0,0],[1,1,0],[1,1,0]]\nOutput: 4\n```\n\n**Example 3:**\n```\nInput: grid = [[1,0,0],[1,1,0],[1,1,0]]\nOutput: -1\nExplanation: Start cell is blocked.\n```\n\n**Constraints:**\n- n == grid.length\n- n == grid[i].length\n- 1 <= n <= 100\n- grid[i][j] is 0 or 1",
+        "targetComplexity": "O(n²)",
+        "testCases": [
+          {
+            "input": "[[0,1],[1,0]]",
+            "expectedOutput": "2",
+            "isHidden": false,
+            "explanation": "Path: (0,0) -> (1,1)"
+          },
+          {
+            "input": "[[0,0,0],[1,1,0],[1,1,0]]",
+            "expectedOutput": "4",
+            "isHidden": false,
+            "explanation": "Path through top and right side"
+          },
+          {
+            "input": "[[1,0,0],[1,1,0],[1,1,0]]",
+            "expectedOutput": "-1",
+            "isHidden": false,
+            "explanation": "Start cell is blocked"
+          },
+          {
+            "input": "[[0]]",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "Single cell, already at destination"
+          },
+          {
+            "input": "[[0,0,0],[0,1,0],[0,0,0]]",
+            "expectedOutput": "3",
+            "isHidden": true,
+            "explanation": "Diagonal path available"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "BFS",
+                "acceptableVariants": ["breadth-first search", "level-order", "shortest path unweighted"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "BFS from (0,0) exploring 8 directions; first time we reach (n-1,n-1) is shortest path; use visited set to avoid cycles",
+                "keywords": ["queue", "8 directions", "visited", "shortest", "level"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n²)",
+                "acceptableVariants": ["O(n²) time, O(n²) space", "O(V+E)"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Handles blocked start/end", "8-directional movement"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n²) time", "Proper visited marking", "No redundant exploration"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear BFS structure", "Clean direction handling"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "BFS guarantees shortest path in unweighted graphs because it explores all nodes at distance d before any at distance d+1",
+                "isCorrect": true,
+                "feedback": "Correct! BFS explores level by level, so the first time we reach the destination is the shortest path."
+              },
+              {
+                "id": "opt-b",
+                "text": "DFS would be more efficient for finding shortest path",
+                "isCorrect": false,
+                "feedback": "DFS doesn't guarantee shortest path - it might find a longer path first. BFS is optimal for unweighted shortest path."
+              },
+              {
+                "id": "opt-c",
+                "text": "We need Dijkstra's algorithm for this problem",
+                "isCorrect": false,
+                "feedback": "Dijkstra is for weighted graphs. With uniform weights (each step = 1), BFS is simpler and equally optimal."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "4.*direction|up.*down.*left.*right",
+            "errorType": "WRONG_DIRECTIONS",
+            "microLessonRef": "ml-bfs-001",
+            "feedback": "This problem requires 8-directional movement (including diagonals), not just 4."
+          },
+          {
+            "pattern": "visited.*after|mark.*after.*queue",
+            "errorType": "LATE_VISITED_MARKING",
+            "microLessonRef": "ml-bfs-002",
+            "feedback": "Mark cells as visited when adding to queue, not when processing. This prevents duplicate entries."
+          },
+          {
+            "pattern": "dfs|DFS|recursion|recursive",
+            "errorType": "WRONG_ALGORITHM",
+            "microLessonRef": "ml-bfs-003",
+            "feedback": "DFS doesn't guarantee shortest path. Use BFS with a queue for shortest path problems."
+          }
+        ],
+        "microLessonRefs": ["ml-bfs-001", "ml-bfs-002", "ml-bfs-003", "ml-bfs-basic-intro"],
+        "hints": [
+          "BFS guarantees shortest path in unweighted graphs - explore level by level.",
+          "Use a queue, starting with (0, 0) at distance 1.",
+          "8 directions means including diagonals: (dr, dc) for dr, dc in {-1, 0, 1} except (0, 0).",
+          "Mark cells as visited when adding to queue to avoid duplicates.",
+          "Check if start or end cell is blocked - return -1 immediately."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "bfs-r1-sibling-1",
+          "title": "Rotting Oranges",
+          "statement": "You are given an `m x n` grid where each cell can have one of three values:\n- `0` representing an empty cell,\n- `1` representing a fresh orange, or\n- `2` representing a rotten orange.\n\nEvery minute, any fresh orange that is 4-directionally adjacent to a rotten orange becomes rotten.\n\nReturn the minimum number of minutes that must elapse until no cell has a fresh orange. If this is impossible, return `-1`.\n\n**Example 1:**\n```\nInput: grid = [[2,1,1],[1,1,0],[0,1,1]]\nOutput: 4\n```\n\n**Example 2:**\n```\nInput: grid = [[2,1,1],[0,1,1],[1,0,1]]\nOutput: -1\nExplanation: The orange in the bottom left corner is never reached.\n```\n\n**Example 3:**\n```\nInput: grid = [[0,2]]\nOutput: 0\nExplanation: No fresh oranges at minute 0, so answer is 0.\n```\n\n**Constraints:**\n- m == grid.length\n- n == grid[i].length\n- 1 <= m, n <= 10\n- grid[i][j] is 0, 1, or 2",
+          "targetComplexity": "O(m*n)",
+          "testCases": [
+            {
+              "input": "[[2,1,1],[1,1,0],[0,1,1]]",
+              "expectedOutput": "4",
+              "isHidden": false,
+              "explanation": "All oranges rot in 4 minutes"
+            },
+            {
+              "input": "[[2,1,1],[0,1,1],[1,0,1]]",
+              "expectedOutput": "-1",
+              "isHidden": false,
+              "explanation": "Bottom-left orange cannot be reached"
+            },
+            {
+              "input": "[[0,2]]",
+              "expectedOutput": "0",
+              "isHidden": false,
+              "explanation": "No fresh oranges"
+            },
+            {
+              "input": "[[1]]",
+              "expectedOutput": "-1",
+              "isHidden": true,
+              "explanation": "Fresh orange with no rotten ones"
+            },
+            {
+              "input": "[[2,2],[1,1]]",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "Multiple sources"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BFS",
+                  "acceptableVariants": ["multi-source BFS", "level-order BFS"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Multi-source BFS starting from all rotten oranges simultaneously; each level = 1 minute; track remaining fresh count",
+                  "keywords": ["multi-source", "queue", "level", "minutes", "fresh count"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(m*n)",
+                  "acceptableVariants": ["O(m*n) time and space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles unreachable oranges", "Returns 0 when no fresh"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(m*n) time", "Multi-source BFS"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear level tracking"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Multi-source BFS starts with all rotten oranges in the queue, simulating simultaneous rotting",
+                  "isCorrect": true,
+                  "feedback": "Correct! All sources start at time 0, and BFS explores their neighbors at time 1, etc."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should BFS from each rotten orange separately and take the maximum",
+                  "isCorrect": false,
+                  "feedback": "That's inefficient and incorrect. Multi-source BFS handles simultaneous spreading naturally."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "separate.*BFS|multiple.*BFS|for.*each.*rotten",
+              "errorType": "SEPARATE_BFS",
+              "microLessonRef": "ml-bfs-004",
+              "feedback": "Use multi-source BFS: add all rotten oranges to the queue initially, not separate BFS from each."
+            },
+            {
+              "pattern": "fresh.*count|remaining|impossible",
+              "errorType": "MISSING_FRESH_CHECK",
+              "microLessonRef": "ml-bfs-005",
+              "feedback": "Track fresh orange count. If any remain after BFS, return -1."
+            }
+          ],
+          "microLessonRefs": ["ml-bfs-002", "ml-bfs-004", "ml-bfs-005"],
+          "hints": [
+            "This is multi-source BFS - start with ALL rotten oranges in the queue.",
+            "Count fresh oranges initially. Decrement when one rots.",
+            "Each BFS level represents one minute passing.",
+            "After BFS, if fresh count > 0, return -1.",
+            "If no fresh oranges exist initially, return 0."
+          ]
+        },
+        {
+          "problemId": "bfs-r1-sibling-2",
+          "title": "Number of Islands",
+          "statement": "Given an `m x n` 2D binary grid `grid` which represents a map of `'1'`s (land) and `'0'`s (water), return the number of islands.\n\nAn island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.\n\n**Example 1:**\n```\nInput: grid = [\n  [\"1\",\"1\",\"1\",\"1\",\"0\"],\n  [\"1\",\"1\",\"0\",\"1\",\"0\"],\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"0\",\"0\",\"0\",\"0\",\"0\"]\n]\nOutput: 1\n```\n\n**Example 2:**\n```\nInput: grid = [\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"0\",\"0\",\"1\",\"0\",\"0\"],\n  [\"0\",\"0\",\"0\",\"1\",\"1\"]\n]\nOutput: 3\n```\n\n**Constraints:**\n- m == grid.length\n- n == grid[i].length\n- 1 <= m, n <= 300\n- grid[i][j] is '0' or '1'",
+          "targetComplexity": "O(m*n)",
+          "testCases": [
+            {
+              "input": "[[\"1\",\"1\",\"1\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"1\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"0\",\"0\"]]",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "One connected island"
+            },
+            {
+              "input": "[[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"1\",\"1\",\"0\",\"0\",\"0\"],[\"0\",\"0\",\"1\",\"0\",\"0\"],[\"0\",\"0\",\"0\",\"1\",\"1\"]]",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "Three separate islands"
+            },
+            {
+              "input": "[[\"1\"]]",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "Single cell island"
+            },
+            {
+              "input": "[[\"0\"]]",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "No islands"
+            },
+            {
+              "input": "[[\"1\",\"0\",\"1\",\"0\",\"1\"]]",
+              "expectedOutput": "3",
+              "isHidden": true,
+              "explanation": "Separate single-cell islands"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BFS",
+                  "acceptableVariants": ["BFS", "DFS", "flood fill", "connected components"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Iterate grid; when finding unvisited land, increment count and BFS/DFS to mark entire island as visited",
+                  "keywords": ["iterate", "unvisited", "flood fill", "mark", "count"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(m*n)",
+                  "acceptableVariants": ["O(m*n) time and space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correctly identifies separate islands"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(m*n) time", "Each cell visited once"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear separation of counting and exploring"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Each BFS/DFS from an unvisited land cell explores exactly one island, so we count how many times we start a new search",
+                  "isCorrect": true,
+                  "feedback": "Correct! The number of times we initiate BFS/DFS equals the number of connected components (islands)."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should count each '1' cell as a separate island",
+                  "isCorrect": false,
+                  "feedback": "Adjacent '1' cells form a single island. We need to count connected components, not individual cells."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "count.*1|every.*land",
+              "errorType": "COUNTING_CELLS",
+              "microLessonRef": "ml-bfs-006",
+              "feedback": "Count islands (connected components), not individual land cells. Use BFS to mark all cells of an island."
+            },
+            {
+              "pattern": "diagonal|8.*direction",
+              "errorType": "WRONG_CONNECTIVITY",
+              "microLessonRef": "ml-bfs-007",
+              "feedback": "Islands connect horizontally and vertically only (4 directions), not diagonally."
+            }
+          ],
+          "microLessonRefs": ["ml-bfs-002", "ml-bfs-006", "ml-bfs-007"],
+          "hints": [
+            "Iterate through the grid. When you find an unvisited '1', that's a new island.",
+            "Use BFS (or DFS) to visit all connected '1's, marking them as visited.",
+            "You can mark visited by changing '1' to '0' or using a separate visited set.",
+            "Only 4 directions (up, down, left, right) - diagonals don't connect."
+          ]
+        },
+        {
+          "problemId": "bfs-r1-sibling-3",
+          "title": "01 Matrix",
+          "statement": "Given an `m x n` binary matrix `mat`, return the distance of the nearest `0` for each cell.\n\nThe distance between two adjacent cells is `1`.\n\n**Example 1:**\n```\nInput: mat = [[0,0,0],[0,1,0],[0,0,0]]\nOutput: [[0,0,0],[0,1,0],[0,0,0]]\n```\n\n**Example 2:**\n```\nInput: mat = [[0,0,0],[0,1,0],[1,1,1]]\nOutput: [[0,0,0],[0,1,0],[1,2,1]]\n```\n\n**Constraints:**\n- m == mat.length\n- n == mat[i].length\n- 1 <= m, n <= 10^4\n- 1 <= m * n <= 10^4\n- mat[i][j] is either 0 or 1.\n- There is at least one 0 in mat.",
+          "targetComplexity": "O(m*n)",
+          "testCases": [
+            {
+              "input": "[[0,0,0],[0,1,0],[0,0,0]]",
+              "expectedOutput": "[[0,0,0],[0,1,0],[0,0,0]]",
+              "isHidden": false,
+              "explanation": "Center cell is 1 step from nearest 0"
+            },
+            {
+              "input": "[[0,0,0],[0,1,0],[1,1,1]]",
+              "expectedOutput": "[[0,0,0],[0,1,0],[1,2,1]]",
+              "isHidden": false,
+              "explanation": "Bottom center is 2 steps from nearest 0"
+            },
+            {
+              "input": "[[0]]",
+              "expectedOutput": "[[0]]",
+              "isHidden": true,
+              "explanation": "Single zero"
+            },
+            {
+              "input": "[[1,1,1],[1,1,1],[1,1,0]]",
+              "expectedOutput": "[[4,3,2],[3,2,1],[2,1,0]]",
+              "isHidden": true,
+              "explanation": "Corner zero, distances spread out"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BFS",
+                  "acceptableVariants": ["multi-source BFS", "reverse BFS"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Multi-source BFS from all 0s simultaneously; distance to each cell is its BFS level; cells further from any 0 are discovered later",
+                  "keywords": ["multi-source", "all zeros", "distance", "level"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(m*n)",
+                  "acceptableVariants": ["O(m*n) time and space"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correct distances"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(m*n) time", "Multi-source BFS"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear distance tracking"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Starting BFS from all 0s gives us distance to nearest 0 for each cell in one pass",
+                  "isCorrect": true,
+                  "feedback": "Correct! Multi-source BFS computes distances from the nearest source for all cells simultaneously."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should BFS from each 1 to find its nearest 0",
+                  "isCorrect": false,
+                  "feedback": "That's O((m*n)²) in worst case. Multi-source BFS from all 0s is O(m*n)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "from.*each.*1|BFS.*from.*1",
+              "errorType": "WRONG_DIRECTION",
+              "microLessonRef": "ml-bfs-008",
+              "feedback": "BFS from all 0s to 1s, not from each 1 to nearest 0. This is much more efficient."
+            },
+            {
+              "pattern": "infinity|INT_MAX|float\\('inf'\\)",
+              "errorType": "INITIALIZATION",
+              "microLessonRef": "ml-bfs-009",
+              "feedback": "Initialize distances: 0 for cells with 0, infinity (or -1) for cells with 1 to be filled by BFS."
+            }
+          ],
+          "microLessonRefs": ["ml-bfs-004", "ml-bfs-008", "ml-bfs-009"],
+          "hints": [
+            "Think backwards: instead of finding nearest 0 from each 1, spread out from all 0s.",
+            "Multi-source BFS: add all 0 cells to queue with distance 0.",
+            "BFS ensures first time we reach a 1-cell, it's via the shortest path from some 0.",
+            "Initialize result with 0s at zero-cells, and infinity at one-cells.",
+            "Update distance when visiting a cell for the first time."
+          ]
+        }
+      ]
+    },
+    "2": {
+      "level": 2,
+      "name": "State-Space BFS",
+      "description": "BFS where states are more complex than just positions, often involving transformations",
+      "canonical": {
+        "problemId": "bfs-r2-canonical",
+        "title": "Word Ladder",
+        "statement": "A transformation sequence from word `beginWord` to word `endWord` using a dictionary `wordList` is a sequence of words `beginWord -> s1 -> s2 -> ... -> sk` such that:\n\n- Every adjacent pair of words differs by a single letter.\n- Every `si` for `1 <= i <= k` is in `wordList`. Note that `beginWord` does not need to be in `wordList`.\n- `sk == endWord`\n\nGiven two words, `beginWord` and `endWord`, and a dictionary `wordList`, return the number of words in the shortest transformation sequence from `beginWord` to `endWord`, or `0` if no such sequence exists.\n\n**Example 1:**\n```\nInput: beginWord = \"hit\", endWord = \"cog\", wordList = [\"hot\",\"dot\",\"dog\",\"lot\",\"log\",\"cog\"]\nOutput: 5\nExplanation: One shortest transformation sequence is \"hit\" -> \"hot\" -> \"dot\" -> \"dog\" -> \"cog\", which is 5 words long.\n```\n\n**Example 2:**\n```\nInput: beginWord = \"hit\", endWord = \"cog\", wordList = [\"hot\",\"dot\",\"dog\",\"lot\",\"log\"]\nOutput: 0\nExplanation: The endWord \"cog\" is not in wordList.\n```\n\n**Constraints:**\n- 1 <= beginWord.length <= 10\n- endWord.length == beginWord.length\n- 1 <= wordList.length <= 5000\n- wordList[i].length == beginWord.length\n- beginWord, endWord, and wordList[i] consist of lowercase English letters.\n- beginWord != endWord\n- All the words in wordList are unique.",
+        "targetComplexity": "O(M² × N)",
+        "testCases": [
+          {
+            "input": "\"hit\", \"cog\", [\"hot\",\"dot\",\"dog\",\"lot\",\"log\",\"cog\"]",
+            "expectedOutput": "5",
+            "isHidden": false,
+            "explanation": "hit -> hot -> dot -> dog -> cog"
+          },
+          {
+            "input": "\"hit\", \"cog\", [\"hot\",\"dot\",\"dog\",\"lot\",\"log\"]",
+            "expectedOutput": "0",
+            "isHidden": false,
+            "explanation": "endWord not in list"
+          },
+          {
+            "input": "\"a\", \"c\", [\"a\",\"b\",\"c\"]",
+            "expectedOutput": "2",
+            "isHidden": true,
+            "explanation": "a -> c directly"
+          },
+          {
+            "input": "\"hot\", \"dog\", [\"hot\",\"dog\"]",
+            "expectedOutput": "0",
+            "isHidden": true,
+            "explanation": "No path, differ by 2 letters"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "BFS",
+                "acceptableVariants": ["BFS on word graph", "state-space BFS", "shortest path"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Each word is a node; edges connect words differing by one letter; BFS finds shortest path from beginWord to endWord",
+                "keywords": ["graph", "one letter", "BFS", "shortest", "visited"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(M² × N)",
+                "acceptableVariants": ["O(M² * N)", "O(N * M * 26)"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Checks endWord in list", "Handles no path"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["Efficient neighbor generation", "Proper visited tracking"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear word transformation logic"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "Words are nodes in an implicit graph; BFS finds the shortest transformation sequence",
+                "isCorrect": true,
+                "feedback": "Correct! The word graph connects words differing by one letter, and BFS gives shortest path."
+              },
+              {
+                "id": "opt-b",
+                "text": "We should use DFS to explore all possible paths",
+                "isCorrect": false,
+                "feedback": "DFS doesn't guarantee shortest path. BFS is optimal for unweighted shortest path."
+              },
+              {
+                "id": "opt-c",
+                "text": "Dynamic programming is more suitable",
+                "isCorrect": false,
+                "feedback": "This is a graph shortest path problem, not a DP problem. BFS is the right approach."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "compare.*every.*word|O\\(N\\^2\\)",
+            "errorType": "INEFFICIENT_NEIGHBORS",
+            "microLessonRef": "ml-bfs-101",
+            "feedback": "Instead of comparing with every word, try all single-letter changes and check if result is in wordList (using a set)."
+          },
+          {
+            "pattern": "endWord.*not.*check|forgot.*endWord",
+            "errorType": "MISSING_END_CHECK",
+            "microLessonRef": "ml-bfs-102",
+            "feedback": "Check if endWord is in wordList at the start. If not, return 0 immediately."
+          },
+          {
+            "pattern": "count.*edges|count.*-.*1",
+            "errorType": "COUNTING_ERROR",
+            "microLessonRef": "ml-bfs-103",
+            "feedback": "The problem asks for number of WORDS in sequence, not edges. Include beginWord in count."
+          }
+        ],
+        "microLessonRefs": ["ml-bfs-101", "ml-bfs-102", "ml-bfs-103", "ml-bfs-state-intro"],
+        "hints": [
+          "Model this as a graph: words are nodes, edges connect words differing by one letter.",
+          "BFS from beginWord; first time we reach endWord is the shortest path.",
+          "Efficient neighbor generation: for each position, try all 26 letters.",
+          "Use a set for wordList for O(1) lookup.",
+          "Check if endWord is in wordList before starting BFS.",
+          "Count words in path, not edges (include beginWord)."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "bfs-r2-sibling-1",
+          "title": "Open the Lock",
+          "statement": "You have a lock in front of you with 4 circular wheels. Each wheel has 10 slots: `'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'`. The wheels can rotate freely and wrap around: for example we can turn `'9'` to be `'0'`, or `'0'` to be `'9'`. Each move consists of turning one wheel one slot.\n\nThe lock initially starts at `'0000'`, a string representing the state of the 4 wheels.\n\nYou are given a list of `deadends`, meaning if the lock displays any of these codes, the wheels of the lock will stop turning and you will be unable to open it.\n\nGiven a `target` representing the value of the wheels that will unlock the lock, return the minimum total number of turns required to open the lock, or -1 if it is impossible.\n\n**Example 1:**\n```\nInput: deadends = [\"0201\",\"0101\",\"0102\",\"1212\",\"2002\"], target = \"0202\"\nOutput: 6\nExplanation: \"0000\" -> \"1000\" -> \"1100\" -> \"1200\" -> \"1201\" -> \"1202\" -> \"0202\"\n```\n\n**Example 2:**\n```\nInput: deadends = [\"8888\"], target = \"0009\"\nOutput: 1\nExplanation: We can turn the last wheel in reverse.\n```\n\n**Example 3:**\n```\nInput: deadends = [\"0000\"], target = \"8888\"\nOutput: -1\nExplanation: We cannot move from the starting point.\n```\n\n**Constraints:**\n- 1 <= deadends.length <= 500\n- deadends[i].length == 4\n- target.length == 4\n- target will not be in the list deadends.\n- target and deadends[i] consist of digits only.",
+          "targetComplexity": "O(10^4)",
+          "testCases": [
+            {
+              "input": "[\"0201\",\"0101\",\"0102\",\"1212\",\"2002\"], \"0202\"",
+              "expectedOutput": "6",
+              "isHidden": false,
+              "explanation": "Avoid deadends, 6 turns needed"
+            },
+            {
+              "input": "[\"8888\"], \"0009\"",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "One turn: 0000 -> 0009"
+            },
+            {
+              "input": "[\"0000\"], \"8888\"",
+              "expectedOutput": "-1",
+              "isHidden": false,
+              "explanation": "Start is a deadend"
+            },
+            {
+              "input": "[], \"0000\"",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "Already at target"
+            },
+            {
+              "input": "[\"1111\"], \"1111\"",
+              "expectedOutput": "-1",
+              "isHidden": true,
+              "explanation": "Target is deadend (per constraints, shouldn't happen, but handle gracefully)"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BFS",
+                  "acceptableVariants": ["state-space BFS", "shortest path"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Each lock state is a node; 8 neighbors (4 wheels × 2 directions); BFS from 0000 avoiding deadends",
+                  "keywords": ["state", "neighbors", "deadends", "BFS", "turns"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(10^4)",
+                  "acceptableVariants": ["O(10^4 * 8)", "O(10000)"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles start deadend", "Handles wrap around"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["BFS exploration", "Set-based deadend check"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear state transition logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "The state space is all 10^4 possible lock combinations; BFS explores this avoiding deadends",
+                  "isCorrect": true,
+                  "feedback": "Correct! Each 4-digit combination is a state, and we BFS through valid states."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should try each wheel independently and add results",
+                  "isCorrect": false,
+                  "feedback": "Wheels are not independent due to deadends. We need to consider full states."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "9.*\\+.*1|0.*-.*1|wrap",
+              "errorType": "WRAP_AROUND",
+              "microLessonRef": "ml-bfs-104",
+              "feedback": "Handle wrap around: 9+1=0, 0-1=9. Use modulo: (digit + 1) % 10 and (digit + 9) % 10."
+            },
+            {
+              "pattern": "start.*deadend|0000.*dead",
+              "errorType": "START_CHECK",
+              "microLessonRef": "ml-bfs-105",
+              "feedback": "Check if '0000' is in deadends at the start. If so, return -1 immediately."
+            }
+          ],
+          "microLessonRefs": ["ml-bfs-101", "ml-bfs-104", "ml-bfs-105"],
+          "hints": [
+            "State space: all 4-digit combinations (10^4 = 10000 states).",
+            "Each state has 8 neighbors: 4 wheels × 2 directions (up/down).",
+            "Handle wrap around: 9→0 and 0→9.",
+            "Treat deadends as walls - skip them in BFS.",
+            "Check if '0000' is a deadend before starting."
+          ]
+        },
+        {
+          "problemId": "bfs-r2-sibling-2",
+          "title": "Sliding Puzzle",
+          "statement": "On a 2 x 3 board, there are five tiles labeled from 1 to 5, and an empty square represented by 0. A move consists of choosing 0 and a 4-directionally adjacent number and swapping it.\n\nThe state of the board is solved if and only if the board is `[[1,2,3],[4,5,0]]`.\n\nGiven the puzzle board `board`, return the least number of moves required so that the state of the board is solved. If it is impossible to solve the board, return -1.\n\n**Example 1:**\n```\nInput: board = [[1,2,3],[4,0,5]]\nOutput: 1\nExplanation: Swap 0 and 5 in one move.\n```\n\n**Example 2:**\n```\nInput: board = [[1,2,3],[5,4,0]]\nOutput: -1\nExplanation: No number of moves will make the board solved.\n```\n\n**Example 3:**\n```\nInput: board = [[4,1,2],[5,0,3]]\nOutput: 5\n```\n\n**Constraints:**\n- board.length == 2\n- board[i].length == 3\n- 0 <= board[i][j] <= 5\n- Each value board[i][j] is unique.",
+          "targetComplexity": "O(6!)",
+          "testCases": [
+            {
+              "input": "[[1,2,3],[4,0,5]]",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "One swap: 0 and 5"
+            },
+            {
+              "input": "[[1,2,3],[5,4,0]]",
+              "expectedOutput": "-1",
+              "isHidden": false,
+              "explanation": "Unsolvable configuration"
+            },
+            {
+              "input": "[[4,1,2],[5,0,3]]",
+              "expectedOutput": "5",
+              "isHidden": false,
+              "explanation": "5 moves needed"
+            },
+            {
+              "input": "[[1,2,3],[4,5,0]]",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "Already solved"
+            },
+            {
+              "input": "[[0,1,2],[3,4,5]]",
+              "expectedOutput": "8",
+              "isHidden": true,
+              "explanation": "Many moves needed"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BFS",
+                  "acceptableVariants": ["state-space BFS", "puzzle BFS"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Each board configuration is a state; serialize as string for hashing; BFS from start to target configuration",
+                  "keywords": ["state", "serialize", "swap", "BFS", "target"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(6!)",
+                  "acceptableVariants": ["O(720)", "O(n! * n)"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles unsolvable", "Correct neighbor generation"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["BFS exploration", "State hashing"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clean state representation"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "There are only 6! = 720 possible states, so BFS can explore all of them",
+                  "isCorrect": true,
+                  "feedback": "Correct! The small state space makes BFS feasible, exploring at most 720 states."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should use A* for better performance",
+                  "isCorrect": false,
+                  "feedback": "A* can help, but with only 720 states, BFS is simple and efficient enough."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "2D.*to.*1D|flatten|serialize",
+              "errorType": "STATE_REPRESENTATION",
+              "microLessonRef": "ml-bfs-106",
+              "feedback": "Flatten the 2D board to a string for easy hashing and comparison."
+            },
+            {
+              "pattern": "neighbor.*index|swap.*position",
+              "errorType": "NEIGHBOR_MAPPING",
+              "microLessonRef": "ml-bfs-107",
+              "feedback": "Precompute valid swaps for each position of 0 in the flattened representation."
+            }
+          ],
+          "microLessonRefs": ["ml-bfs-101", "ml-bfs-106", "ml-bfs-107"],
+          "hints": [
+            "Represent board state as a string: \"123450\" for [[1,2,3],[4,5,0]].",
+            "Target state is \"123450\".",
+            "For each position of 0, precompute which positions it can swap with.",
+            "Position mapping: 0->[1,3], 1->[0,2,4], 2->[1,5], 3->[0,4], 4->[1,3,5], 5->[2,4].",
+            "BFS from start state to target state."
+          ]
+        },
+        {
+          "problemId": "bfs-r2-sibling-3",
+          "title": "Minimum Genetic Mutation",
+          "statement": "A gene string can be represented by an 8-character long string, with choices from `'A'`, `'C'`, `'G'`, and `'T'`.\n\nSuppose we need to investigate a mutation from a gene string `startGene` to a gene string `endGene` where one mutation is defined as one single character changed in the gene string.\n\nFor example, `\"AACCGGTT\" -> \"AACCGGTA\"` is one mutation.\n\nThere is also a gene bank `bank` that records all the valid gene mutations. A gene must be in `bank` to make it a valid gene string.\n\nGiven the two gene strings `startGene` and `endGene` and the gene bank `bank`, return the minimum number of mutations needed to mutate from `startGene` to `endGene`. If there is no such mutation, return `-1`.\n\nNote that the starting point is assumed to be valid, so it might not be included in the bank.\n\n**Example 1:**\n```\nInput: startGene = \"AACCGGTT\", endGene = \"AACCGGTA\", bank = [\"AACCGGTA\"]\nOutput: 1\n```\n\n**Example 2:**\n```\nInput: startGene = \"AACCGGTT\", endGene = \"AAACGGTA\", bank = [\"AACCGGTA\",\"AACCGCTA\",\"AAACGGTA\"]\nOutput: 2\n```\n\n**Example 3:**\n```\nInput: startGene = \"AAAAACCC\", endGene = \"AACCCCCC\", bank = [\"AAAACCCC\",\"AAACCCCC\",\"AACCCCCC\"]\nOutput: 3\n```\n\n**Constraints:**\n- 0 <= bank.length <= 10\n- startGene.length == endGene.length == bank[i].length == 8\n- startGene, endGene, and bank[i] consist of only the characters ['A', 'C', 'G', 'T'].",
+          "targetComplexity": "O(B × 8 × 4)",
+          "testCases": [
+            {
+              "input": "\"AACCGGTT\", \"AACCGGTA\", [\"AACCGGTA\"]",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "Direct mutation possible"
+            },
+            {
+              "input": "\"AACCGGTT\", \"AAACGGTA\", [\"AACCGGTA\",\"AACCGCTA\",\"AAACGGTA\"]",
+              "expectedOutput": "2",
+              "isHidden": false,
+              "explanation": "Two mutations needed"
+            },
+            {
+              "input": "\"AAAAACCC\", \"AACCCCCC\", [\"AAAACCCC\",\"AAACCCCC\",\"AACCCCCC\"]",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "Three step path"
+            },
+            {
+              "input": "\"AACCGGTT\", \"AACCGGTT\", []",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "Start equals end"
+            },
+            {
+              "input": "\"AACCGGTT\", \"AAACGGTA\", []",
+              "expectedOutput": "-1",
+              "isHidden": true,
+              "explanation": "No valid mutations in bank"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BFS",
+                  "acceptableVariants": ["BFS on gene graph", "state-space BFS"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Each valid gene is a node; edges connect genes differing by one character; BFS finds shortest mutation path",
+                  "keywords": ["gene", "mutation", "one character", "bank", "BFS"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(B × 8 × 4)",
+                  "acceptableVariants": ["O(B * 32)", "O(bank size * gene length * 4)"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles empty bank", "Checks endGene in bank"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["BFS with set lookup"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear mutation generation"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "This is identical to Word Ladder but with genes instead of words and 4 characters instead of 26",
+                  "isCorrect": true,
+                  "feedback": "Correct! Same BFS pattern, just different alphabet (A, C, G, T) and fixed length 8."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should try all permutations of mutations",
+                  "isCorrect": false,
+                  "feedback": "That's exponential. BFS explores the state space efficiently."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "26|a-z|lowercase",
+              "errorType": "WRONG_ALPHABET",
+              "microLessonRef": "ml-bfs-108",
+              "feedback": "Gene mutations use only 4 characters: A, C, G, T. Not the full alphabet."
+            },
+            {
+              "pattern": "endGene.*bank|bank.*contains.*end",
+              "errorType": "END_GENE_CHECK",
+              "microLessonRef": "ml-bfs-102",
+              "feedback": "Check if endGene is in bank. Unlike startGene, endGene must be valid (in bank)."
+            }
+          ],
+          "microLessonRefs": ["ml-bfs-101", "ml-bfs-102", "ml-bfs-108"],
+          "hints": [
+            "Very similar to Word Ladder, but alphabet is {A, C, G, T}.",
+            "For each gene in queue, try changing each position to each of the 4 characters.",
+            "Only consider mutations that are in the bank.",
+            "Use a set for bank for O(1) lookup.",
+            "Check if endGene is in bank before starting."
+          ]
+        }
+      ]
+    }
+  },
+  "microLessons": {
+    "ml-bfs-001": {
+      "id": "ml-bfs-001",
+      "title": "4-Direction vs 8-Direction Movement",
+      "content": "Grid problems specify connectivity:\n\n**4-directional (orthogonal):**\n```python\ndirections = [(0, 1), (0, -1), (1, 0), (-1, 0)]\n# Right, Left, Down, Up\n```\n\n**8-directional (includes diagonals):**\n```python\ndirections = [\n    (-1, -1), (-1, 0), (-1, 1),\n    (0, -1),           (0, 1),\n    (1, -1),  (1, 0),  (1, 1)\n]\n# Or generate:\ndirections = [(dr, dc) for dr in [-1, 0, 1] for dc in [-1, 0, 1] if (dr, dc) != (0, 0)]\n```\n\nAlways read the problem carefully for which connectivity is required."
+    },
+    "ml-bfs-002": {
+      "id": "ml-bfs-002",
+      "title": "When to Mark Visited",
+      "content": "**Mark when adding to queue (correct):**\n```python\nqueue = deque([(start, 0)])\nvisited = {start}\n\nwhile queue:\n    node, dist = queue.popleft()\n    for neighbor in get_neighbors(node):\n        if neighbor not in visited:\n            visited.add(neighbor)  # Mark NOW\n            queue.append((neighbor, dist + 1))\n```\n\n**Mark when processing (wrong):**\n```python\nwhile queue:\n    node, dist = queue.popleft()\n    if node in visited:  # Too late!\n        continue\n    visited.add(node)\n    # ...\n```\n\n**Why it matters:** Marking late allows the same node to be added multiple times, wasting time and potentially causing incorrect results."
+    },
+    "ml-bfs-003": {
+      "id": "ml-bfs-003",
+      "title": "BFS vs DFS for Shortest Path",
+      "content": "**BFS guarantees shortest path in unweighted graphs:**\n- Explores all nodes at distance d before any at distance d+1\n- First time reaching a node is via shortest path\n\n**DFS does NOT guarantee shortest path:**\n- May explore deep paths before short ones\n- Would need to explore ALL paths to find shortest\n\n```python\n# BFS: Level by level (shortest path)\nLevel 0: [start]\nLevel 1: [all nodes 1 step away]\nLevel 2: [all nodes 2 steps away]\n...\n\n# DFS: Depth first (not shortest)\nstart -> neighbor1 -> neighbor1's neighbor -> ... (deep first)\n```\n\n**Rule:** For unweighted shortest path, always use BFS."
+    },
+    "ml-bfs-004": {
+      "id": "ml-bfs-004",
+      "title": "Multi-Source BFS",
+      "content": "When the problem has multiple starting points:\n\n**Wrong approach:**\n```python\n# BFS from each source separately\nfor source in sources:\n    bfs(source)  # O(sources * V * E)\n```\n\n**Correct approach - Multi-source BFS:**\n```python\n# Add ALL sources to initial queue\nqueue = deque()\nfor source in sources:\n    queue.append((source, 0))\n    visited.add(source)\n\nwhile queue:\n    node, dist = queue.popleft()\n    # Process normally...\n```\n\n**Why it works:** All sources start at distance 0. BFS then finds distance from nearest source for each node.\n\n**Examples:** Rotting Oranges, 01 Matrix, Walls and Gates"
+    },
+    "ml-bfs-005": {
+      "id": "ml-bfs-005",
+      "title": "Tracking Remaining Elements",
+      "content": "For problems like Rotting Oranges:\n\n```python\n# Count items to process\nfresh_count = sum(1 for r in range(m) for c in range(n) if grid[r][c] == 1)\n\n# During BFS, decrement when processing\nwhile queue:\n    r, c, time = queue.popleft()\n    for nr, nc in neighbors(r, c):\n        if grid[nr][nc] == 1:  # Fresh orange\n            grid[nr][nc] = 2    # Now rotten\n            fresh_count -= 1    # One less fresh\n            queue.append((nr, nc, time + 1))\n\n# After BFS\nif fresh_count > 0:\n    return -1  # Some oranges never rotted\n```\n\nThis pattern detects unreachable elements."
+    },
+    "ml-bfs-006": {
+      "id": "ml-bfs-006",
+      "title": "Counting Connected Components",
+      "content": "Pattern for counting islands/components:\n\n```python\ndef count_components(grid):\n    count = 0\n    \n    for r in range(m):\n        for c in range(n):\n            if grid[r][c] == '1' and (r, c) not in visited:\n                count += 1  # Found new component\n                bfs(r, c)   # Mark all connected cells\n    \n    return count\n\ndef bfs(start_r, start_c):\n    queue = deque([(start_r, start_c)])\n    visited.add((start_r, start_c))\n    \n    while queue:\n        r, c = queue.popleft()\n        for nr, nc in neighbors(r, c):\n            if grid[nr][nc] == '1' and (nr, nc) not in visited:\n                visited.add((nr, nc))\n                queue.append((nr, nc))\n```\n\nEach BFS call explores exactly one connected component."
+    },
+    "ml-bfs-007": {
+      "id": "ml-bfs-007",
+      "title": "Reading Connectivity Requirements",
+      "content": "Problems describe connectivity in different ways:\n\n**4-directional:**\n- \"horizontally or vertically adjacent\"\n- \"4-directionally connected\"\n- \"up, down, left, right\"\n\n**8-directional:**\n- \"8-directionally connected\"\n- \"adjacent including diagonals\"\n- \"differ in at most one row and one column\"\n\n**Custom connectivity:**\n- Knight moves: L-shaped\n- Word ladder: one character difference\n\nAlways identify the connectivity before coding!"
+    },
+    "ml-bfs-008": {
+      "id": "ml-bfs-008",
+      "title": "BFS Direction: Sources vs Targets",
+      "content": "**Finding distance FROM multiple sources TO all cells:**\n- Start BFS from all sources (multi-source BFS)\n- Example: Distance to nearest 0 (01 Matrix)\n\n**Finding distance TO a single target FROM all cells:**\n- Equivalent to BFS FROM target (reverse the graph if directed)\n- Example: Distance to exit\n\n**Why multi-source from 0s, not BFS from each 1:**\n```python\n# From each 1 to nearest 0: O(m*n * m*n) worst case\nfor each 1:\n    bfs_to_find_nearest_0()  # O(m*n) each\n\n# From all 0s outward: O(m*n) total\nmulti_source_bfs_from_all_0s()\n```\n\nMulti-source BFS visits each cell once, giving O(m*n)."
+    },
+    "ml-bfs-009": {
+      "id": "ml-bfs-009",
+      "title": "Initializing Distance Matrix",
+      "content": "For distance problems:\n\n```python\n# Initialize distances\ndist = [[float('inf')] * n for _ in range(m)]\n\n# Set source distances to 0 and add to queue\nqueue = deque()\nfor r in range(m):\n    for c in range(n):\n        if mat[r][c] == 0:\n            dist[r][c] = 0\n            queue.append((r, c))\n\n# BFS updates distances\nwhile queue:\n    r, c = queue.popleft()\n    for nr, nc in neighbors(r, c):\n        if dist[nr][nc] > dist[r][c] + 1:\n            dist[nr][nc] = dist[r][c] + 1\n            queue.append((nr, nc))\n```\n\n**Key insight:** Only update and enqueue if we found a shorter path."
+    },
+    "ml-bfs-101": {
+      "id": "ml-bfs-101",
+      "title": "Efficient Neighbor Generation for Words",
+      "content": "**Inefficient: Compare with every word O(N*M)**\n```python\nfor word in word_list:\n    if differs_by_one(current, word):\n        # neighbor found\n```\n\n**Efficient: Generate all single-letter changes O(26*M)**\n```python\nword_set = set(word_list)\n\nfor i in range(len(word)):\n    for c in 'abcdefghijklmnopqrstuvwxyz':\n        if c != word[i]:\n            new_word = word[:i] + c + word[i+1:]\n            if new_word in word_set:\n                # neighbor found\n```\n\n**When to use which:**\n- If N (word list size) > 26*M: generate changes\n- If N < 26*M: compare with all words\n- Usually N is large, so generating changes is better."
+    },
+    "ml-bfs-102": {
+      "id": "ml-bfs-102",
+      "title": "Pre-checking End State",
+      "content": "Before starting BFS, check if the goal is reachable:\n\n```python\n# Word Ladder / Genetic Mutation\nif end_word not in word_set:\n    return 0  # or -1\n\n# Open the Lock\nif '0000' in deadends:\n    return -1\n\n# Sliding Puzzle\nif start == target:\n    return 0\n```\n\n**Why check early:**\n1. Avoids unnecessary BFS computation\n2. Handles edge cases cleanly\n3. Makes code logic clearer\n\n**Note:** The start state being invalid is also worth checking (like '0000' in deadends)."
+    },
+    "ml-bfs-103": {
+      "id": "ml-bfs-103",
+      "title": "Counting Words vs Edges",
+      "content": "Word Ladder asks for \"number of words in shortest transformation sequence\":\n\n```\nSequence: hit -> hot -> dot -> dog -> cog\nWords: 5 (including start and end)\nEdges/Transformations: 4\n```\n\n**Common mistake:**\n```python\n# Wrong: counting edges\nreturn distance  # Returns 4\n\n# Correct: counting words\nreturn distance + 1  # Returns 5\n```\n\n**Or start with distance = 1:**\n```python\nqueue = deque([(beginWord, 1)])  # Start at 1, not 0\n```\n\nAlways read what the problem asks: words, edges, or steps."
+    },
+    "ml-bfs-104": {
+      "id": "ml-bfs-104",
+      "title": "Circular/Wrap-Around Handling",
+      "content": "For locks, dials, or circular structures:\n\n```python\n# Turn dial up: 0->1, ..., 8->9, 9->0\ndef turn_up(digit):\n    return (int(digit) + 1) % 10\n\n# Turn dial down: 0->9, 1->0, ..., 9->8\ndef turn_down(digit):\n    return (int(digit) - 1 + 10) % 10\n    # Or equivalently:\n    return (int(digit) + 9) % 10\n```\n\n**Generate all neighbors:**\n```python\ndef get_neighbors(state):\n    neighbors = []\n    for i in range(4):  # 4 wheels\n        for delta in [-1, 1]:  # Down or up\n            new_digit = (int(state[i]) + delta + 10) % 10\n            new_state = state[:i] + str(new_digit) + state[i+1:]\n            neighbors.append(new_state)\n    return neighbors\n```"
+    },
+    "ml-bfs-105": {
+      "id": "ml-bfs-105",
+      "title": "Handling Invalid Start State",
+      "content": "Sometimes the start state is already invalid:\n\n```python\ndef open_lock(deadends, target):\n    dead_set = set(deadends)\n    \n    # Check start is valid\n    if '0000' in dead_set:\n        return -1\n    \n    # Check if already at target\n    if '0000' == target:\n        return 0\n    \n    # Now do BFS...\n```\n\n**Other examples:**\n- Shortest path where start cell is blocked\n- Transformation where start equals end\n- Any case where no moves are needed or possible\n\nHandle these before the main BFS loop."
+    },
+    "ml-bfs-106": {
+      "id": "ml-bfs-106",
+      "title": "State Serialization for Puzzles",
+      "content": "For puzzles with board states, serialize for hashing:\n\n```python\n# 2D board to string\ndef serialize(board):\n    return ''.join(str(cell) for row in board for cell in row)\n\n# Example: [[1,2,3],[4,0,5]] -> \"123405\"\n\n# String back to index manipulation\ndef get_neighbors(state):\n    i = state.index('0')  # Find empty cell\n    neighbors = []\n    for swap_pos in valid_swaps[i]:\n        new_state = list(state)\n        new_state[i], new_state[swap_pos] = new_state[swap_pos], new_state[i]\n        neighbors.append(''.join(new_state))\n    return neighbors\n```\n\n**Benefits of string serialization:**\n- Hashable (can use in set/dict)\n- Easy comparison\n- Immutable (safe for visited set)"
+    },
+    "ml-bfs-107": {
+      "id": "ml-bfs-107",
+      "title": "Precomputing Valid Moves",
+      "content": "For sliding puzzles, precompute valid swaps:\n\n```python\n# 2x3 board positions:\n# 0 1 2\n# 3 4 5\n\n# For each position, which positions can 0 swap with?\nvalid_swaps = {\n    0: [1, 3],\n    1: [0, 2, 4],\n    2: [1, 5],\n    3: [0, 4],\n    4: [1, 3, 5],\n    5: [2, 4]\n}\n\n# Use in neighbor generation:\ndef get_neighbors(state):\n    i = state.index('0')\n    for j in valid_swaps[i]:\n        # Swap positions i and j\n        ...\n```\n\n**Why precompute:**\n- Avoids recalculating valid moves each time\n- Makes neighbor generation O(1) per neighbor\n- Cleaner code"
+    },
+    "ml-bfs-108": {
+      "id": "ml-bfs-108",
+      "title": "Problem-Specific Alphabet",
+      "content": "Different problems have different character sets:\n\n**Word Ladder (26 lowercase letters):**\n```python\nfor c in 'abcdefghijklmnopqrstuvwxyz':\n```\n\n**Genetic Mutation (4 nucleotides):**\n```python\nfor c in 'ACGT':\n```\n\n**Lock (10 digits):**\n```python\nfor d in '0123456789':\n```\n\n**Read the problem constraints carefully!**\n\nUsing the wrong alphabet:\n- Too large: wastes time generating invalid neighbors\n- Too small: misses valid neighbors"
+    },
+    "ml-bfs-basic-intro": {
+      "id": "ml-bfs-basic-intro",
+      "title": "Introduction to BFS",
+      "content": "Breadth-First Search explores level by level:\n\n```python\nfrom collections import deque\n\ndef bfs(start, target):\n    queue = deque([(start, 0)])  # (node, distance)\n    visited = {start}\n    \n    while queue:\n        node, dist = queue.popleft()\n        \n        if node == target:\n            return dist\n        \n        for neighbor in get_neighbors(node):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                queue.append((neighbor, dist + 1))\n    \n    return -1  # Target not reachable\n```\n\n**Key properties:**\n1. Uses a queue (FIFO)\n2. Explores all nodes at distance d before d+1\n3. First path found to any node is shortest\n4. Time: O(V + E), Space: O(V)"
+    },
+    "ml-bfs-state-intro": {
+      "id": "ml-bfs-state-intro",
+      "title": "State-Space BFS",
+      "content": "BFS works on any state space, not just grids:\n\n**State can be:**\n- A word (Word Ladder)\n- A lock combination (Open the Lock)\n- A board configuration (Sliding Puzzle)\n- A (position, keys) tuple (Shortest Path to Get All Keys)\n\n**Requirements for BFS:**\n1. **States** must be hashable (for visited set)\n2. **Transitions** between states (neighbors)\n3. **Start and goal** states\n4. **Uniform cost** per transition (otherwise use Dijkstra)\n\n```python\n# Template\ndef state_bfs(start, is_goal):\n    queue = deque([(start, 0)])\n    visited = {start}\n    \n    while queue:\n        state, steps = queue.popleft()\n        \n        if is_goal(state):\n            return steps\n        \n        for next_state in get_transitions(state):\n            if next_state not in visited:\n                visited.add(next_state)\n                queue.append((next_state, steps + 1))\n    \n    return -1\n```"
+    }
+  }
+}

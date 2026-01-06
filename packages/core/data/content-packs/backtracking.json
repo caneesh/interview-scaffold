@@ -1,0 +1,1370 @@
+{
+  "packId": "backtracking-v1",
+  "pattern": "BACKTRACKING",
+  "version": "1.0.0",
+  "rungs": [
+    {
+      "rungLevel": 1,
+      "theme": "Enumeration Backtracking",
+      "canonical": {
+        "problemId": "subsets",
+        "title": "Subsets",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 20,
+        "description": "Given an integer array nums of unique elements, return all possible subsets (the power set). The solution set must not contain duplicate subsets. Return the solution in any order.",
+        "examples": [
+          {
+            "input": "nums = [1,2,3]",
+            "output": "[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]",
+            "explanation": "All 2^3 = 8 subsets of [1,2,3]"
+          },
+          {
+            "input": "nums = [0]",
+            "output": "[[],[0]]",
+            "explanation": "Two subsets: empty and [0]"
+          }
+        ],
+        "constraints": [
+          "1 <= nums.length <= 10",
+          "-10 <= nums[i] <= 10",
+          "All the numbers of nums are unique"
+        ],
+        "starterCode": {
+          "python": "def subsets(nums: List[int]) -> List[List[int]]:\n    pass",
+          "typescript": "function subsets(nums: number[]): number[][] {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def subsets(nums: List[int]) -> List[List[int]]:\n    result = []\n    \n    def backtrack(start, current):\n        result.append(current[:])\n        for i in range(start, len(nums)):\n            current.append(nums[i])\n            backtrack(i + 1, current)\n            current.pop()\n    \n    backtrack(0, [])\n    return result",
+          "typescript": "function subsets(nums: number[]): number[][] {\n    const result: number[][] = [];\n    \n    function backtrack(start: number, current: number[]): void {\n        result.push([...current]);\n        for (let i = start; i < nums.length; i++) {\n            current.push(nums[i]);\n            backtrack(i + 1, current);\n            current.pop();\n        }\n    }\n    \n    backtrack(0, []);\n    return result;\n}"
+        },
+        "testCases": [
+          {"input": {"nums": [1, 2, 3]}, "expected": [[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]},
+          {"input": {"nums": [0]}, "expected": [[], [0]]},
+          {"input": {"nums": [1, 2]}, "expected": [[], [1], [1, 2], [2]]},
+          {"input": {"nums": [5, 7]}, "expected": [[], [5], [5, 7], [7]]},
+          {"input": {"nums": [1]}, "expected": [[], [1]]}
+        ],
+        "steps": [
+          {
+            "stepId": "subsets-think",
+            "type": "THINKING_GATE",
+            "prompt": "Before coding, think about the decision tree. At each position, what choice do you make? How do you avoid duplicates? When do you add to the result?",
+            "hints": [
+              "At each element, you choose to include it or not",
+              "Use a 'start' index to only consider elements after the current position",
+              "Every node in the decision tree is a valid subset - add at every recursive call"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies this as a backtracking enumeration problem",
+                "points": 2,
+                "errorMappings": ["backtrack_pattern_not_recognized", "backtrack_vs_dp_confusion"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands the include/exclude decision tree and start index for avoiding duplicates",
+                "points": 2,
+                "errorMappings": ["backtrack_duplicate_subsets", "backtrack_missing_start_index"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(2^n) subsets and O(n) per subset for copying",
+                "points": 1,
+                "errorMappings": ["backtrack_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "subsets-code",
+            "type": "CODING",
+            "prompt": "Implement the backtracking solution. Remember to: 1) Add current subset to result at each call, 2) Use start index, 3) Backtrack by removing the last element.",
+            "hints": [
+              "result.append(current[:]) - copy the list!",
+              "Loop from start to len(nums)",
+              "current.pop() after recursive call to backtrack"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly implements the backtracking template",
+                "points": 2,
+                "errorMappings": ["backtrack_template_wrong", "backtrack_missing_base_case"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Makes a copy when adding to result, properly backtracks",
+                "points": 2,
+                "errorMappings": ["backtrack_reference_bug", "backtrack_missing_undo"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Generates all 2^n subsets without duplicates",
+                "points": 1,
+                "errorMappings": ["backtrack_duplicate_subsets"]
+              }
+            }
+          },
+          {
+            "stepId": "subsets-reflect",
+            "type": "REFLECTION",
+            "prompt": "How would you handle duplicates in the input array (Subsets II)? Can you solve this iteratively?",
+            "hints": [
+              "For duplicates: sort first, skip if nums[i] == nums[i-1] and i > start",
+              "Iterative: start with [[]], for each num, add it to all existing subsets"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Can adapt for duplicate elements",
+                "points": 2,
+                "errorMappings": ["backtrack_duplicate_handling_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands the iterative approach builds on previous subsets",
+                "points": 2,
+                "errorMappings": ["backtrack_iterative_not_understood"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Both approaches are O(n * 2^n)",
+                "points": 1,
+                "errorMappings": ["backtrack_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "permutations",
+          "title": "Permutations",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "Given an array nums of distinct integers, return all the possible permutations. You can return the answer in any order.",
+          "examples": [
+            {
+              "input": "nums = [1,2,3]",
+              "output": "[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]",
+              "explanation": "All 3! = 6 permutations of [1,2,3]"
+            },
+            {
+              "input": "nums = [0,1]",
+              "output": "[[0,1],[1,0]]",
+              "explanation": "All 2! = 2 permutations"
+            }
+          ],
+          "constraints": [
+            "1 <= nums.length <= 6",
+            "-10 <= nums[i] <= 10",
+            "All the integers of nums are unique"
+          ],
+          "starterCode": {
+            "python": "def permute(nums: List[int]) -> List[List[int]]:\n    pass",
+            "typescript": "function permute(nums: number[]): number[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def permute(nums: List[int]) -> List[List[int]]:\n    result = []\n    \n    def backtrack(current):\n        if len(current) == len(nums):\n            result.append(current[:])\n            return\n        for num in nums:\n            if num not in current:\n                current.append(num)\n                backtrack(current)\n                current.pop()\n    \n    backtrack([])\n    return result",
+            "typescript": "function permute(nums: number[]): number[][] {\n    const result: number[][] = [];\n    \n    function backtrack(current: number[]): void {\n        if (current.length === nums.length) {\n            result.push([...current]);\n            return;\n        }\n        for (const num of nums) {\n            if (!current.includes(num)) {\n                current.push(num);\n                backtrack(current);\n                current.pop();\n            }\n        }\n    }\n    \n    backtrack([]);\n    return result;\n}"
+          },
+          "testCases": [
+            {"input": {"nums": [1, 2, 3]}, "expected": [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]},
+            {"input": {"nums": [0, 1]}, "expected": [[0, 1], [1, 0]]},
+            {"input": {"nums": [1]}, "expected": [[1]]},
+            {"input": {"nums": [1, 2]}, "expected": [[1, 2], [2, 1]]}
+          ],
+          "steps": [
+            {
+              "stepId": "permutations-think",
+              "type": "THINKING_GATE",
+              "prompt": "How is this different from Subsets? What defines a complete permutation? How do you track which elements are used?",
+              "hints": [
+                "Permutations use ALL elements, subsets use any number",
+                "Add to result only when current.length == nums.length",
+                "Track used elements with a set or check 'in current'"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Distinguishes permutation from subset pattern",
+                  "points": 2,
+                  "errorMappings": ["backtrack_permutation_vs_subset"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands need to track used elements",
+                  "points": 2,
+                  "errorMappings": ["backtrack_used_tracking_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies O(n!) permutations",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "permutations-code",
+              "type": "CODING",
+              "prompt": "Implement permutations. Use a base case for complete permutation and track which elements are already used.",
+              "hints": [
+                "Base case: len(current) == len(nums)",
+                "Loop through ALL nums, but skip if already in current",
+                "For efficiency, use a 'used' set instead of 'in current'"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Implements correct permutation backtracking",
+                  "points": 2,
+                  "errorMappings": ["backtrack_template_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Properly tracks and backtracks used elements",
+                  "points": 2,
+                  "errorMappings": ["backtrack_used_tracking_wrong", "backtrack_missing_undo"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Generates exactly n! permutations",
+                  "points": 1,
+                  "errorMappings": ["backtrack_missing_permutations"]
+                }
+              }
+            },
+            {
+              "stepId": "permutations-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you handle duplicate elements (Permutations II)? Can you do this with swapping instead of a used set?",
+              "hints": [
+                "For duplicates: sort and skip if same as previous at same level",
+                "Swap approach: swap current index with each later index, recurse, swap back"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can adapt for duplicate elements",
+                  "points": 2,
+                  "errorMappings": ["backtrack_duplicate_handling_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands swap-based permutation generation",
+                  "points": 2,
+                  "errorMappings": ["backtrack_swap_approach_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Swap approach is O(n!) time, O(n) space",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "combinations",
+          "title": "Combinations",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "Given two integers n and k, return all possible combinations of k numbers chosen from the range [1, n]. You may return the answer in any order.",
+          "examples": [
+            {
+              "input": "n = 4, k = 2",
+              "output": "[[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]",
+              "explanation": "All C(4,2) = 6 combinations of 2 numbers from [1,2,3,4]"
+            },
+            {
+              "input": "n = 1, k = 1",
+              "output": "[[1]]",
+              "explanation": "Only one combination: [1]"
+            }
+          ],
+          "constraints": [
+            "1 <= n <= 20",
+            "1 <= k <= n"
+          ],
+          "starterCode": {
+            "python": "def combine(n: int, k: int) -> List[List[int]]:\n    pass",
+            "typescript": "function combine(n: number, k: number): number[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def combine(n: int, k: int) -> List[List[int]]:\n    result = []\n    \n    def backtrack(start, current):\n        if len(current) == k:\n            result.append(current[:])\n            return\n        for i in range(start, n + 1):\n            current.append(i)\n            backtrack(i + 1, current)\n            current.pop()\n    \n    backtrack(1, [])\n    return result",
+            "typescript": "function combine(n: number, k: number): number[][] {\n    const result: number[][] = [];\n    \n    function backtrack(start: number, current: number[]): void {\n        if (current.length === k) {\n            result.push([...current]);\n            return;\n        }\n        for (let i = start; i <= n; i++) {\n            current.push(i);\n            backtrack(i + 1, current);\n            current.pop();\n        }\n    }\n    \n    backtrack(1, []);\n    return result;\n}"
+          },
+          "testCases": [
+            {"input": {"n": 4, "k": 2}, "expected": [[1, 2], [1, 3], [1, 4], [2, 3], [2, 4], [3, 4]]},
+            {"input": {"n": 1, "k": 1}, "expected": [[1]]},
+            {"input": {"n": 3, "k": 2}, "expected": [[1, 2], [1, 3], [2, 3]]},
+            {"input": {"n": 4, "k": 3}, "expected": [[1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]]},
+            {"input": {"n": 5, "k": 1}, "expected": [[1], [2], [3], [4], [5]]}
+          ],
+          "steps": [
+            {
+              "stepId": "combinations-think",
+              "type": "THINKING_GATE",
+              "prompt": "How is this similar to Subsets? What's the key difference in the base case? Can you add pruning to skip branches that can't reach k elements?",
+              "hints": [
+                "Same structure as subsets, but with a size constraint",
+                "Base case: len(current) == k instead of adding all subsets",
+                "Pruning: stop if remaining elements can't fill k slots"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Recognizes combination as constrained subset enumeration",
+                  "points": 2,
+                  "errorMappings": ["backtrack_pattern_not_recognized"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Identifies size k as the key constraint",
+                  "points": 2,
+                  "errorMappings": ["backtrack_constraint_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies C(n,k) combinations",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "combinations-code",
+              "type": "CODING",
+              "prompt": "Implement combinations using backtracking with a start index and size constraint.",
+              "hints": [
+                "Numbers are 1 to n, so loop from start to n+1",
+                "Add to result only when len(current) == k",
+                "Optional: prune when n - start + 1 < k - len(current)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly uses start index for combinations",
+                  "points": 2,
+                  "errorMappings": ["backtrack_missing_start_index"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Proper base case and termination",
+                  "points": 2,
+                  "errorMappings": ["backtrack_missing_base_case"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Generates exactly C(n,k) combinations",
+                  "points": 1,
+                  "errorMappings": ["backtrack_duplicate_subsets"]
+                }
+              }
+            },
+            {
+              "stepId": "combinations-reflect",
+              "type": "REFLECTION",
+              "prompt": "What pruning optimization can significantly speed this up? How does this relate to the recursive formula C(n,k) = C(n-1,k-1) + C(n-1,k)?",
+              "hints": [
+                "Prune: if remaining numbers < needed slots, return early",
+                "The formula: include current element (C(n-1,k-1)) or exclude it (C(n-1,k))"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands pruning optimization",
+                  "points": 2,
+                  "errorMappings": ["backtrack_pruning_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Connects to combinatorial formula",
+                  "points": 2,
+                  "errorMappings": ["backtrack_math_connection_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Pruning reduces constant factor significantly",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "combination-sum",
+          "title": "Combination Sum",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "Given an array of distinct integers candidates and a target integer target, return a list of all unique combinations of candidates where the chosen numbers sum to target. You may return the combinations in any order. The same number may be chosen from candidates an unlimited number of times. Two combinations are unique if the frequency of at least one of the chosen numbers is different.",
+          "examples": [
+            {
+              "input": "candidates = [2,3,6,7], target = 7",
+              "output": "[[2,2,3],[7]]",
+              "explanation": "2 + 2 + 3 = 7 and 7 = 7"
+            },
+            {
+              "input": "candidates = [2,3,5], target = 8",
+              "output": "[[2,2,2,2],[2,3,3],[3,5]]",
+              "explanation": "Multiple combinations sum to 8"
+            }
+          ],
+          "constraints": [
+            "1 <= candidates.length <= 30",
+            "2 <= candidates[i] <= 40",
+            "All elements of candidates are distinct",
+            "1 <= target <= 40"
+          ],
+          "starterCode": {
+            "python": "def combinationSum(candidates: List[int], target: int) -> List[List[int]]:\n    pass",
+            "typescript": "function combinationSum(candidates: number[], target: number): number[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def combinationSum(candidates: List[int], target: int) -> List[List[int]]:\n    result = []\n    \n    def backtrack(start, current, remaining):\n        if remaining == 0:\n            result.append(current[:])\n            return\n        if remaining < 0:\n            return\n        for i in range(start, len(candidates)):\n            current.append(candidates[i])\n            backtrack(i, current, remaining - candidates[i])\n            current.pop()\n    \n    backtrack(0, [], target)\n    return result",
+            "typescript": "function combinationSum(candidates: number[], target: number): number[][] {\n    const result: number[][] = [];\n    \n    function backtrack(start: number, current: number[], remaining: number): void {\n        if (remaining === 0) {\n            result.push([...current]);\n            return;\n        }\n        if (remaining < 0) return;\n        for (let i = start; i < candidates.length; i++) {\n            current.push(candidates[i]);\n            backtrack(i, current, remaining - candidates[i]);\n            current.pop();\n        }\n    }\n    \n    backtrack(0, [], target);\n    return result;\n}"
+          },
+          "testCases": [
+            {"input": {"candidates": [2, 3, 6, 7], "target": 7}, "expected": [[2, 2, 3], [7]]},
+            {"input": {"candidates": [2, 3, 5], "target": 8}, "expected": [[2, 2, 2, 2], [2, 3, 3], [3, 5]]},
+            {"input": {"candidates": [2], "target": 1}, "expected": []},
+            {"input": {"candidates": [1], "target": 1}, "expected": [[1]]},
+            {"input": {"candidates": [1], "target": 2}, "expected": [[1, 1]]}
+          ],
+          "steps": [
+            {
+              "stepId": "combination-sum-think",
+              "type": "THINKING_GATE",
+              "prompt": "What's different about this problem compared to regular Combinations? How do you handle unlimited reuse of elements? When do you prune?",
+              "hints": [
+                "Elements can be reused: pass 'i' instead of 'i+1' to allow same element again",
+                "Track remaining sum instead of just counting elements",
+                "Prune when remaining < 0"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies unbounded selection (same element reusable)",
+                  "points": 2,
+                  "errorMappings": ["backtrack_unbounded_not_recognized"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands to track remaining sum and prune on negative",
+                  "points": 2,
+                  "errorMappings": ["backtrack_sum_tracking_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Understands exponential nature due to repetition",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "combination-sum-code",
+              "type": "CODING",
+              "prompt": "Implement the solution. Key insight: recurse with 'i' (not i+1) to allow reusing the same candidate.",
+              "hints": [
+                "backtrack(i, ...) allows reusing candidate[i]",
+                "Base case: remaining == 0 means valid combination",
+                "Early termination: remaining < 0 means overshot"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly passes 'i' for unbounded selection",
+                  "points": 2,
+                  "errorMappings": ["backtrack_reuse_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Proper sum tracking and base cases",
+                  "points": 2,
+                  "errorMappings": ["backtrack_sum_tracking_wrong", "backtrack_missing_base_case"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Prunes effectively with remaining < 0",
+                  "points": 1,
+                  "errorMappings": ["backtrack_pruning_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "combination-sum-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you modify for Combination Sum II (each element used at most once, with duplicates in input)? What about Combination Sum III (k numbers from 1-9)?",
+              "hints": [
+                "Combination Sum II: sort, use i+1, skip duplicates at same level",
+                "Combination Sum III: constrain by count k and range 1-9"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Can adapt for bounded selection with duplicates",
+                  "points": 2,
+                  "errorMappings": ["backtrack_variant_not_understood"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands multiple constraint variations",
+                  "points": 2,
+                  "errorMappings": ["backtrack_constraint_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Bounded variants have better complexity",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rungLevel": 2,
+      "theme": "Constraint Satisfaction Backtracking",
+      "canonical": {
+        "problemId": "n-queens",
+        "title": "N-Queens",
+        "difficulty": "HARD",
+        "estimatedMinutes": 35,
+        "description": "The n-queens puzzle is the problem of placing n queens on an n x n chessboard such that no two queens attack each other. Given an integer n, return all distinct solutions to the n-queens puzzle. You may return the answer in any order. Each solution contains a distinct board configuration of the n-queens' placement, where 'Q' and '.' both indicate a queen and an empty space, respectively.",
+        "examples": [
+          {
+            "input": "n = 4",
+            "output": "[[\".Q..\",\"...Q\",\"Q...\",\"..Q.\"],[\"..Q.\",\"Q...\",\"...Q\",\".Q..\"]]",
+            "explanation": "There are two distinct solutions to the 4-queens puzzle"
+          },
+          {
+            "input": "n = 1",
+            "output": "[[\"Q\"]]",
+            "explanation": "Single queen on 1x1 board"
+          }
+        ],
+        "constraints": [
+          "1 <= n <= 9"
+        ],
+        "starterCode": {
+          "python": "def solveNQueens(n: int) -> List[List[str]]:\n    pass",
+          "typescript": "function solveNQueens(n: number): string[][] {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def solveNQueens(n: int) -> List[List[str]]:\n    result = []\n    cols = set()\n    diag1 = set()  # row - col\n    diag2 = set()  # row + col\n    board = [['.' for _ in range(n)] for _ in range(n)]\n    \n    def backtrack(row):\n        if row == n:\n            result.append([''.join(r) for r in board])\n            return\n        for col in range(n):\n            if col in cols or (row - col) in diag1 or (row + col) in diag2:\n                continue\n            cols.add(col)\n            diag1.add(row - col)\n            diag2.add(row + col)\n            board[row][col] = 'Q'\n            backtrack(row + 1)\n            board[row][col] = '.'\n            cols.remove(col)\n            diag1.remove(row - col)\n            diag2.remove(row + col)\n    \n    backtrack(0)\n    return result",
+          "typescript": "function solveNQueens(n: number): string[][] {\n    const result: string[][] = [];\n    const cols = new Set<number>();\n    const diag1 = new Set<number>();\n    const diag2 = new Set<number>();\n    const board: string[][] = Array.from({length: n}, () => Array(n).fill('.'));\n    \n    function backtrack(row: number): void {\n        if (row === n) {\n            result.push(board.map(r => r.join('')));\n            return;\n        }\n        for (let col = 0; col < n; col++) {\n            if (cols.has(col) || diag1.has(row - col) || diag2.has(row + col)) {\n                continue;\n            }\n            cols.add(col);\n            diag1.add(row - col);\n            diag2.add(row + col);\n            board[row][col] = 'Q';\n            backtrack(row + 1);\n            board[row][col] = '.';\n            cols.delete(col);\n            diag1.delete(row - col);\n            diag2.delete(row + col);\n        }\n    }\n    \n    backtrack(0);\n    return result;\n}"
+        },
+        "testCases": [
+          {"input": {"n": 4}, "expected": [[".Q..", "...Q", "Q...", "..Q."], ["..Q.", "Q...", "...Q", ".Q.."]]},
+          {"input": {"n": 1}, "expected": [["Q"]]},
+          {"input": {"n": 2}, "expected": []},
+          {"input": {"n": 3}, "expected": []}
+        ],
+        "steps": [
+          {
+            "stepId": "n-queens-think",
+            "type": "THINKING_GATE",
+            "prompt": "How do you represent queen attacks? What constraint sets do you need to track? How do you know two queens are on the same diagonal?",
+            "hints": [
+              "Track: columns used, diagonal1 (row-col), diagonal2 (row+col)",
+              "Same row-col value = same \\ diagonal",
+              "Same row+col value = same / diagonal",
+              "Place one queen per row, so only need to track columns and diagonals"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies constraint satisfaction backtracking pattern",
+                "points": 2,
+                "errorMappings": ["backtrack_constraint_pattern_missed"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands diagonal representation using row+/-col",
+                "points": 2,
+                "errorMappings": ["n_queens_diagonal_wrong", "n_queens_constraint_incomplete"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Understands branching factor and pruning effect",
+                "points": 1,
+                "errorMappings": ["backtrack_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "n-queens-code",
+            "type": "CODING",
+            "prompt": "Implement N-Queens with three sets tracking attacked positions. Place queens row by row, backtracking when no valid column exists.",
+            "hints": [
+              "Use sets for O(1) lookup: cols, diag1, diag2",
+              "For each row, try each column that's not under attack",
+              "Add to sets before recursing, remove after (backtrack)"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Uses efficient set-based constraint tracking",
+                "points": 2,
+                "errorMappings": ["n_queens_inefficient_check", "backtrack_template_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Correctly adds and removes from all three constraint sets",
+                "points": 2,
+                "errorMappings": ["backtrack_missing_undo", "n_queens_constraint_incomplete"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Board state correctly converted to output format",
+                "points": 1,
+                "errorMappings": ["n_queens_output_format_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "n-queens-reflect",
+            "type": "REFLECTION",
+            "prompt": "How would you count solutions instead of enumerating them? What symmetry optimizations could reduce the search space?",
+            "hints": [
+              "Count: increment counter instead of storing board",
+              "Symmetry: only search first half of columns for row 0, multiply by 2"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Can adapt for counting variant",
+                "points": 2,
+                "errorMappings": ["backtrack_variant_not_understood"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands symmetry pruning",
+                "points": 2,
+                "errorMappings": ["backtrack_symmetry_missed"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Symmetry reduces search by factor of 2-8",
+                "points": 1,
+                "errorMappings": ["backtrack_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "sudoku-solver",
+          "title": "Sudoku Solver",
+          "difficulty": "HARD",
+          "estimatedMinutes": 40,
+          "description": "Write a program to solve a Sudoku puzzle by filling the empty cells. A sudoku solution must satisfy all of the following rules: Each of the digits 1-9 must occur exactly once in each row, each column, and each of the 9 3x3 sub-boxes. The '.' character indicates empty cells.",
+          "examples": [
+            {
+              "input": "board = [[\"5\",\"3\",\".\",\".\",\"7\",\".\",\".\",\".\",\".\"],[\"6\",\".\",\".\",\"1\",\"9\",\"5\",\".\",\".\",\".\"],[\".\",\"9\",\"8\",\".\",\".\",\".\",\".\",\"6\",\".\"],[\"8\",\".\",\".\",\".\",\"6\",\".\",\".\",\".\",\"3\"],[\"4\",\".\",\".\",\"8\",\".\",\"3\",\".\",\".\",\"1\"],[\"7\",\".\",\".\",\".\",\"2\",\".\",\".\",\".\",\"6\"],[\".\",\"6\",\".\",\".\",\".\",\".\",\"2\",\"8\",\".\"],[\".\",\".\",\".\",\"4\",\"1\",\"9\",\".\",\".\",\"5\"],[\".\",\".\",\".\",\".\",\"8\",\".\",\".\",\"7\",\"9\"]]",
+              "output": "[[\"5\",\"3\",\"4\",\"6\",\"7\",\"8\",\"9\",\"1\",\"2\"],[\"6\",\"7\",\"2\",\"1\",\"9\",\"5\",\"3\",\"4\",\"8\"],[\"1\",\"9\",\"8\",\"3\",\"4\",\"2\",\"5\",\"6\",\"7\"],[\"8\",\"5\",\"9\",\"7\",\"6\",\"1\",\"4\",\"2\",\"3\"],[\"4\",\"2\",\"6\",\"8\",\"5\",\"3\",\"7\",\"9\",\"1\"],[\"7\",\"1\",\"3\",\"9\",\"2\",\"4\",\"8\",\"5\",\"6\"],[\"9\",\"6\",\"1\",\"5\",\"3\",\"7\",\"2\",\"8\",\"4\"],[\"2\",\"8\",\"7\",\"4\",\"1\",\"9\",\"6\",\"3\",\"5\"],[\"3\",\"4\",\"5\",\"2\",\"8\",\"6\",\"1\",\"7\",\"9\"]]",
+              "explanation": "The solved Sudoku board"
+            }
+          ],
+          "constraints": [
+            "board.length == 9",
+            "board[i].length == 9",
+            "board[i][j] is a digit or '.'",
+            "The input board has exactly one solution"
+          ],
+          "starterCode": {
+            "python": "def solveSudoku(board: List[List[str]]) -> None:\n    pass",
+            "typescript": "function solveSudoku(board: string[][]): void {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def solveSudoku(board: List[List[str]]) -> None:\n    rows = [set() for _ in range(9)]\n    cols = [set() for _ in range(9)]\n    boxes = [set() for _ in range(9)]\n    \n    for i in range(9):\n        for j in range(9):\n            if board[i][j] != '.':\n                num = board[i][j]\n                rows[i].add(num)\n                cols[j].add(num)\n                boxes[(i // 3) * 3 + j // 3].add(num)\n    \n    def backtrack(pos):\n        if pos == 81:\n            return True\n        i, j = pos // 9, pos % 9\n        if board[i][j] != '.':\n            return backtrack(pos + 1)\n        box_idx = (i // 3) * 3 + j // 3\n        for num in '123456789':\n            if num in rows[i] or num in cols[j] or num in boxes[box_idx]:\n                continue\n            board[i][j] = num\n            rows[i].add(num)\n            cols[j].add(num)\n            boxes[box_idx].add(num)\n            if backtrack(pos + 1):\n                return True\n            board[i][j] = '.'\n            rows[i].remove(num)\n            cols[j].remove(num)\n            boxes[box_idx].remove(num)\n        return False\n    \n    backtrack(0)",
+            "typescript": "function solveSudoku(board: string[][]): void {\n    const rows: Set<string>[] = Array.from({length: 9}, () => new Set());\n    const cols: Set<string>[] = Array.from({length: 9}, () => new Set());\n    const boxes: Set<string>[] = Array.from({length: 9}, () => new Set());\n    \n    for (let i = 0; i < 9; i++) {\n        for (let j = 0; j < 9; j++) {\n            if (board[i][j] !== '.') {\n                const num = board[i][j];\n                rows[i].add(num);\n                cols[j].add(num);\n                boxes[Math.floor(i / 3) * 3 + Math.floor(j / 3)].add(num);\n            }\n        }\n    }\n    \n    function backtrack(pos: number): boolean {\n        if (pos === 81) return true;\n        const i = Math.floor(pos / 9), j = pos % 9;\n        if (board[i][j] !== '.') return backtrack(pos + 1);\n        const boxIdx = Math.floor(i / 3) * 3 + Math.floor(j / 3);\n        for (const num of '123456789') {\n            if (rows[i].has(num) || cols[j].has(num) || boxes[boxIdx].has(num)) continue;\n            board[i][j] = num;\n            rows[i].add(num);\n            cols[j].add(num);\n            boxes[boxIdx].add(num);\n            if (backtrack(pos + 1)) return true;\n            board[i][j] = '.';\n            rows[i].delete(num);\n            cols[j].delete(num);\n            boxes[boxIdx].delete(num);\n        }\n        return false;\n    }\n    \n    backtrack(0);\n}"
+          },
+          "testCases": [
+            {
+              "input": {"board": [["5","3",".",".","7",".",".",".","."],["6",".",".","1","9","5",".",".","."],[".","9","8",".",".",".",".","6","."],["8",".",".",".","6",".",".",".","3"],["4",".",".","8",".","3",".",".","1"],["7",".",".",".","2",".",".",".","6"],[".","6",".",".",".",".","2","8","."],[".",".",".","4","1","9",".",".","5"],[".",".",".",".","8",".",".","7","9"]]},
+              "expected": [["5","3","4","6","7","8","9","1","2"],["6","7","2","1","9","5","3","4","8"],["1","9","8","3","4","2","5","6","7"],["8","5","9","7","6","1","4","2","3"],["4","2","6","8","5","3","7","9","1"],["7","1","3","9","2","4","8","5","6"],["9","6","1","5","3","7","2","8","4"],["2","8","7","4","1","9","6","3","5"],["3","4","5","2","8","6","1","7","9"]]
+            }
+          ],
+          "steps": [
+            {
+              "stepId": "sudoku-think",
+              "type": "THINKING_GATE",
+              "prompt": "What constraints need to be tracked? How do you efficiently check if a number is valid in a cell? What's the box index formula?",
+              "hints": [
+                "Track 3 types of constraints: rows, cols, 3x3 boxes",
+                "Use sets for O(1) constraint checking",
+                "Box index: (row // 3) * 3 + (col // 3)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies triple constraint structure",
+                  "points": 2,
+                  "errorMappings": ["sudoku_constraint_incomplete"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands box index calculation",
+                  "points": 2,
+                  "errorMappings": ["sudoku_box_index_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Recognizes importance of efficient constraint checking",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "sudoku-code",
+              "type": "CODING",
+              "prompt": "Implement Sudoku solver. Pre-populate constraint sets, then backtrack through empty cells trying digits 1-9.",
+              "hints": [
+                "Initialize sets with existing board values first",
+                "Linear scan: pos 0-80, convert to (i,j) with pos//9, pos%9",
+                "Return True on success to stop searching"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Pre-populates constraints from initial board",
+                  "points": 2,
+                  "errorMappings": ["sudoku_init_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Updates and reverts all three constraint sets",
+                  "points": 2,
+                  "errorMappings": ["backtrack_missing_undo", "sudoku_constraint_incomplete"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Returns True to propagate success and stop search",
+                  "points": 1,
+                  "errorMappings": ["backtrack_early_termination_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "sudoku-reflect",
+              "type": "REFLECTION",
+              "prompt": "What heuristics could improve performance? How would you check if a board is valid (not solve it)?",
+              "hints": [
+                "Heuristic: choose cell with fewest valid options (MRV)",
+                "Validation: just check constraints without recursion"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands MRV heuristic",
+                  "points": 2,
+                  "errorMappings": ["backtrack_heuristic_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Can simplify to validation-only problem",
+                  "points": 2,
+                  "errorMappings": ["backtrack_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "MRV can dramatically reduce search space",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "word-search",
+          "title": "Word Search",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "Given an m x n grid of characters board and a string word, return true if word exists in the grid. The word can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once.",
+          "examples": [
+            {
+              "input": "board = [[\"A\",\"B\",\"C\",\"E\"],[\"S\",\"F\",\"C\",\"S\"],[\"A\",\"D\",\"E\",\"E\"]], word = \"ABCCED\"",
+              "output": "true",
+              "explanation": "The word can be traced on the board"
+            },
+            {
+              "input": "board = [[\"A\",\"B\",\"C\",\"E\"],[\"S\",\"F\",\"C\",\"S\"],[\"A\",\"D\",\"E\",\"E\"]], word = \"SEE\"",
+              "output": "true",
+              "explanation": "The word can be traced: S -> E -> E"
+            },
+            {
+              "input": "board = [[\"A\",\"B\",\"C\",\"E\"],[\"S\",\"F\",\"C\",\"S\"],[\"A\",\"D\",\"E\",\"E\"]], word = \"ABCB\"",
+              "output": "false",
+              "explanation": "Cannot reuse the 'B' cell"
+            }
+          ],
+          "constraints": [
+            "m == board.length",
+            "n == board[i].length",
+            "1 <= m, n <= 6",
+            "1 <= word.length <= 15",
+            "board and word consists of only lowercase and uppercase English letters"
+          ],
+          "starterCode": {
+            "python": "def exist(board: List[List[str]], word: str) -> bool:\n    pass",
+            "typescript": "function exist(board: string[][], word: string): boolean {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def exist(board: List[List[str]], word: str) -> bool:\n    m, n = len(board), len(board[0])\n    \n    def backtrack(i, j, k):\n        if k == len(word):\n            return True\n        if i < 0 or i >= m or j < 0 or j >= n or board[i][j] != word[k]:\n            return False\n        temp = board[i][j]\n        board[i][j] = '#'\n        found = (backtrack(i+1, j, k+1) or backtrack(i-1, j, k+1) or\n                 backtrack(i, j+1, k+1) or backtrack(i, j-1, k+1))\n        board[i][j] = temp\n        return found\n    \n    for i in range(m):\n        for j in range(n):\n            if backtrack(i, j, 0):\n                return True\n    return False",
+            "typescript": "function exist(board: string[][], word: string): boolean {\n    const m = board.length, n = board[0].length;\n    \n    function backtrack(i: number, j: number, k: number): boolean {\n        if (k === word.length) return true;\n        if (i < 0 || i >= m || j < 0 || j >= n || board[i][j] !== word[k]) {\n            return false;\n        }\n        const temp = board[i][j];\n        board[i][j] = '#';\n        const found = backtrack(i+1, j, k+1) || backtrack(i-1, j, k+1) ||\n                      backtrack(i, j+1, k+1) || backtrack(i, j-1, k+1);\n        board[i][j] = temp;\n        return found;\n    }\n    \n    for (let i = 0; i < m; i++) {\n        for (let j = 0; j < n; j++) {\n            if (backtrack(i, j, 0)) return true;\n        }\n    }\n    return false;\n}"
+          },
+          "testCases": [
+            {"input": {"board": [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "word": "ABCCED"}, "expected": true},
+            {"input": {"board": [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "word": "SEE"}, "expected": true},
+            {"input": {"board": [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], "word": "ABCB"}, "expected": false},
+            {"input": {"board": [["A"]], "word": "A"}, "expected": true},
+            {"input": {"board": [["A","B"],["C","D"]], "word": "ABCD"}, "expected": false}
+          ],
+          "steps": [
+            {
+              "stepId": "word-search-think",
+              "type": "THINKING_GATE",
+              "prompt": "How do you explore all paths from each starting cell? How do you prevent revisiting cells in the same path? When do you backtrack?",
+              "hints": [
+                "DFS/backtracking from each cell that matches word[0]",
+                "Mark visited cells (modify board or use set)",
+                "Backtrack when: out of bounds, wrong char, or already visited"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies grid backtracking pattern",
+                  "points": 2,
+                  "errorMappings": ["backtrack_grid_pattern_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands need to track visited cells per path",
+                  "points": 2,
+                  "errorMappings": ["backtrack_visited_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies worst case O(m*n*4^L) where L is word length",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "word-search-code",
+              "type": "CODING",
+              "prompt": "Implement word search. Mark cells as visited by temporarily changing them, restore on backtrack.",
+              "hints": [
+                "board[i][j] = '#' to mark visited (modify in place)",
+                "Check bounds and character match before recursing",
+                "Try all 4 directions, return True if any succeeds"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Uses in-place marking for efficiency",
+                  "points": 2,
+                  "errorMappings": ["backtrack_visited_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Restores cell value after exploring all directions",
+                  "points": 2,
+                  "errorMappings": ["backtrack_missing_undo"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Short-circuits on finding valid path",
+                  "points": 1,
+                  "errorMappings": ["backtrack_early_termination_missed"]
+                }
+              }
+            },
+            {
+              "stepId": "word-search-reflect",
+              "type": "REFLECTION",
+              "prompt": "How would you extend this to find all words from a dictionary (Word Search II)? What data structure would help?",
+              "hints": [
+                "Trie for dictionary enables prefix pruning",
+                "Search once, matching against Trie as you go"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Recognizes Trie optimization for multiple words",
+                  "points": 2,
+                  "errorMappings": ["backtrack_trie_optimization_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands how Trie enables prefix pruning",
+                  "points": 2,
+                  "errorMappings": ["backtrack_pruning_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Trie reduces from O(W * m*n*4^L) to O(m*n*4^L)",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "palindrome-partitioning",
+          "title": "Palindrome Partitioning",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 30,
+          "description": "Given a string s, partition s such that every substring of the partition is a palindrome. Return all possible palindrome partitioning of s.",
+          "examples": [
+            {
+              "input": "s = \"aab\"",
+              "output": "[[\"a\",\"a\",\"b\"],[\"aa\",\"b\"]]",
+              "explanation": "Both partitions have all palindromic substrings"
+            },
+            {
+              "input": "s = \"a\"",
+              "output": "[[\"a\"]]",
+              "explanation": "Single character is always a palindrome"
+            }
+          ],
+          "constraints": [
+            "1 <= s.length <= 16",
+            "s contains only lowercase English letters"
+          ],
+          "starterCode": {
+            "python": "def partition(s: str) -> List[List[str]]:\n    pass",
+            "typescript": "function partition(s: string): string[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def partition(s: str) -> List[List[str]]:\n    result = []\n    \n    def is_palindrome(start, end):\n        while start < end:\n            if s[start] != s[end]:\n                return False\n            start += 1\n            end -= 1\n        return True\n    \n    def backtrack(start, current):\n        if start == len(s):\n            result.append(current[:])\n            return\n        for end in range(start, len(s)):\n            if is_palindrome(start, end):\n                current.append(s[start:end+1])\n                backtrack(end + 1, current)\n                current.pop()\n    \n    backtrack(0, [])\n    return result",
+            "typescript": "function partition(s: string): string[][] {\n    const result: string[][] = [];\n    \n    function isPalindrome(start: number, end: number): boolean {\n        while (start < end) {\n            if (s[start] !== s[end]) return false;\n            start++;\n            end--;\n        }\n        return true;\n    }\n    \n    function backtrack(start: number, current: string[]): void {\n        if (start === s.length) {\n            result.push([...current]);\n            return;\n        }\n        for (let end = start; end < s.length; end++) {\n            if (isPalindrome(start, end)) {\n                current.push(s.substring(start, end + 1));\n                backtrack(end + 1, current);\n                current.pop();\n            }\n        }\n    }\n    \n    backtrack(0, []);\n    return result;\n}"
+          },
+          "testCases": [
+            {"input": {"s": "aab"}, "expected": [["a", "a", "b"], ["aa", "b"]]},
+            {"input": {"s": "a"}, "expected": [["a"]]},
+            {"input": {"s": "ab"}, "expected": [["a", "b"]]},
+            {"input": {"s": "aaa"}, "expected": [["a", "a", "a"], ["a", "aa"], ["aa", "a"], ["aaa"]]},
+            {"input": {"s": "aba"}, "expected": [["a", "b", "a"], ["aba"]]}
+          ],
+          "steps": [
+            {
+              "stepId": "palindrome-partition-think",
+              "type": "THINKING_GATE",
+              "prompt": "How do you enumerate all possible partitions? At each position, what are your choices? When is a partition valid?",
+              "hints": [
+                "At position i, try all substrings s[i:j+1] where i <= j < n",
+                "Only recurse if the substring is a palindrome",
+                "Valid partition: reached end of string with all palindromes"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies partition enumeration pattern",
+                  "points": 2,
+                  "errorMappings": ["backtrack_partition_pattern_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands constraint checking before recursion",
+                  "points": 2,
+                  "errorMappings": ["backtrack_constraint_check_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Recognizes O(n * 2^n) worst case",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "palindrome-partition-code",
+              "type": "CODING",
+              "prompt": "Implement palindrome partitioning. For each starting position, try all ending positions, only recursing on palindromic substrings.",
+              "hints": [
+                "Helper function to check palindrome",
+                "Loop end from start to len(s)-1",
+                "Only add to current and recurse if palindrome"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly iterates through all possible end positions",
+                  "points": 2,
+                  "errorMappings": ["backtrack_partition_loop_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Checks palindrome before recursing (pruning)",
+                  "points": 2,
+                  "errorMappings": ["backtrack_constraint_check_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Proper backtracking after each partition attempt",
+                  "points": 1,
+                  "errorMappings": ["backtrack_missing_undo"]
+                }
+              }
+            },
+            {
+              "stepId": "palindrome-partition-reflect",
+              "type": "REFLECTION",
+              "prompt": "How could you precompute which substrings are palindromes? What's the time complexity of that approach?",
+              "hints": [
+                "Use DP: dp[i][j] = true if s[i:j+1] is palindrome",
+                "dp[i][j] = (s[i] == s[j]) and dp[i+1][j-1]",
+                "Precompute in O(n^2), then O(1) per palindrome check"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Recognizes DP precomputation optimization",
+                  "points": 2,
+                  "errorMappings": ["backtrack_dp_optimization_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands 2D palindrome DP",
+                  "points": 2,
+                  "errorMappings": ["backtrack_variant_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n^2) precompute vs O(n) per check",
+                  "points": 1,
+                  "errorMappings": ["backtrack_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "microLessons": [
+    {
+      "lessonId": "backtrack_template",
+      "title": "The Backtracking Template",
+      "content": "Backtracking follows a template: (1) Base case: check if we have a complete solution, add to results if valid. (2) For each choice at current position: (a) Make the choice (add to current state), (b) Recurse to next position, (c) Undo the choice (remove from current state). The 'undo' step is what makes it backtracking - we explore one path, then return to try others.",
+      "triggerErrorIds": ["backtrack_template_wrong", "backtrack_missing_undo"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "backtrack_vs_recursion",
+      "title": "Backtracking vs Simple Recursion",
+      "content": "Simple recursion computes a value by breaking into subproblems. Backtracking builds and explores a decision tree, systematically trying all possibilities. Key difference: backtracking modifies state, recurses, then UNDOES the modification to try other branches. Without the undo step, you're not backtracking.",
+      "triggerErrorIds": ["backtrack_pattern_not_recognized"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "backtrack_enumeration_types",
+      "title": "Types of Enumeration: Subsets, Permutations, Combinations",
+      "content": "Three fundamental enumeration problems: (1) Subsets: all possible selections (include/exclude each element). Use start index, add at every node. 2^n results. (2) Permutations: all orderings using ALL elements. Track used elements, add only at leaves. n! results. (3) Combinations: all size-k selections. Like subsets but only add when size == k. C(n,k) results.",
+      "triggerErrorIds": ["backtrack_permutation_vs_subset"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_start_index",
+      "title": "Using Start Index to Avoid Duplicates",
+      "content": "In subset/combination problems, pass a 'start' index to avoid generating duplicates like [1,2] and [2,1]. Each recursive call only considers elements at index >= start. For Subsets: backtrack(i+1) ensures we don't go backward. For Combination Sum (reuse allowed): backtrack(i) allows same element again.",
+      "triggerErrorIds": ["backtrack_missing_start_index", "backtrack_duplicate_subsets"],
+      "prerequisites": ["backtrack_enumeration_types"]
+    },
+    {
+      "lessonId": "backtrack_used_set",
+      "title": "Tracking Used Elements in Permutations",
+      "content": "For permutations, we need ALL elements in each result, but can't reuse. Two approaches: (1) Check 'if num in current' (O(n) per check). (2) Use a 'used' set or boolean array (O(1) per check). Remember to add to 'used' before recursing and remove after (backtrack). The used set tracks what's already in the current permutation.",
+      "triggerErrorIds": ["backtrack_used_tracking_wrong"],
+      "prerequisites": ["backtrack_enumeration_types"]
+    },
+    {
+      "lessonId": "backtrack_copy_result",
+      "title": "Why You Must Copy When Adding to Results",
+      "content": "Common bug: result.append(current) stores a reference, not a copy. As backtracking continues and modifies 'current', all stored references change too! Always copy: result.append(current[:]) in Python, result.push([...current]) in JS. This creates a snapshot of the current state.",
+      "triggerErrorIds": ["backtrack_reference_bug"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_constraint_satisfaction",
+      "title": "Constraint Satisfaction Backtracking",
+      "content": "Problems like N-Queens and Sudoku require placing items subject to constraints. Pattern: (1) Track constraints (which rows/cols/diagonals are used). (2) At each position, try only valid choices (those not violating constraints). (3) Add to constraint sets before recursing, remove after. Pruning invalid branches early is key to efficiency.",
+      "triggerErrorIds": ["backtrack_constraint_pattern_missed"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_n_queens_diagonals",
+      "title": "N-Queens: Representing Diagonals",
+      "content": "Queens attack on diagonals. How to represent? Key insight: cells on the same diagonal share a property. For \\ diagonals (top-left to bottom-right): row - col is constant. For / diagonals (top-right to bottom-left): row + col is constant. Use sets to track used diagonals: diag1.add(row - col), diag2.add(row + col).",
+      "triggerErrorIds": ["n_queens_diagonal_wrong", "n_queens_constraint_incomplete"],
+      "prerequisites": ["backtrack_constraint_satisfaction"]
+    },
+    {
+      "lessonId": "backtrack_sudoku_box",
+      "title": "Sudoku: Box Index Calculation",
+      "content": "Sudoku has 9 3x3 boxes numbered 0-8 (left-to-right, top-to-bottom). To find which box contains cell (row, col): box_index = (row // 3) * 3 + (col // 3). This maps rows 0-2 to box rows 0, rows 3-5 to box rows 1, etc. Same for columns. Each box needs its own constraint set.",
+      "triggerErrorIds": ["sudoku_box_index_wrong"],
+      "prerequisites": ["backtrack_constraint_satisfaction"]
+    },
+    {
+      "lessonId": "backtrack_grid_visited",
+      "title": "Marking Visited Cells in Grid Backtracking",
+      "content": "In grid problems like Word Search, you can't reuse cells in the same path. Options: (1) Use a visited set: visited.add((i,j)) before recursing, visited.remove((i,j)) after. (2) Modify grid in-place: board[i][j] = '#', restore original after. In-place is O(1) space and faster, but modifies input temporarily.",
+      "triggerErrorIds": ["backtrack_visited_wrong"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_pruning",
+      "title": "Pruning in Backtracking",
+      "content": "Pruning means cutting off branches of the decision tree that can't lead to valid solutions. Examples: (1) In Combination Sum, if remaining < 0, stop. (2) In Combinations, if remaining numbers < needed slots, stop. (3) In N-Queens, skip columns that are attacked. Good pruning dramatically reduces the search space.",
+      "triggerErrorIds": ["backtrack_pruning_missed"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_early_return",
+      "title": "Early Termination on Finding Solution",
+      "content": "For problems asking 'find one solution' (not all), return True/False from backtrack to signal success. Pattern: 'if backtrack(...): return True'. This propagates success up the call stack and stops exploration. For 'find all solutions', don't return early - continue exploring after finding each solution.",
+      "triggerErrorIds": ["backtrack_early_termination_missed"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_duplicate_input",
+      "title": "Handling Duplicate Elements in Input",
+      "content": "When input has duplicates and you want unique results: (1) Sort the input first. (2) Skip duplicates at the same decision level: 'if i > start and nums[i] == nums[i-1]: continue'. This skips choosing the same value twice at the same position in the decision tree, while still allowing the value to appear multiple times in a single result.",
+      "triggerErrorIds": ["backtrack_duplicate_handling_wrong"],
+      "prerequisites": ["backtrack_start_index"]
+    },
+    {
+      "lessonId": "backtrack_complexity",
+      "title": "Backtracking Time Complexity",
+      "content": "Backtracking complexity depends on the decision tree size. Subsets: 2^n (each element: include/exclude). Permutations: n! (n choices, then n-1, then n-2...). Combinations C(n,k): n!/(k!(n-k)!). N-Queens: roughly n! but pruning helps. Word Search: O(m*n*4^L) where L is word length. Always multiply by cost per node (e.g., copying result).",
+      "triggerErrorIds": ["backtrack_complexity_wrong"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_vs_dp",
+      "title": "When to Use Backtracking vs DP",
+      "content": "Backtracking: enumerate ALL solutions, or find ONE solution satisfying constraints. Generates explicit solutions. DP: find OPTIMAL solution or COUNT solutions. Doesn't enumerate. Example: 'Find all subsets summing to k' = backtracking. 'Count subsets summing to k' = DP. 'Find if any subset sums to k' = either works.",
+      "triggerErrorIds": ["backtrack_vs_dp_confusion"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "backtrack_partition",
+      "title": "String Partitioning Pattern",
+      "content": "Partition problems ask to split a string into parts satisfying some property. Pattern: at position i, try all substrings s[i:j+1] for j from i to n-1. If substring is valid (e.g., palindrome), add to current partition and recurse from position j+1. Base case: reached end of string. This is different from subsets - choices are non-overlapping segments.",
+      "triggerErrorIds": ["backtrack_partition_pattern_missed", "backtrack_partition_loop_wrong"],
+      "prerequisites": ["backtrack_template"]
+    },
+    {
+      "lessonId": "backtrack_unbounded",
+      "title": "Unbounded Selection (Elements Reusable)",
+      "content": "When elements can be used multiple times (Combination Sum), the key change is: recurse with 'i' instead of 'i+1'. This allows the same element to be chosen again. Compare: Subsets (each element once): backtrack(i+1). Combination Sum (unlimited): backtrack(i). Combination Sum II (each element once, with duplicates): backtrack(i+1) + skip duplicates.",
+      "triggerErrorIds": ["backtrack_unbounded_not_recognized", "backtrack_reuse_wrong"],
+      "prerequisites": ["backtrack_start_index"]
+    },
+    {
+      "lessonId": "backtrack_swap_permutation",
+      "title": "Swap-Based Permutation Generation",
+      "content": "Alternative to used-set for permutations: swap elements in place. At position i, swap nums[i] with each nums[j] where j >= i, recurse for position i+1, swap back. This generates permutations by deciding which element goes in each position. O(n!) time, O(n) space (no extra used set). Handles in-place modification.",
+      "triggerErrorIds": ["backtrack_swap_approach_wrong"],
+      "prerequisites": ["backtrack_enumeration_types"]
+    },
+    {
+      "lessonId": "backtrack_iterative_subsets",
+      "title": "Iterative Subset Generation",
+      "content": "Subsets can be generated iteratively: start with [[]]. For each number, add it to all existing subsets to create new ones. Result grows: [[]] -> [[], [1]] -> [[], [1], [2], [1,2]] -> ... This is BFS-style vs backtracking's DFS-style. Both are O(n * 2^n). Choose based on preference; backtracking generalizes to more problems.",
+      "triggerErrorIds": ["backtrack_iterative_not_understood"],
+      "prerequisites": ["backtrack_enumeration_types"]
+    },
+    {
+      "lessonId": "backtrack_heuristics",
+      "title": "Search Heuristics: MRV and LCV",
+      "content": "Heuristics improve backtracking efficiency. MRV (Minimum Remaining Values): choose the variable with fewest legal values first - fails faster. LCV (Least Constraining Value): choose value that rules out fewest choices for other variables - succeeds faster. For Sudoku, MRV means filling cells with fewest candidate digits first.",
+      "triggerErrorIds": ["backtrack_heuristic_missed"],
+      "prerequisites": ["backtrack_constraint_satisfaction"]
+    }
+  ],
+  "errorMappings": [
+    {
+      "errorId": "backtrack_pattern_not_recognized",
+      "pattern": "(enumerate all|find all possible|generate all|list all)",
+      "lessonIds": ["backtrack_vs_recursion", "backtrack_template"],
+      "feedbackTemplate": "This is a backtracking problem! You need to enumerate all possibilities. Think: what choice do I make at each step? How do I explore all choices systematically?"
+    },
+    {
+      "errorId": "backtrack_template_wrong",
+      "pattern": "(missing base case|infinite recursion|stack overflow|wrong structure)",
+      "lessonIds": ["backtrack_template"],
+      "feedbackTemplate": "Review the backtracking template: (1) Base case - when is solution complete? (2) Loop through choices. (3) Make choice, recurse, UNDO choice. Which part is missing?"
+    },
+    {
+      "errorId": "backtrack_missing_undo",
+      "pattern": "(forgot to pop|missing pop|didn't remove|state corrupted)",
+      "lessonIds": ["backtrack_template"],
+      "feedbackTemplate": "You're missing the backtrack step! After recursing, you must undo your choice: current.pop() or used.remove(). Otherwise, the state carries over to other branches."
+    },
+    {
+      "errorId": "backtrack_missing_base_case",
+      "pattern": "(when to stop|termination|no results|empty result)",
+      "lessonIds": ["backtrack_template"],
+      "feedbackTemplate": "Check your base case. When is a solution complete? For subsets: add at every call. For permutations: when len(current) == len(nums). For combinations: when len(current) == k."
+    },
+    {
+      "errorId": "backtrack_reference_bug",
+      "pattern": "(all same|results changed|mutated|same reference)",
+      "lessonIds": ["backtrack_copy_result"],
+      "feedbackTemplate": "You're storing a reference, not a copy! Use result.append(current[:]) in Python or result.push([...current]) in JS to create a snapshot of the current state."
+    },
+    {
+      "errorId": "backtrack_duplicate_subsets",
+      "pattern": "(duplicate|repeated|same subset|redundant)",
+      "lessonIds": ["backtrack_start_index"],
+      "feedbackTemplate": "You're generating duplicates! Use a 'start' index and only consider elements at index >= start. This prevents [1,2] and [2,1] from both appearing."
+    },
+    {
+      "errorId": "backtrack_missing_start_index",
+      "pattern": "(start.*parameter|index.*forward|avoid.*backward)",
+      "lessonIds": ["backtrack_start_index"],
+      "feedbackTemplate": "Pass a 'start' index to your backtrack function. Loop from start to len(nums), and pass i+1 to the next call. This ensures you only move forward through the array."
+    },
+    {
+      "errorId": "backtrack_permutation_vs_subset",
+      "pattern": "(permutation.*subset|order matters|all elements)",
+      "lessonIds": ["backtrack_enumeration_types"],
+      "feedbackTemplate": "Permutations vs Subsets: Subsets can have any length and use start index. Permutations use ALL elements (length = n) and track which are used. Which do you need?"
+    },
+    {
+      "errorId": "backtrack_used_tracking_wrong",
+      "pattern": "(already used|visited twice|element reused|in current)",
+      "lessonIds": ["backtrack_used_set"],
+      "feedbackTemplate": "Track used elements properly! Use a set: used.add(num) before recursing, used.remove(num) after. Or check 'if num not in current' (slower but works for distinct elements)."
+    },
+    {
+      "errorId": "backtrack_constraint_pattern_missed",
+      "pattern": "(constraint|valid placement|no conflicts|attacks)",
+      "lessonIds": ["backtrack_constraint_satisfaction"],
+      "feedbackTemplate": "This is constraint satisfaction backtracking. Track constraints (what's already used/forbidden) and only try placements that don't violate constraints. Prune invalid branches early."
+    },
+    {
+      "errorId": "n_queens_diagonal_wrong",
+      "pattern": "(diagonal|attack|same diagonal|queen.*diagonal)",
+      "lessonIds": ["backtrack_n_queens_diagonals"],
+      "feedbackTemplate": "For diagonals: cells on same \\ diagonal have same (row - col). Cells on same / diagonal have same (row + col). Use two sets: diag1 for row-col, diag2 for row+col."
+    },
+    {
+      "errorId": "n_queens_constraint_incomplete",
+      "pattern": "(missing constraint|forgot.*diagonal|only checking column)",
+      "lessonIds": ["backtrack_n_queens_diagonals"],
+      "feedbackTemplate": "N-Queens needs THREE constraint sets: cols, diag1 (row-col), diag2 (row+col). You're missing one! Queens attack on rows (handled by placing one per row), columns, and both diagonals."
+    },
+    {
+      "errorId": "n_queens_inefficient_check",
+      "pattern": "(checking all queens|O\\(n\\) per check|loop through queens)",
+      "lessonIds": ["backtrack_constraint_satisfaction"],
+      "feedbackTemplate": "Don't loop through placed queens to check conflicts. Use sets for O(1) lookup: if col in cols or (row-col) in diag1 or (row+col) in diag2."
+    },
+    {
+      "errorId": "n_queens_output_format_wrong",
+      "pattern": "(output format|string.*board|join.*row)",
+      "lessonIds": ["backtrack_constraint_satisfaction"],
+      "feedbackTemplate": "N-Queens output: list of boards, each board is list of strings. Convert 2D char array: [''.join(row) for row in board] or board.map(r => r.join(''))."
+    },
+    {
+      "errorId": "sudoku_constraint_incomplete",
+      "pattern": "(only.*row|only.*column|forgot.*box|missing constraint)",
+      "lessonIds": ["backtrack_constraint_satisfaction"],
+      "feedbackTemplate": "Sudoku has THREE constraint types: rows[9], cols[9], boxes[9]. Each is a set of digits used. Check all three before placing a digit."
+    },
+    {
+      "errorId": "sudoku_box_index_wrong",
+      "pattern": "(box index|which box|3x3.*index|box.*calculation)",
+      "lessonIds": ["backtrack_sudoku_box"],
+      "feedbackTemplate": "Box index formula: (row // 3) * 3 + (col // 3). This gives 0-8 for the nine 3x3 boxes. Row 0-2 -> box row 0, row 3-5 -> box row 1, etc."
+    },
+    {
+      "errorId": "sudoku_init_wrong",
+      "pattern": "(initial.*board|existing.*numbers|pre-fill|setup.*constraints)",
+      "lessonIds": ["backtrack_constraint_satisfaction"],
+      "feedbackTemplate": "Initialize constraint sets with the existing board values BEFORE backtracking. Loop through the board and add each non-'.' digit to rows[i], cols[j], and boxes[box_idx]."
+    },
+    {
+      "errorId": "backtrack_visited_wrong",
+      "pattern": "(visited|reusing cell|same cell twice|marking.*cell)",
+      "lessonIds": ["backtrack_grid_visited"],
+      "feedbackTemplate": "Track visited cells per path! Either use a visited set (add before, remove after) or modify the grid temporarily (board[i][j] = '#', restore original after recursing)."
+    },
+    {
+      "errorId": "backtrack_grid_pattern_missed",
+      "pattern": "(grid.*search|path.*grid|adjacent cells|4 directions)",
+      "lessonIds": ["backtrack_grid_visited"],
+      "feedbackTemplate": "Grid backtracking pattern: from each cell, explore 4 neighbors (up, down, left, right). Check bounds and validity before recursing. Mark visited to avoid cycles in the current path."
+    },
+    {
+      "errorId": "backtrack_pruning_missed",
+      "pattern": "(too slow|timeout|prune|cut off|early termination)",
+      "lessonIds": ["backtrack_pruning"],
+      "feedbackTemplate": "Add pruning! Before recursing, check if this branch can possibly lead to a solution. Examples: remaining sum < 0, remaining elements < needed count, constraint already violated."
+    },
+    {
+      "errorId": "backtrack_early_termination_missed",
+      "pattern": "(find one|stop after|first solution|return true)",
+      "lessonIds": ["backtrack_early_return"],
+      "feedbackTemplate": "For 'find any solution' problems, return True on success: 'if backtrack(...): return True'. This propagates up and stops the search. Don't continue exploring after finding a valid solution."
+    },
+    {
+      "errorId": "backtrack_duplicate_handling_wrong",
+      "pattern": "(duplicate.*input|repeated elements|same value.*twice)",
+      "lessonIds": ["backtrack_duplicate_input"],
+      "feedbackTemplate": "For duplicate input elements: (1) Sort first. (2) Skip duplicates at same level: 'if i > start and nums[i] == nums[i-1]: continue'. This avoids choosing the same value twice at the same position."
+    },
+    {
+      "errorId": "backtrack_complexity_wrong",
+      "pattern": "(time complexity|space complexity|big-?O|how many)",
+      "lessonIds": ["backtrack_complexity"],
+      "feedbackTemplate": "Backtracking complexity = size of decision tree. Subsets: 2^n, Permutations: n!, Combinations: C(n,k), N-Queens: ~n!, Grid search: O(4^L). Multiply by work per node (copying, etc.)."
+    },
+    {
+      "errorId": "backtrack_vs_dp_confusion",
+      "pattern": "(should I use dp|backtracking vs dp|enumerate or count)",
+      "lessonIds": ["backtrack_vs_dp"],
+      "feedbackTemplate": "Backtracking for 'find ALL solutions' or 'find ONE satisfying constraints'. DP for 'count solutions' or 'find optimal value'. If you need the actual solutions, use backtracking."
+    },
+    {
+      "errorId": "backtrack_partition_pattern_missed",
+      "pattern": "(partition string|split into|divide.*parts)",
+      "lessonIds": ["backtrack_partition"],
+      "feedbackTemplate": "String partitioning: at position i, try all substrings s[i:j+1]. If valid, add to partition and recurse from j+1. Base case: i == len(s) means complete partition."
+    },
+    {
+      "errorId": "backtrack_partition_loop_wrong",
+      "pattern": "(end position|substring loop|j from i)",
+      "lessonIds": ["backtrack_partition"],
+      "feedbackTemplate": "In partition problems, loop 'for end in range(start, len(s))'. The substring is s[start:end+1]. Recurse with start = end + 1 (next position after this substring)."
+    },
+    {
+      "errorId": "backtrack_constraint_check_wrong",
+      "pattern": "(check before|validate first|only valid|constraint.*before recurse)",
+      "lessonIds": ["backtrack_constraint_satisfaction"],
+      "feedbackTemplate": "Check constraints BEFORE recursing, not after. This is pruning - don't explore branches that are already invalid. Example: only recurse if substring is palindrome."
+    },
+    {
+      "errorId": "backtrack_unbounded_not_recognized",
+      "pattern": "(unlimited|reuse|same element again|unbounded)",
+      "lessonIds": ["backtrack_unbounded"],
+      "feedbackTemplate": "When elements can be reused (unlimited times), recurse with 'i' instead of 'i+1'. This allows the same element to be chosen again in subsequent calls."
+    },
+    {
+      "errorId": "backtrack_reuse_wrong",
+      "pattern": "(i\\+1.*should be i|can't reuse|wrong index.*recurse)",
+      "lessonIds": ["backtrack_unbounded"],
+      "feedbackTemplate": "Check your recursive index: backtrack(i+1) means each element used at most once. backtrack(i) means unlimited reuse. Which does your problem require?"
+    },
+    {
+      "errorId": "backtrack_sum_tracking_wrong",
+      "pattern": "(sum.*wrong|remaining.*negative|target.*tracking)",
+      "lessonIds": ["backtrack_unbounded"],
+      "feedbackTemplate": "Track remaining sum, not running sum. Pass 'remaining - nums[i]' to each call. Base case: remaining == 0 (found valid combination). Prune: remaining < 0 (overshot)."
+    },
+    {
+      "errorId": "backtrack_constraint_missed",
+      "pattern": "(size constraint|k elements|fixed length)",
+      "lessonIds": ["backtrack_enumeration_types"],
+      "feedbackTemplate": "Don't forget the size constraint! For combinations of size k, only add to results when len(current) == k. You can also prune: if remaining elements < remaining slots, return early."
+    },
+    {
+      "errorId": "backtrack_variant_not_understood",
+      "pattern": "(what if|different version|modify for|extend to)",
+      "lessonIds": ["backtrack_duplicate_input", "backtrack_unbounded"],
+      "feedbackTemplate": "Common variants: (1) With duplicates: sort + skip same values at same level. (2) Unlimited reuse: backtrack(i) not i+1. (3) Size constraint: add base case for len == k. (4) Find one: return True on success."
+    },
+    {
+      "errorId": "backtrack_swap_approach_wrong",
+      "pattern": "(swap.*permutation|in-?place.*permutation|swap back)",
+      "lessonIds": ["backtrack_swap_permutation"],
+      "feedbackTemplate": "Swap-based permutations: at position i, swap nums[i] with each nums[j] where j >= i, recurse for i+1, swap back. This generates permutations by deciding what goes in each position."
+    },
+    {
+      "errorId": "backtrack_iterative_not_understood",
+      "pattern": "(iterative.*subset|without recursion|build up)",
+      "lessonIds": ["backtrack_iterative_subsets"],
+      "feedbackTemplate": "Iterative subsets: start with [[]]. For each num, add it to every existing subset. After num=1: [[], [1]]. After num=2: [[], [1], [2], [1,2]]. Each step doubles the result count."
+    },
+    {
+      "errorId": "backtrack_math_connection_missed",
+      "pattern": "(combinatorics|mathematical|formula|C\\(n,k\\))",
+      "lessonIds": ["backtrack_enumeration_types"],
+      "feedbackTemplate": "Backtracking connects to combinatorics! C(n,k) = C(n-1,k-1) + C(n-1,k) reflects the include/exclude decision. Understanding the math helps verify your solution generates the right count."
+    },
+    {
+      "errorId": "backtrack_symmetry_missed",
+      "pattern": "(symmetry|mirror|reduce search|half)",
+      "lessonIds": ["backtrack_pruning"],
+      "feedbackTemplate": "Some problems have symmetry you can exploit. For N-Queens, solutions are symmetric - only search first half of first-row positions and mirror. This can halve the search space."
+    },
+    {
+      "errorId": "backtrack_heuristic_missed",
+      "pattern": "(MRV|LCV|heuristic|which.*first|order.*try)",
+      "lessonIds": ["backtrack_heuristics"],
+      "feedbackTemplate": "Heuristics improve performance. MRV (Minimum Remaining Values): pick the most constrained variable first (fails faster). For Sudoku, fill cells with fewest candidates first."
+    },
+    {
+      "errorId": "backtrack_trie_optimization_missed",
+      "pattern": "(multiple words|word search II|dictionary|trie)",
+      "lessonIds": ["backtrack_pruning"],
+      "feedbackTemplate": "For searching multiple words (Word Search II), build a Trie from the dictionary. During backtracking, follow Trie nodes - this prunes paths that can't match any word prefix."
+    },
+    {
+      "errorId": "backtrack_dp_optimization_missed",
+      "pattern": "(precompute|cache|memoize|repeated.*check)",
+      "lessonIds": ["backtrack_vs_dp"],
+      "feedbackTemplate": "You can often precompute expensive checks. For Palindrome Partitioning, use DP to precompute which substrings are palindromes in O(n^2), then O(1) per check during backtracking."
+    },
+    {
+      "errorId": "backtrack_missing_permutations",
+      "pattern": "(missing.*permutation|not all|incomplete)",
+      "lessonIds": ["backtrack_used_set"],
+      "feedbackTemplate": "You're missing permutations! Make sure you loop through ALL elements (not just from start index) and skip only those already in current/used. Check your used-tracking logic."
+    }
+  ]
+}

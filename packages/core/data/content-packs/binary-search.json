@@ -1,0 +1,1058 @@
+{
+  "$schema": "./content-pack.schema.json",
+  "packId": "binary-search",
+  "pattern": "BINARY_SEARCH",
+  "version": "1.0.0",
+  "rungs": {
+    "1": {
+      "level": 1,
+      "name": "Standard Binary Search",
+      "description": "Classic binary search on sorted arrays to find targets or insertion points",
+      "canonical": {
+        "problemId": "bs-r1-canonical",
+        "title": "Binary Search",
+        "statement": "Given an array of integers `nums` which is sorted in ascending order, and an integer `target`, write a function to search `target` in `nums`. If `target` exists, then return its index. Otherwise, return `-1`.\n\nYou must write an algorithm with O(log n) runtime complexity.\n\n**Example 1:**\n```\nInput: nums = [-1, 0, 3, 5, 9, 12], target = 9\nOutput: 4\nExplanation: 9 exists in nums and its index is 4.\n```\n\n**Example 2:**\n```\nInput: nums = [-1, 0, 3, 5, 9, 12], target = 2\nOutput: -1\nExplanation: 2 does not exist in nums so return -1.\n```\n\n**Constraints:**\n- 1 <= nums.length <= 10^4\n- -10^4 < nums[i], target < 10^4\n- All the integers in nums are unique\n- nums is sorted in ascending order",
+        "targetComplexity": "O(log n)",
+        "testCases": [
+          {
+            "input": "[-1, 0, 3, 5, 9, 12], 9",
+            "expectedOutput": "4",
+            "isHidden": false,
+            "explanation": "9 is at index 4"
+          },
+          {
+            "input": "[-1, 0, 3, 5, 9, 12], 2",
+            "expectedOutput": "-1",
+            "isHidden": false,
+            "explanation": "2 is not in the array"
+          },
+          {
+            "input": "[5], 5",
+            "expectedOutput": "0",
+            "isHidden": true,
+            "explanation": "Single element found"
+          },
+          {
+            "input": "[2, 5], 5",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "Target at end"
+          },
+          {
+            "input": "[2, 5], 2",
+            "expectedOutput": "0",
+            "isHidden": true,
+            "explanation": "Target at start"
+          },
+          {
+            "input": "[1, 2, 3, 4, 5], 6",
+            "expectedOutput": "-1",
+            "isHidden": true,
+            "explanation": "Target greater than all"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "BINARY_SEARCH",
+                "acceptableVariants": ["binary search", "divide and conquer", "halving"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Maintain search space [left, right]; compare middle element to target; halve search space based on comparison",
+                "keywords": ["left", "right", "middle", "halve", "compare"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(log n)",
+                "acceptableVariants": ["O(log n) time, O(1) space", "logarithmic"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Handles not found", "Handles single element"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(log n) time", "O(1) space", "No linear scan"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear loop condition", "Correct mid calculation", "Readable"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "Each comparison eliminates half of the remaining elements, giving O(log n) comparisons",
+                "isCorrect": true,
+                "feedback": "Correct! Halving n elements log₂(n) times reduces to 1 element."
+              },
+              {
+                "id": "opt-b",
+                "text": "Binary search works on any array",
+                "isCorrect": false,
+                "feedback": "Binary search requires a sorted array (or some monotonic property)."
+              },
+              {
+                "id": "opt-c",
+                "text": "We should scan linearly to be sure we don't miss the target",
+                "isCorrect": false,
+                "feedback": "Linear scan is O(n). Binary search guarantees finding the target in O(log n) if it exists."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "infinite.*loop|while.*true|never.*terminate",
+            "errorType": "INFINITE_LOOP",
+            "microLessonRef": "ml-bs-001",
+            "feedback": "Check your loop condition and pointer updates. The search space must shrink each iteration."
+          },
+          {
+            "pattern": "mid.*=.*\\(left.*\\+.*right\\).*\\/.*2|overflow",
+            "errorType": "INTEGER_OVERFLOW",
+            "microLessonRef": "ml-bs-002",
+            "feedback": "Use mid = left + (right - left) / 2 to avoid integer overflow."
+          },
+          {
+            "pattern": "off.*by.*one|left.*>.*right|<=.*vs.*<",
+            "errorType": "BOUNDARY_ERROR",
+            "microLessonRef": "ml-bs-003",
+            "feedback": "Be consistent with your loop condition and pointer updates. If using left <= right, update with left = mid + 1 and right = mid - 1."
+          }
+        ],
+        "microLessonRefs": ["ml-bs-001", "ml-bs-002", "ml-bs-003", "ml-bs-basic-intro"],
+        "hints": [
+          "Initialize left = 0, right = n - 1 to cover the entire array.",
+          "Calculate mid = left + (right - left) / 2 to avoid overflow.",
+          "If nums[mid] == target, return mid.",
+          "If nums[mid] < target, search right half: left = mid + 1.",
+          "If nums[mid] > target, search left half: right = mid - 1.",
+          "If left > right, target doesn't exist, return -1."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "bs-r1-sibling-1",
+          "title": "Search Insert Position",
+          "statement": "Given a sorted array of distinct integers and a target value, return the index if the target is found. If not, return the index where it would be if it were inserted in order.\n\nYou must write an algorithm with O(log n) runtime complexity.\n\n**Example 1:**\n```\nInput: nums = [1, 3, 5, 6], target = 5\nOutput: 2\n```\n\n**Example 2:**\n```\nInput: nums = [1, 3, 5, 6], target = 2\nOutput: 1\n```\n\n**Example 3:**\n```\nInput: nums = [1, 3, 5, 6], target = 7\nOutput: 4\n```\n\n**Constraints:**\n- 1 <= nums.length <= 10^4\n- -10^4 <= nums[i] <= 10^4\n- nums contains distinct values sorted in ascending order\n- -10^4 <= target <= 10^4",
+          "targetComplexity": "O(log n)",
+          "testCases": [
+            {
+              "input": "[1, 3, 5, 6], 5",
+              "expectedOutput": "2",
+              "isHidden": false,
+              "explanation": "5 is at index 2"
+            },
+            {
+              "input": "[1, 3, 5, 6], 2",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "2 would be inserted at index 1"
+            },
+            {
+              "input": "[1, 3, 5, 6], 7",
+              "expectedOutput": "4",
+              "isHidden": false,
+              "explanation": "7 would be inserted at the end"
+            },
+            {
+              "input": "[1, 3, 5, 6], 0",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "0 would be inserted at the start"
+            },
+            {
+              "input": "[1], 1",
+              "expectedOutput": "0",
+              "isHidden": true,
+              "explanation": "Single element, target found"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BINARY_SEARCH",
+                  "acceptableVariants": ["binary search", "lower bound"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Find the leftmost position where target could be inserted; this is the first element >= target",
+                  "keywords": ["insert", "lower bound", "first", "greater or equal"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(log n)",
+                  "acceptableVariants": ["logarithmic"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles insertion at ends"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(log n) time"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clean implementation"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "This finds the lower bound - the first position where we can insert target while maintaining sorted order",
+                  "isCorrect": true,
+                  "feedback": "Correct! The insertion point is the first index i where nums[i] >= target."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We need to check every element to find the insertion point",
+                  "isCorrect": false,
+                  "feedback": "Binary search finds the insertion point in O(log n), not O(n)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "return.*mid|return.*right",
+              "errorType": "WRONG_RETURN",
+              "microLessonRef": "ml-bs-004",
+              "feedback": "For insertion position, return left after the loop ends. Left points to the first element >= target."
+            }
+          ],
+          "microLessonRefs": ["ml-bs-001", "ml-bs-004"],
+          "hints": [
+            "This is finding the 'lower bound' - first position where element >= target.",
+            "At the end of binary search, left points to the insertion position.",
+            "If target exists, left will point to it. If not, left points to where it should be."
+          ]
+        },
+        {
+          "problemId": "bs-r1-sibling-2",
+          "title": "First Bad Version",
+          "statement": "You are a product manager and currently leading a team to develop a new product. Unfortunately, the latest version of your product fails the quality check. Since each version is developed based on the previous version, all the versions after a bad version are also bad.\n\nSuppose you have `n` versions `[1, 2, ..., n]` and you want to find out the first bad one, which causes all the following ones to be bad.\n\nYou are given an API `bool isBadVersion(version)` which returns whether version is bad. Implement a function to find the first bad version. You should minimize the number of calls to the API.\n\n**Example 1:**\n```\nInput: n = 5, bad = 4\nOutput: 4\nExplanation:\ncall isBadVersion(3) -> false\ncall isBadVersion(5) -> true\ncall isBadVersion(4) -> true\nSo 4 is the first bad version.\n```\n\n**Example 2:**\n```\nInput: n = 1, bad = 1\nOutput: 1\n```\n\n**Constraints:**\n- 1 <= bad <= n <= 2^31 - 1",
+          "targetComplexity": "O(log n)",
+          "testCases": [
+            {
+              "input": "n = 5, bad = 4",
+              "expectedOutput": "4",
+              "isHidden": false,
+              "explanation": "First bad is version 4"
+            },
+            {
+              "input": "n = 1, bad = 1",
+              "expectedOutput": "1",
+              "isHidden": false,
+              "explanation": "Only version is bad"
+            },
+            {
+              "input": "n = 3, bad = 1",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "First version is bad"
+            },
+            {
+              "input": "n = 2, bad = 2",
+              "expectedOutput": "2",
+              "isHidden": true,
+              "explanation": "Last version is first bad"
+            },
+            {
+              "input": "n = 2147483647, bad = 2147483647",
+              "expectedOutput": "2147483647",
+              "isHidden": true,
+              "explanation": "Large n, avoid overflow"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BINARY_SEARCH",
+                  "acceptableVariants": ["binary search", "find first true"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Search space [left, right] contains first bad; if mid is bad, first bad is at mid or before; if mid is good, first bad is after mid",
+                  "keywords": ["first", "bad", "good", "halve"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(log n)",
+                  "acceptableVariants": ["O(log n) API calls"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles n = 1", "Avoids overflow"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(log n) API calls", "Minimal calls"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "This is finding the first 'true' in a sequence [false, false, ..., true, true]; classic binary search for boundary",
+                  "isCorrect": true,
+                  "feedback": "Correct! The versions form [good, good, ..., bad, bad, ...] and we find the first bad."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should check from version 1 until we find a bad one",
+                  "isCorrect": false,
+                  "feedback": "That's O(n). Binary search finds the first bad in O(log n) calls."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "overflow|left.*\\+.*right|2147483647",
+              "errorType": "INTEGER_OVERFLOW",
+              "microLessonRef": "ml-bs-002",
+              "feedback": "With n up to 2^31 - 1, use mid = left + (right - left) / 2 to avoid overflow."
+            },
+            {
+              "pattern": "right.*=.*mid.*-.*1.*bad",
+              "errorType": "WRONG_UPDATE",
+              "microLessonRef": "ml-bs-005",
+              "feedback": "When isBadVersion(mid) is true, don't exclude mid - it might be the first bad. Use right = mid."
+            }
+          ],
+          "microLessonRefs": ["ml-bs-001", "ml-bs-002", "ml-bs-005"],
+          "hints": [
+            "Think of versions as [good, good, ..., bad, bad, ...] sequence.",
+            "If isBadVersion(mid) is true, first bad could be mid or earlier.",
+            "If isBadVersion(mid) is false, first bad must be after mid.",
+            "Be careful with the loop condition when using right = mid.",
+            "Use left + (right - left) / 2 to avoid overflow."
+          ]
+        },
+        {
+          "problemId": "bs-r1-sibling-3",
+          "title": "Find First and Last Position of Element in Sorted Array",
+          "statement": "Given an array of integers `nums` sorted in non-decreasing order, find the starting and ending position of a given `target` value.\n\nIf `target` is not found in the array, return `[-1, -1]`.\n\nYou must write an algorithm with O(log n) runtime complexity.\n\n**Example 1:**\n```\nInput: nums = [5, 7, 7, 8, 8, 10], target = 8\nOutput: [3, 4]\n```\n\n**Example 2:**\n```\nInput: nums = [5, 7, 7, 8, 8, 10], target = 6\nOutput: [-1, -1]\n```\n\n**Example 3:**\n```\nInput: nums = [], target = 0\nOutput: [-1, -1]\n```\n\n**Constraints:**\n- 0 <= nums.length <= 10^5\n- -10^9 <= nums[i] <= 10^9\n- nums is a non-decreasing array\n- -10^9 <= target <= 10^9",
+          "targetComplexity": "O(log n)",
+          "testCases": [
+            {
+              "input": "[5, 7, 7, 8, 8, 10], 8",
+              "expectedOutput": "[3, 4]",
+              "isHidden": false,
+              "explanation": "8 appears at indices 3 and 4"
+            },
+            {
+              "input": "[5, 7, 7, 8, 8, 10], 6",
+              "expectedOutput": "[-1, -1]",
+              "isHidden": false,
+              "explanation": "6 is not in the array"
+            },
+            {
+              "input": "[], 0",
+              "expectedOutput": "[-1, -1]",
+              "isHidden": false,
+              "explanation": "Empty array"
+            },
+            {
+              "input": "[1], 1",
+              "expectedOutput": "[0, 0]",
+              "isHidden": true,
+              "explanation": "Single element found"
+            },
+            {
+              "input": "[2, 2, 2, 2, 2], 2",
+              "expectedOutput": "[0, 4]",
+              "isHidden": true,
+              "explanation": "All same elements"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BINARY_SEARCH",
+                  "acceptableVariants": ["binary search", "lower bound upper bound"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Run two binary searches: one for leftmost occurrence (lower bound), one for rightmost (upper bound - 1)",
+                  "keywords": ["leftmost", "rightmost", "lower bound", "upper bound", "two searches"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(log n)",
+                  "acceptableVariants": ["O(log n) for each search", "2 * O(log n)"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Handles not found", "Handles duplicates"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(log n) total", "Two binary searches"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear separation of left/right searches"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Two binary searches - one biased left to find first, one biased right to find last",
+                  "isCorrect": true,
+                  "feedback": "Correct! Modify the condition when nums[mid] == target to continue searching in the desired direction."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "Find any occurrence, then scan left and right",
+                  "isCorrect": false,
+                  "feedback": "That's O(n) in worst case (all elements equal target). Two binary searches keeps it O(log n)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "linear.*scan|while.*nums\\[i\\]",
+              "errorType": "LINEAR_EXPANSION",
+              "microLessonRef": "ml-bs-006",
+              "feedback": "Don't scan linearly after finding target. Use two binary searches for O(log n)."
+            },
+            {
+              "pattern": "single.*search|one.*binary",
+              "errorType": "INSUFFICIENT_SEARCHES",
+              "microLessonRef": "ml-bs-006",
+              "feedback": "You need two binary searches: one for left bound, one for right bound."
+            }
+          ],
+          "microLessonRefs": ["ml-bs-001", "ml-bs-006"],
+          "hints": [
+            "You need two binary searches: one for the first occurrence, one for the last.",
+            "For leftmost: when nums[mid] == target, search left (right = mid - 1) but remember mid.",
+            "For rightmost: when nums[mid] == target, search right (left = mid + 1) but remember mid.",
+            "Alternatively: find lower_bound(target) and upper_bound(target) - 1."
+          ]
+        }
+      ]
+    },
+    "2": {
+      "level": 2,
+      "name": "Binary Search on Answer Space",
+      "description": "Using binary search to find optimal values in a monotonic answer space",
+      "canonical": {
+        "problemId": "bs-r2-canonical",
+        "title": "Koko Eating Bananas",
+        "statement": "Koko loves to eat bananas. There are `n` piles of bananas, the `i`th pile has `piles[i]` bananas. The guards have gone and will come back in `h` hours.\n\nKoko can decide her bananas-per-hour eating speed of `k`. Each hour, she chooses some pile of bananas and eats `k` bananas from that pile. If the pile has less than `k` bananas, she eats all of them instead and will not eat any more bananas during this hour.\n\nKoko likes to eat slowly but still wants to finish eating all the bananas before the guards return.\n\nReturn the minimum integer `k` such that she can eat all the bananas within `h` hours.\n\n**Example 1:**\n```\nInput: piles = [3, 6, 7, 11], h = 8\nOutput: 4\n```\n\n**Example 2:**\n```\nInput: piles = [30, 11, 23, 4, 20], h = 5\nOutput: 30\n```\n\n**Example 3:**\n```\nInput: piles = [30, 11, 23, 4, 20], h = 6\nOutput: 23\n```\n\n**Constraints:**\n- 1 <= piles.length <= 10^4\n- piles.length <= h <= 10^9\n- 1 <= piles[i] <= 10^9",
+        "targetComplexity": "O(n log m)",
+        "testCases": [
+          {
+            "input": "[3, 6, 7, 11], 8",
+            "expectedOutput": "4",
+            "isHidden": false,
+            "explanation": "At speed 4: ceil(3/4)+ceil(6/4)+ceil(7/4)+ceil(11/4) = 1+2+2+3 = 8 hours"
+          },
+          {
+            "input": "[30, 11, 23, 4, 20], 5",
+            "expectedOutput": "30",
+            "isHidden": false,
+            "explanation": "Must eat fastest pile in 1 hour each"
+          },
+          {
+            "input": "[30, 11, 23, 4, 20], 6",
+            "expectedOutput": "23",
+            "isHidden": false,
+            "explanation": "One extra hour allows slower speed"
+          },
+          {
+            "input": "[1, 1, 1, 999999999], 10",
+            "expectedOutput": "142857143",
+            "isHidden": true,
+            "explanation": "Large pile, need to handle ceil division"
+          },
+          {
+            "input": "[1], 1",
+            "expectedOutput": "1",
+            "isHidden": true,
+            "explanation": "Single pile, minimum speed"
+          }
+        ],
+        "steps": [
+          {
+            "type": "THINKING_GATE",
+            "rubric": {
+              "patternRecognition": {
+                "expected": "BINARY_SEARCH",
+                "acceptableVariants": ["binary search on answer", "minimize maximum", "search on result space"],
+                "weight": 0.4
+              },
+              "invariant": {
+                "expected": "Binary search on speed k from 1 to max(piles); for each k, check if total hours <= h; find minimum k that works",
+                "keywords": ["binary search", "speed", "check feasible", "minimize"],
+                "weight": 0.4
+              },
+              "complexity": {
+                "expected": "O(n log m)",
+                "acceptableVariants": ["O(n log max(piles))", "O(n * log(max))"],
+                "weight": 0.2
+              }
+            }
+          },
+          {
+            "type": "CODING",
+            "rubric": {
+              "correctness": {
+                "weight": 0.5,
+                "criteria": ["Passes all test cases", "Correct ceil division", "Handles large values"]
+              },
+              "efficiency": {
+                "weight": 0.3,
+                "criteria": ["O(n log m) time", "Binary search on answer"]
+              },
+              "codeQuality": {
+                "weight": 0.2,
+                "criteria": ["Clear feasibility check", "Clean binary search structure"]
+              }
+            }
+          },
+          {
+            "type": "REFLECTION",
+            "options": [
+              {
+                "id": "opt-a",
+                "text": "We binary search on the answer (speed) because: higher speed always takes <= hours than lower speed (monotonic)",
+                "isCorrect": true,
+                "feedback": "Correct! The monotonic property of 'can finish in h hours' enables binary search."
+              },
+              {
+                "id": "opt-b",
+                "text": "We should try each possible speed from 1 to max",
+                "isCorrect": false,
+                "feedback": "That's O(n * max(piles)), which can be up to 10^13. Binary search gives O(n log max)."
+              },
+              {
+                "id": "opt-c",
+                "text": "The answer is always max(piles)",
+                "isCorrect": false,
+                "feedback": "If h > n, we can eat slower than max(piles). We want the minimum speed."
+              }
+            ]
+          }
+        ],
+        "errorMappings": [
+          {
+            "pattern": "ceil.*wrong|floor.*division|integer.*division",
+            "errorType": "WRONG_CEIL",
+            "microLessonRef": "ml-bs-101",
+            "feedback": "For hours per pile, use ceil division: (pile + k - 1) / k or math.ceil(pile / k)."
+          },
+          {
+            "pattern": "search.*1.*max|left.*=.*1",
+            "errorType": "SEARCH_RANGE",
+            "microLessonRef": "ml-bs-102",
+            "feedback": "Search from 1 to max(piles). Speed can't be 0, and anything > max(piles) is wasteful."
+          },
+          {
+            "pattern": "overflow|large.*number",
+            "errorType": "OVERFLOW",
+            "microLessonRef": "ml-bs-103",
+            "feedback": "With piles up to 10^9, be careful with intermediate calculations. Use long/BigInt if needed."
+          }
+        ],
+        "microLessonRefs": ["ml-bs-101", "ml-bs-102", "ml-bs-103", "ml-bs-answer-intro"],
+        "hints": [
+          "Think: what range of speeds are possible? From 1 to max(piles).",
+          "For a given speed k, can we compute total hours needed? Yes, sum of ceil(pile[i] / k).",
+          "The key insight: if speed k works, any speed > k also works. This is monotonic!",
+          "Binary search for the minimum k where total_hours(k) <= h.",
+          "Be careful with ceil division: hours = (pile + k - 1) / k."
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "bs-r2-sibling-1",
+          "title": "Capacity To Ship Packages Within D Days",
+          "statement": "A conveyor belt has packages that must be shipped from one port to another within `days` days.\n\nThe `i`th package on the conveyor belt has a weight of `weights[i]`. Each day, we load the ship with packages on the conveyor belt (in the order given). We may not load more weight than the maximum weight capacity of the ship.\n\nReturn the least weight capacity of the ship that will result in all the packages being shipped within `days` days.\n\n**Example 1:**\n```\nInput: weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], days = 5\nOutput: 15\nExplanation: \nA ship capacity of 15 allows shipping in 5 days:\n1st day: 1, 2, 3, 4, 5\n2nd day: 6, 7\n3rd day: 8\n4th day: 9\n5th day: 10\n```\n\n**Example 2:**\n```\nInput: weights = [3, 2, 2, 4, 1, 4], days = 3\nOutput: 6\n```\n\n**Example 3:**\n```\nInput: weights = [1, 2, 3, 1, 1], days = 4\nOutput: 3\n```\n\n**Constraints:**\n- 1 <= days <= weights.length <= 5 * 10^4\n- 1 <= weights[i] <= 500",
+          "targetComplexity": "O(n log sum)",
+          "testCases": [
+            {
+              "input": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5",
+              "expectedOutput": "15",
+              "isHidden": false,
+              "explanation": "Minimum capacity to ship in 5 days"
+            },
+            {
+              "input": "[3, 2, 2, 4, 1, 4], 3",
+              "expectedOutput": "6",
+              "isHidden": false,
+              "explanation": "Ship [3,2], [2,4], [1,4] needs capacity 6"
+            },
+            {
+              "input": "[1, 2, 3, 1, 1], 4",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "Ship [1,2], [3], [1], [1]"
+            },
+            {
+              "input": "[10], 1",
+              "expectedOutput": "10",
+              "isHidden": true,
+              "explanation": "Single package"
+            },
+            {
+              "input": "[1, 1, 1, 1, 1], 1",
+              "expectedOutput": "5",
+              "isHidden": true,
+              "explanation": "All in one day"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BINARY_SEARCH",
+                  "acceptableVariants": ["binary search on answer", "minimize capacity"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Binary search on capacity from max(weights) to sum(weights); check if capacity allows shipping in <= days days",
+                  "keywords": ["capacity", "days", "binary search", "feasible"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n log sum)",
+                  "acceptableVariants": ["O(n log(sum(weights)))"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correct day counting", "Handles edge cases"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n log sum) time"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear feasibility function"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "Capacity must be at least max(weights) (to ship largest package) and at most sum(weights) (ship all in 1 day)",
+                  "isCorrect": true,
+                  "feedback": "Correct! This defines our binary search range."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should try different orderings of packages",
+                  "isCorrect": false,
+                  "feedback": "The problem says packages must be shipped in the given order. We can't reorder."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "left.*=.*0|capacity.*0",
+              "errorType": "WRONG_LOWER_BOUND",
+              "microLessonRef": "ml-bs-104",
+              "feedback": "Minimum capacity must be max(weights) - we need to ship the heaviest package."
+            },
+            {
+              "pattern": "new.*day.*wrong|day.*count",
+              "errorType": "DAY_COUNTING",
+              "microLessonRef": "ml-bs-105",
+              "feedback": "Start a new day when adding a package would exceed capacity. Count days correctly."
+            }
+          ],
+          "microLessonRefs": ["ml-bs-101", "ml-bs-104", "ml-bs-105"],
+          "hints": [
+            "Minimum capacity = max(weights), maximum = sum(weights).",
+            "For a given capacity, greedily load each day until it would exceed capacity.",
+            "Count how many days are needed for a given capacity.",
+            "Binary search for minimum capacity where days_needed <= days."
+          ]
+        },
+        {
+          "problemId": "bs-r2-sibling-2",
+          "title": "Minimum Number of Days to Make m Bouquets",
+          "statement": "You are given an integer array `bloomDay`, an integer `m` and an integer `k`.\n\nYou want to make `m` bouquets. To make a bouquet, you need to use `k` adjacent flowers from the garden.\n\nThe garden consists of `n` flowers, the `i`th flower will bloom in the `bloomDay[i]` and then can be used in exactly one bouquet.\n\nReturn the minimum number of days you need to wait to be able to make `m` bouquets from the garden. If it is impossible to make `m` bouquets return `-1`.\n\n**Example 1:**\n```\nInput: bloomDay = [1, 10, 3, 10, 2], m = 3, k = 1\nOutput: 3\nExplanation: After day 3, bloomed = [x, _, x, _, x]. We can make 3 bouquets of 1 flower each.\n```\n\n**Example 2:**\n```\nInput: bloomDay = [1, 10, 3, 10, 2], m = 3, k = 2\nOutput: -1\nExplanation: We need 3 bouquets of 2 adjacent flowers. We only have 5 flowers.\n```\n\n**Example 3:**\n```\nInput: bloomDay = [7, 7, 7, 7, 12, 7, 7], m = 2, k = 3\nOutput: 12\n```\n\n**Constraints:**\n- bloomDay.length == n\n- 1 <= n <= 10^5\n- 1 <= bloomDay[i] <= 10^9\n- 1 <= m <= 10^6\n- 1 <= k <= n",
+          "targetComplexity": "O(n log max)",
+          "testCases": [
+            {
+              "input": "[1, 10, 3, 10, 2], 3, 1",
+              "expectedOutput": "3",
+              "isHidden": false,
+              "explanation": "Day 3: flowers 0, 2, 4 bloomed, make 3 single-flower bouquets"
+            },
+            {
+              "input": "[1, 10, 3, 10, 2], 3, 2",
+              "expectedOutput": "-1",
+              "isHidden": false,
+              "explanation": "Need 6 flowers but only have 5"
+            },
+            {
+              "input": "[7, 7, 7, 7, 12, 7, 7], 2, 3",
+              "expectedOutput": "12",
+              "isHidden": false,
+              "explanation": "Need day 12 for continuous group of 3"
+            },
+            {
+              "input": "[1, 1, 1, 1], 1, 4",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "All bloom day 1"
+            },
+            {
+              "input": "[1000000000], 1, 1",
+              "expectedOutput": "1000000000",
+              "isHidden": true,
+              "explanation": "Single flower, large bloom day"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BINARY_SEARCH",
+                  "acceptableVariants": ["binary search on answer", "minimize days"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Binary search on days from min to max bloom; for each day, count consecutive groups of k bloomed flowers",
+                  "keywords": ["days", "bloomed", "adjacent", "consecutive", "k flowers"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n log max)",
+                  "acceptableVariants": ["O(n log(max(bloomDay)))"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Returns -1 when impossible", "Handles adjacent requirement"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n log max) time"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear bouquet counting logic"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "If m * k > n, it's impossible - check this first before binary search",
+                  "isCorrect": true,
+                  "feedback": "Correct! We need at least m * k flowers total."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "We should simulate day by day",
+                  "isCorrect": false,
+                  "feedback": "With bloom days up to 10^9, simulation is too slow. Binary search on the answer."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "adjacent|consecutive|contiguous",
+              "errorType": "NON_ADJACENT",
+              "microLessonRef": "ml-bs-106",
+              "feedback": "Flowers must be ADJACENT (consecutive indices). Reset counter when a flower hasn't bloomed."
+            },
+            {
+              "pattern": "impossible|m.*k.*n",
+              "errorType": "IMPOSSIBLE_CHECK",
+              "microLessonRef": "ml-bs-107",
+              "feedback": "Check if m * k > n upfront - if so, return -1 immediately."
+            }
+          ],
+          "microLessonRefs": ["ml-bs-101", "ml-bs-106", "ml-bs-107"],
+          "hints": [
+            "First check: if m * k > n, return -1 (not enough flowers).",
+            "Binary search on the number of days: min(bloomDay) to max(bloomDay).",
+            "For a given day d, a flower is bloomed if bloomDay[i] <= d.",
+            "Count consecutive bloomed flowers; each group of k forms one bouquet.",
+            "If total bouquets >= m, this day works."
+          ]
+        },
+        {
+          "problemId": "bs-r2-sibling-3",
+          "title": "Split Array Largest Sum",
+          "statement": "Given an integer array `nums` and an integer `k`, split `nums` into `k` non-empty subarrays such that the largest sum of any subarray is minimized.\n\nReturn the minimized largest sum of the split.\n\nA subarray is a contiguous part of the array.\n\n**Example 1:**\n```\nInput: nums = [7, 2, 5, 10, 8], k = 2\nOutput: 18\nExplanation: There are four ways to split nums into two subarrays.\nThe best way is [7, 2, 5] and [10, 8], where the largest sum is 18.\n```\n\n**Example 2:**\n```\nInput: nums = [1, 2, 3, 4, 5], k = 2\nOutput: 9\nExplanation: [1, 2, 3] and [4, 5] gives max sum = 9.\n```\n\n**Example 3:**\n```\nInput: nums = [1, 4, 4], k = 3\nOutput: 4\nExplanation: Each element is its own subarray.\n```\n\n**Constraints:**\n- 1 <= nums.length <= 1000\n- 0 <= nums[i] <= 10^6\n- 1 <= k <= min(50, nums.length)",
+          "targetComplexity": "O(n log sum)",
+          "testCases": [
+            {
+              "input": "[7, 2, 5, 10, 8], 2",
+              "expectedOutput": "18",
+              "isHidden": false,
+              "explanation": "Split: [7,2,5] and [10,8]"
+            },
+            {
+              "input": "[1, 2, 3, 4, 5], 2",
+              "expectedOutput": "9",
+              "isHidden": false,
+              "explanation": "Split: [1,2,3] and [4,5]"
+            },
+            {
+              "input": "[1, 4, 4], 3",
+              "expectedOutput": "4",
+              "isHidden": false,
+              "explanation": "Each element separate"
+            },
+            {
+              "input": "[10, 5, 3, 1, 7, 8, 2, 4], 4",
+              "expectedOutput": "13",
+              "isHidden": true,
+              "explanation": "Multiple ways to split"
+            },
+            {
+              "input": "[1], 1",
+              "expectedOutput": "1",
+              "isHidden": true,
+              "explanation": "Single element, single split"
+            }
+          ],
+          "steps": [
+            {
+              "type": "THINKING_GATE",
+              "rubric": {
+                "patternRecognition": {
+                  "expected": "BINARY_SEARCH",
+                  "acceptableVariants": ["binary search on answer", "minimize maximum"],
+                  "weight": 0.4
+                },
+                "invariant": {
+                  "expected": "Binary search on max subarray sum from max(nums) to sum(nums); check if array can be split into <= k subarrays each with sum <= target",
+                  "keywords": ["maximum sum", "minimize", "split", "subarrays", "binary search"],
+                  "weight": 0.4
+                },
+                "complexity": {
+                  "expected": "O(n log sum)",
+                  "acceptableVariants": ["O(n log(sum(nums)))"],
+                  "weight": 0.2
+                }
+              }
+            },
+            {
+              "type": "CODING",
+              "rubric": {
+                "correctness": {
+                  "weight": 0.5,
+                  "criteria": ["Passes all test cases", "Correct split counting"]
+                },
+                "efficiency": {
+                  "weight": 0.3,
+                  "criteria": ["O(n log sum) time", "Not DP O(n²k)"]
+                },
+                "codeQuality": {
+                  "weight": 0.2,
+                  "criteria": ["Clear feasibility check"]
+                }
+              }
+            },
+            {
+              "type": "REFLECTION",
+              "options": [
+                {
+                  "id": "opt-a",
+                  "text": "If we can split into k parts with max sum M, we can also do it with max sum M+1 (monotonic), enabling binary search",
+                  "isCorrect": true,
+                  "feedback": "Correct! The feasibility is monotonic with respect to the target max sum."
+                },
+                {
+                  "id": "opt-b",
+                  "text": "Dynamic programming is the only way to solve this",
+                  "isCorrect": false,
+                  "feedback": "DP works but is O(n²k). Binary search on answer gives O(n log sum)."
+                }
+              ]
+            }
+          ],
+          "errorMappings": [
+            {
+              "pattern": "greedy.*split|new.*subarray",
+              "errorType": "GREEDY_CHECK",
+              "microLessonRef": "ml-bs-108",
+              "feedback": "For feasibility: greedily add elements to current subarray until exceeding target, then start new subarray."
+            },
+            {
+              "pattern": "dp|dynamic.*programming|O\\(n\\^2\\)",
+              "errorType": "SUBOPTIMAL_APPROACH",
+              "microLessonRef": "ml-bs-109",
+              "feedback": "DP is valid but O(n²k). Binary search on answer is O(n log sum), which is more efficient."
+            }
+          ],
+          "microLessonRefs": ["ml-bs-101", "ml-bs-108", "ml-bs-109"],
+          "hints": [
+            "The minimum possible max sum is max(nums) (each element in own subarray).",
+            "The maximum possible max sum is sum(nums) (all in one subarray).",
+            "For a given target max sum, greedily count how many subarrays are needed.",
+            "Binary search: if we can split into <= k parts, this target works.",
+            "Find minimum target that allows k or fewer subarrays."
+          ]
+        }
+      ]
+    }
+  },
+  "microLessons": {
+    "ml-bs-001": {
+      "id": "ml-bs-001",
+      "title": "Avoiding Infinite Loops",
+      "content": "Common causes of infinite loops in binary search:\n\n**1. Not shrinking search space:**\n```python\n# Wrong: mid can equal left, causing infinite loop\nwhile left < right:\n    mid = left + (right - left) // 2\n    if condition:\n        left = mid  # Should be mid + 1\n```\n\n**2. Inconsistent conditions:**\n```python\n# Wrong: loop condition and updates don't match\nwhile left <= right:\n    if found:\n        right = mid  # Should be mid - 1 with <=\n```\n\n**Two safe templates:**\n```python\n# Template 1: left <= right\nwhile left <= right:\n    mid = left + (right - left) // 2\n    if nums[mid] == target:\n        return mid\n    elif nums[mid] < target:\n        left = mid + 1\n    else:\n        right = mid - 1\n\n# Template 2: left < right\nwhile left < right:\n    mid = left + (right - left) // 2\n    if condition(mid):\n        right = mid\n    else:\n        left = mid + 1\n```"
+    },
+    "ml-bs-002": {
+      "id": "ml-bs-002",
+      "title": "Integer Overflow in Mid Calculation",
+      "content": "When left and right are large integers:\n\n```java\n// WRONG: Can overflow if left + right > Integer.MAX_VALUE\nint mid = (left + right) / 2;\n\n// CORRECT: Avoids overflow\nint mid = left + (right - left) / 2;\n\n// Also correct (bit shift)\nint mid = (left + right) >>> 1;  // Unsigned right shift\n```\n\n**Example of overflow:**\n```\nleft = 2,000,000,000\nright = 2,100,000,000\nleft + right = 4,100,000,000 > 2,147,483,647 (Integer.MAX_VALUE)\n// Results in negative number due to overflow!\n```\n\n**Python note:** Python integers don't overflow, but the formula `left + (right - left) // 2` is still clearer and more portable."
+    },
+    "ml-bs-003": {
+      "id": "ml-bs-003",
+      "title": "Loop Condition and Pointer Updates",
+      "content": "The loop condition and pointer updates must be consistent:\n\n**Template 1: `left <= right` (search for exact match)**\n```python\nwhile left <= right:\n    mid = left + (right - left) // 2\n    if nums[mid] == target:\n        return mid\n    elif nums[mid] < target:\n        left = mid + 1   # Exclude mid\n    else:\n        right = mid - 1  # Exclude mid\nreturn -1  # Not found\n```\n\n**Template 2: `left < right` (find boundary)**\n```python\nwhile left < right:\n    mid = left + (right - left) // 2\n    if condition(mid):\n        right = mid      # Include mid\n    else:\n        left = mid + 1   # Exclude mid\nreturn left  # Left == right, boundary found\n```\n\nNever mix templates - pick one and use it consistently."
+    },
+    "ml-bs-004": {
+      "id": "ml-bs-004",
+      "title": "Finding Insert Position",
+      "content": "After binary search with `left <= right` template:\n\n```python\nwhile left <= right:\n    mid = left + (right - left) // 2\n    if nums[mid] < target:\n        left = mid + 1\n    else:\n        right = mid - 1\n# After loop: left is the insert position\nreturn left\n```\n\n**Why left is the insert position:**\n- If target exists: loop exits when we find it and go too far, left points to it\n- If target doesn't exist: left points to first element > target\n\n**Example:** nums = [1, 3, 5, 6], target = 2\n- After loop: left = 1 (where 2 should be inserted)\n\nThis is equivalent to `lower_bound` in C++ STL."
+    },
+    "ml-bs-005": {
+      "id": "ml-bs-005",
+      "title": "Finding First True in Boolean Array",
+      "content": "Pattern for finding first occurrence of `true` in [false, false, ..., true, true]:\n\n```python\n# Template: left < right, searching for first true\nleft, right = 0, n - 1\nwhile left < right:\n    mid = left + (right - left) // 2\n    if is_true(mid):\n        right = mid      # mid might be answer, keep it\n    else:\n        left = mid + 1   # mid is not answer, exclude it\nreturn left  # First true position\n```\n\n**Key insight:** When condition is true, don't exclude mid with `right = mid - 1` because mid might be the first true.\n\n**Example - First Bad Version:**\n```python\nwhile left < right:\n    mid = left + (right - left) // 2\n    if isBadVersion(mid):\n        right = mid      # Could be first bad\n    else:\n        left = mid + 1   # All before mid+1 are good\nreturn left\n```"
+    },
+    "ml-bs-006": {
+      "id": "ml-bs-006",
+      "title": "Finding First and Last Position",
+      "content": "Two binary searches with different behaviors when target is found:\n\n**Find leftmost (first occurrence):**\n```python\ndef findFirst(nums, target):\n    left, right = 0, len(nums) - 1\n    result = -1\n    while left <= right:\n        mid = left + (right - left) // 2\n        if nums[mid] == target:\n            result = mid      # Save it\n            right = mid - 1   # Keep searching left\n        elif nums[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return result\n```\n\n**Find rightmost (last occurrence):**\n```python\ndef findLast(nums, target):\n    left, right = 0, len(nums) - 1\n    result = -1\n    while left <= right:\n        mid = left + (right - left) // 2\n        if nums[mid] == target:\n            result = mid     # Save it\n            left = mid + 1   # Keep searching right\n        elif nums[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return result\n```"
+    },
+    "ml-bs-101": {
+      "id": "ml-bs-101",
+      "title": "Ceiling Division",
+      "content": "When calculating hours/days needed:\n\n```python\n# Wrong: floor division\nhours = pile // speed  # 7 // 3 = 2 (but 7 bananas at speed 3 takes 3 hours!)\n\n# Correct: ceiling division\nhours = (pile + speed - 1) // speed  # (7 + 3 - 1) // 3 = 3\n\n# Or using math.ceil\nimport math\nhours = math.ceil(pile / speed)  # math.ceil(7 / 3) = 3\n```\n\n**The formula `(a + b - 1) // b`:**\n- Equivalent to ceil(a / b)\n- Works with integer arithmetic (no floating point)\n- Example: (7 + 3 - 1) // 3 = 9 // 3 = 3"
+    },
+    "ml-bs-102": {
+      "id": "ml-bs-102",
+      "title": "Search Range for Answer",
+      "content": "When binary searching on the answer, determine valid bounds:\n\n**Koko Eating Bananas (speed):**\n- Minimum: 1 (must eat at least 1 banana/hour)\n- Maximum: max(piles) (eating faster is wasteful)\n\n**Ship Capacity:**\n- Minimum: max(weights) (must fit largest package)\n- Maximum: sum(weights) (ship everything in one day)\n\n**Split Array Largest Sum:**\n- Minimum: max(nums) (worst case each element is own subarray)\n- Maximum: sum(nums) (entire array is one subarray)\n\n**General pattern:**\n```python\nleft = minimum_possible_answer\nright = maximum_possible_answer\nwhile left < right:\n    mid = left + (right - left) // 2\n    if is_feasible(mid):\n        right = mid  # mid works, try smaller\n    else:\n        left = mid + 1  # mid doesn't work, try larger\nreturn left\n```"
+    },
+    "ml-bs-103": {
+      "id": "ml-bs-103",
+      "title": "Handling Large Numbers",
+      "content": "With values up to 10^9, intermediate calculations can overflow:\n\n```python\n# Summing hours for each pile\ntotal_hours = 0\nfor pile in piles:\n    total_hours += (pile + k - 1) // k  # Could exceed 32-bit int\n```\n\n**Solutions:**\n1. Use 64-bit integers (long in Java, Python handles automatically)\n2. Early termination when total exceeds limit:\n```python\ntotal_hours = 0\nfor pile in piles:\n    total_hours += (pile + k - 1) // k\n    if total_hours > h:  # Already exceeded, no need to continue\n        return False\nreturn True\n```"
+    },
+    "ml-bs-104": {
+      "id": "ml-bs-104",
+      "title": "Lower Bound for Capacity Problems",
+      "content": "In capacity/load problems, minimum capacity isn't 1:\n\n```python\n# Ship Packages - minimum capacity must fit largest package\nmin_capacity = max(weights)\n\n# Why? If capacity < max(weights), we can't ship that package at all!\n\n# Binary search range\nleft = max(weights)\nright = sum(weights)\n```\n\n**General rule:** The minimum feasible answer often comes from a constraint in the problem:\n- Koko: speed >= 1 (must eat something)\n- Ship: capacity >= max(weights) (must fit largest item)\n- Split: sum >= max(nums) (each subarray has at least one element)"
+    },
+    "ml-bs-105": {
+      "id": "ml-bs-105",
+      "title": "Counting Days/Groups Correctly",
+      "content": "When checking if capacity/speed is feasible:\n\n```python\ndef can_ship_in_days(weights, capacity, target_days):\n    days = 1\n    current_load = 0\n    \n    for weight in weights:\n        if current_load + weight > capacity:\n            # Start a new day\n            days += 1\n            current_load = weight\n        else:\n            current_load += weight\n    \n    return days <= target_days\n```\n\n**Common mistake:** Starting days at 0 instead of 1\n- We start on day 1 with an empty ship\n- Each time we start a new day, increment days\n\n**Alternative (sometimes clearer):**\n```python\ndays = 0\ncurrent_load = 0\nfor weight in weights:\n    if current_load + weight > capacity:\n        days += 1\n        current_load = 0\n    current_load += weight\ndays += 1  # Count last day\nreturn days <= target_days\n```"
+    },
+    "ml-bs-106": {
+      "id": "ml-bs-106",
+      "title": "Counting Adjacent Groups",
+      "content": "For problems requiring ADJACENT/CONSECUTIVE elements:\n\n```python\ndef count_bouquets(bloomDay, day, k):\n    bouquets = 0\n    consecutive = 0\n    \n    for bloom in bloomDay:\n        if bloom <= day:  # Flower has bloomed\n            consecutive += 1\n            if consecutive == k:\n                bouquets += 1\n                consecutive = 0  # Reset for next bouquet\n        else:\n            consecutive = 0  # Break in sequence\n    \n    return bouquets\n```\n\n**Key:** Reset the counter when:\n1. You've formed a complete group (bouquet)\n2. You encounter an element that breaks the sequence"
+    },
+    "ml-bs-107": {
+      "id": "ml-bs-107",
+      "title": "Early Impossibility Check",
+      "content": "Check impossible cases before binary search:\n\n```python\ndef minDays(bloomDay, m, k):\n    n = len(bloomDay)\n    \n    # Impossible check: need m*k flowers, only have n\n    if m * k > n:\n        return -1\n    \n    # Now binary search...\n```\n\n**Common impossibility conditions:**\n- Bouquets: m * k > n (not enough flowers)\n- Split array: k > n (more splits than elements)\n- Packages: any single weight > capacity (can't ship it)\n\nThese checks prevent:\n1. Wasted computation\n2. Edge cases in binary search\n3. Unclear -1 returns from feasibility function"
+    },
+    "ml-bs-108": {
+      "id": "ml-bs-108",
+      "title": "Greedy Feasibility Check",
+      "content": "For \"split array\" type problems, greedy checking works:\n\n```python\ndef can_split(nums, k, max_sum):\n    \"\"\"Can we split nums into <= k subarrays, each with sum <= max_sum?\"\"\"\n    subarrays = 1\n    current_sum = 0\n    \n    for num in nums:\n        if current_sum + num > max_sum:\n            # Start new subarray\n            subarrays += 1\n            current_sum = num\n        else:\n            current_sum += num\n    \n    return subarrays <= k\n```\n\n**Why greedy works:**\n- We try to fit as much as possible in each subarray\n- This minimizes the number of subarrays needed\n- If greedy can't do it in k, no strategy can"
+    },
+    "ml-bs-109": {
+      "id": "ml-bs-109",
+      "title": "Binary Search vs DP for Split Problems",
+      "content": "Split Array Largest Sum can be solved two ways:\n\n**DP Approach: O(n²k)**\n```python\n# dp[i][j] = min largest sum to split first i elements into j parts\n# Transition: try all possible last partition starting points\n```\n\n**Binary Search Approach: O(n log sum)**\n```python\n# Binary search on the answer (max subarray sum)\n# For each candidate, greedily check if k splits suffice\n```\n\n**When to use which:**\n- Binary search: When answer has monotonic feasibility (if X works, X+1 works)\n- DP: When you need the actual partition, not just the value\n- Binary search is often simpler and faster for large inputs"
+    },
+    "ml-bs-basic-intro": {
+      "id": "ml-bs-basic-intro",
+      "title": "Introduction to Binary Search",
+      "content": "Binary search finds a target in a sorted array in O(log n) time:\n\n**Core idea:** Each comparison eliminates half of remaining elements.\n\n**Requirements:**\n1. Sorted (or monotonic) data\n2. Random access (arrays, not linked lists)\n\n**Template:**\n```python\ndef binary_search(nums, target):\n    left, right = 0, len(nums) - 1\n    \n    while left <= right:\n        mid = left + (right - left) // 2\n        \n        if nums[mid] == target:\n            return mid\n        elif nums[mid] < target:\n            left = mid + 1  # Search right half\n        else:\n            right = mid - 1  # Search left half\n    \n    return -1  # Not found\n```\n\n**Complexity:** O(log n) time, O(1) space"
+    },
+    "ml-bs-answer-intro": {
+      "id": "ml-bs-answer-intro",
+      "title": "Binary Search on Answer Space",
+      "content": "Instead of searching in an array, search in the space of possible answers:\n\n**Pattern recognition:**\n- \"Find minimum X such that condition is satisfied\"\n- \"Find maximum Y such that property holds\"\n- The feasibility is monotonic: if X works, X+1 also works (or vice versa)\n\n**Template:**\n```python\ndef binary_search_on_answer():\n    left = minimum_possible_answer\n    right = maximum_possible_answer\n    \n    while left < right:\n        mid = left + (right - left) // 2\n        \n        if is_feasible(mid):\n            right = mid  # mid works, try smaller\n        else:\n            left = mid + 1  # mid doesn't work\n    \n    return left\n\ndef is_feasible(answer):\n    # Check if 'answer' satisfies the problem's constraint\n    # Usually O(n) check\n    pass\n```\n\n**Total complexity:** O(n log A) where A is answer range"
+    }
+  }
+}
