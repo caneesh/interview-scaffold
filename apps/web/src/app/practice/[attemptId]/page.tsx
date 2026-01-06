@@ -11,6 +11,7 @@ import { HintPanel } from '@/components/HintPanel';
 import { ReflectionForm } from '@/components/ReflectionForm';
 import { MicroLessonModal } from '@/components/MicroLessonModal';
 import { CompletionSummary } from '@/components/CompletionSummary';
+import { LLMFeedback } from '@/components/LLMFeedback';
 
 interface Problem {
   id: string;
@@ -33,6 +34,13 @@ interface TestResult {
 interface Hint {
   level: string;
   text: string;
+}
+
+interface ValidationData {
+  rubricGrade: 'PASS' | 'PARTIAL' | 'FAIL';
+  llmFeedback?: string;
+  llmConfidence?: number;
+  microLessonId?: string;
 }
 
 interface Attempt {
@@ -101,6 +109,7 @@ export default function AttemptPage() {
   // Step states
   const [stepLoading, setStepLoading] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [validation, setValidation] = useState<ValidationData | null>(null);
   const [hints, setHints] = useState<Hint[]>([]);
   const [hintLoading, setHintLoading] = useState(false);
 
@@ -240,6 +249,7 @@ export default function AttemptPage() {
       } else {
         setAttempt(result.attempt);
         setTestResults(result.testResults);
+        setValidation(result.validation ?? null);
         setProblemCollapsed(true);
       }
     } catch (err) {
@@ -296,6 +306,7 @@ export default function AttemptPage() {
       } else {
         setAttempt(result.attempt);
         setTestResults([]); // Clear results to allow retry
+        setValidation(null); // Clear LLM feedback for retry
       }
     } catch (err) {
       setError('Failed to submit reflection');
@@ -388,6 +399,15 @@ export default function AttemptPage() {
             <div style={{ marginTop: '1.5rem' }}>
               <TestResults results={testResults} />
             </div>
+          )}
+
+          {validation?.llmFeedback && validation.llmConfidence !== undefined && (
+            <LLMFeedback
+              feedback={validation.llmFeedback}
+              confidence={validation.llmConfidence}
+              grade={validation.rubricGrade}
+              microLessonId={validation.microLessonId}
+            />
           )}
         </>
       )}
