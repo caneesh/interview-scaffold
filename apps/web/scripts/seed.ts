@@ -458,11 +458,12 @@ Constraints:
     rung: 1,
     targetComplexity: 'O(n * 2^n)',
     testCases: [
-      { input: '[[1, 2, 3]]', expectedOutput: '[[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]', isHidden: false },
+      // Expected outputs match standard backtracking DFS order
+      { input: '[[1, 2, 3]]', expectedOutput: '[[], [1], [1, 2], [1, 2, 3], [1, 3], [2], [2, 3], [3]]', isHidden: false },
       { input: '[[0]]', expectedOutput: '[[], [0]]', isHidden: false },
-      { input: '[[1, 2]]', expectedOutput: '[[], [1], [2], [1, 2]]', isHidden: false },
+      { input: '[[1, 2]]', expectedOutput: '[[], [1], [1, 2], [2]]', isHidden: false },
       { input: '[[]]', expectedOutput: '[[]]', isHidden: true },
-      { input: '[[1, 2, 3, 4]]', expectedOutput: '[[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3], [4], [1, 4], [2, 4], [1, 2, 4], [3, 4], [1, 3, 4], [2, 3, 4], [1, 2, 3, 4]]', isHidden: true },
+      { input: '[[1, 2, 3, 4]]', expectedOutput: '[[], [1], [1, 2], [1, 2, 3], [1, 2, 3, 4], [1, 2, 4], [1, 3], [1, 3, 4], [1, 4], [2], [2, 3], [2, 3, 4], [2, 4], [3], [3, 4], [4]]', isHidden: true },
     ],
     hints: [
       'Each element can either be included or excluded from a subset.',

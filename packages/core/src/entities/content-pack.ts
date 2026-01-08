@@ -1,73 +1,142 @@
 import type { PatternId } from './pattern.js';
 import type { RungLevel } from './rung.js';
-import type { TestCase } from './problem.js';
-import type { HintLevel, StepType } from './step.js';
+import type { StepType } from './step.js';
+
+// ============================================================================
+// Content Pack - Top Level
+// ============================================================================
 
 /**
  * ContentPack - immutable JSON content for a pattern's problems
  */
 export interface ContentPack {
-  readonly $schema?: string;
   readonly packId: string;
   readonly pattern: PatternId;
   readonly version: string;
-  readonly rungs: Partial<Record<RungLevel, RungContent>>;
-  readonly microLessons: Record<string, MicroLesson>;
+  readonly rungs: readonly RungContent[];
+  readonly microLessons: readonly MicroLesson[];
+  readonly errorMappings: readonly ErrorMapping[];
 }
 
+export type ContentPackId = string;
+
+// ============================================================================
+// Rung Content
+// ============================================================================
+
 export interface RungContent {
-  readonly level: RungLevel;
-  readonly name: string;
-  readonly description: string;
+  readonly rungLevel: RungLevel;
+  readonly theme: string;
   readonly canonical: ProblemContent;
   readonly siblings: readonly ProblemContent[];
 }
 
+// ============================================================================
+// Problem Content
+// ============================================================================
+
+export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
+
+export type SupportedLanguage = 'python' | 'typescript';
+
 export interface ProblemContent {
   readonly problemId: string;
   readonly title: string;
-  readonly statement: string;
-  readonly targetComplexity: string;
-  readonly testCases: readonly TestCase[];
+  readonly difficulty: Difficulty;
+  readonly estimatedMinutes: number;
+  readonly description: string;
+  readonly examples: readonly ProblemExample[];
+  readonly constraints: readonly string[];
+  readonly starterCode: Readonly<Record<SupportedLanguage, string>>;
+  readonly referenceSolution: Readonly<Record<SupportedLanguage, string>>;
+  readonly testCases: readonly ContentPackTestCase[];
   readonly steps: readonly StepContent[];
-  readonly errorMappings: readonly ErrorMapping[];
-  readonly microLessonRefs: readonly string[];
-  readonly hints: readonly string[];
 }
 
+export interface ProblemExample {
+  readonly input: string;
+  readonly output: string;
+  readonly explanation?: string;
+}
+
+export interface ContentPackTestCase {
+  readonly input: Record<string, unknown>;
+  readonly expected: unknown;
+}
+
+// ============================================================================
+// Step Content
+// ============================================================================
+
 export interface StepContent {
+  readonly stepId: string;
   readonly type: StepType;
-  readonly rubric?: StepRubric;
-  readonly options?: readonly ReflectionOption[];
+  readonly prompt: string;
+  readonly hints: readonly string[];
+  readonly rubric: StepRubric;
 }
 
 export interface StepRubric {
-  readonly patternRecognition?: PatternRecognitionRubric;
-  readonly invariant?: InvariantRubric;
-  readonly complexity?: ComplexityRubric;
-  readonly correctness?: CriteriaRubric;
-  readonly efficiency?: CriteriaRubric;
-  readonly codeQuality?: CriteriaRubric;
+  readonly patternRecognition: RubricDimension;
+  readonly invariantUnderstanding: RubricDimension;
+  readonly complexityAnalysis: RubricDimension;
 }
 
+export interface RubricDimension {
+  readonly criteria: string;
+  readonly points: number;
+  readonly errorMappings: readonly string[];
+}
+
+// ============================================================================
+// Micro Lessons
+// ============================================================================
+
+export interface MicroLesson {
+  readonly lessonId: string;
+  readonly title: string;
+  readonly content: string;
+  readonly triggerErrorIds: readonly string[];
+  readonly prerequisites: readonly string[];
+}
+
+// ============================================================================
+// Error Mappings
+// ============================================================================
+
+export interface ErrorMapping {
+  readonly errorId: string;
+  readonly pattern: string;
+  readonly lessonIds: readonly string[];
+  readonly feedbackTemplate: string;
+}
+
+// ============================================================================
+// Legacy Types (for backwards compatibility)
+// ============================================================================
+
+/** @deprecated Use RubricDimension instead */
 export interface PatternRecognitionRubric {
   readonly expected: string;
   readonly acceptableVariants: readonly string[];
   readonly weight: number;
 }
 
+/** @deprecated Use RubricDimension instead */
 export interface InvariantRubric {
   readonly expected: string;
   readonly keywords: readonly string[];
   readonly weight: number;
 }
 
+/** @deprecated Use RubricDimension instead */
 export interface ComplexityRubric {
   readonly expected: string;
   readonly acceptableVariants: readonly string[];
   readonly weight: number;
 }
 
+/** @deprecated Use RubricDimension instead */
 export interface CriteriaRubric {
   readonly weight: number;
   readonly criteria: readonly string[];
@@ -79,18 +148,3 @@ export interface ReflectionOption {
   readonly isCorrect: boolean;
   readonly feedback: string;
 }
-
-export interface ErrorMapping {
-  readonly pattern: string;
-  readonly errorType: string;
-  readonly microLessonRef: string;
-  readonly feedback: string;
-}
-
-export interface MicroLesson {
-  readonly id: string;
-  readonly title: string;
-  readonly content: string;
-}
-
-export type ContentPackId = string;

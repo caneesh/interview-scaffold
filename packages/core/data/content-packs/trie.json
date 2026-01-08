@@ -1,0 +1,1438 @@
+{
+  "packId": "trie-v1",
+  "pattern": "TRIE",
+  "version": "1.0.0",
+  "rungs": [
+    {
+      "rungLevel": 1,
+      "theme": "Basic Trie Operations",
+      "canonical": {
+        "problemId": "implement-trie",
+        "title": "Implement Trie (Prefix Tree)",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 25,
+        "description": "A trie (pronounced as 'try') or prefix tree is a tree data structure used to efficiently store and retrieve keys in a dataset of strings. There are various applications of this data structure, such as autocomplete and spellchecker. Implement the Trie class: Trie() Initializes the trie object. void insert(String word) Inserts the string word into the trie. boolean search(String word) Returns true if the string word is in the trie (i.e., was inserted before), and false otherwise. boolean startsWith(String prefix) Returns true if there is a previously inserted string word that has the prefix prefix, and false otherwise.",
+        "examples": [
+          {
+            "input": "[\"Trie\", \"insert\", \"search\", \"search\", \"startsWith\", \"insert\", \"search\"]\n[[], [\"apple\"], [\"apple\"], [\"app\"], [\"app\"], [\"app\"], [\"app\"]]",
+            "output": "[null, null, true, false, true, null, true]",
+            "explanation": "After inserting 'apple', search('apple') returns true, search('app') returns false (not a complete word), startsWith('app') returns true. After inserting 'app', search('app') returns true."
+          }
+        ],
+        "constraints": [
+          "1 <= word.length, prefix.length <= 2000",
+          "word and prefix consist only of lowercase English letters",
+          "At most 3 * 10^4 calls in total will be made to insert, search, and startsWith"
+        ],
+        "starterCode": {
+          "python": "class Trie:\n    def __init__(self):\n        pass\n\n    def insert(self, word: str) -> None:\n        pass\n\n    def search(self, word: str) -> bool:\n        pass\n\n    def startsWith(self, prefix: str) -> bool:\n        pass",
+          "typescript": "class Trie {\n    constructor() {\n        \n    }\n\n    insert(word: string): void {\n        \n    }\n\n    search(word: string): boolean {\n        \n    }\n\n    startsWith(prefix: string): boolean {\n        \n    }\n}"
+        },
+        "referenceSolution": {
+          "python": "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\n\nclass Trie:\n    def __init__(self):\n        self.root = TrieNode()\n\n    def insert(self, word: str) -> None:\n        node = self.root\n        for char in word:\n            if char not in node.children:\n                node.children[char] = TrieNode()\n            node = node.children[char]\n        node.is_end = True\n\n    def search(self, word: str) -> bool:\n        node = self._find_node(word)\n        return node is not None and node.is_end\n\n    def startsWith(self, prefix: str) -> bool:\n        return self._find_node(prefix) is not None\n\n    def _find_node(self, prefix: str):\n        node = self.root\n        for char in prefix:\n            if char not in node.children:\n                return None\n            node = node.children[char]\n        return node",
+          "typescript": "class TrieNode {\n    children: Map<string, TrieNode> = new Map();\n    isEnd: boolean = false;\n}\n\nclass Trie {\n    private root: TrieNode = new TrieNode();\n\n    insert(word: string): void {\n        let node = this.root;\n        for (const char of word) {\n            if (!node.children.has(char)) {\n                node.children.set(char, new TrieNode());\n            }\n            node = node.children.get(char)!;\n        }\n        node.isEnd = true;\n    }\n\n    search(word: string): boolean {\n        const node = this.findNode(word);\n        return node !== null && node.isEnd;\n    }\n\n    startsWith(prefix: string): boolean {\n        return this.findNode(prefix) !== null;\n    }\n\n    private findNode(prefix: string): TrieNode | null {\n        let node = this.root;\n        for (const char of prefix) {\n            if (!node.children.has(char)) return null;\n            node = node.children.get(char)!;\n        }\n        return node;\n    }\n}"
+        },
+        "testCases": [
+          {"input": {"operations": ["Trie", "insert", "search", "search", "startsWith", "insert", "search"], "values": [[], ["apple"], ["apple"], ["app"], ["app"], ["app"], ["app"]]}, "expected": [null, null, true, false, true, null, true]},
+          {"input": {"operations": ["Trie", "insert", "search", "startsWith"], "values": [[], ["hello"], ["hello"], ["hel"]]}, "expected": [null, null, true, true]},
+          {"input": {"operations": ["Trie", "insert", "insert", "search", "search"], "values": [[], ["a"], ["ab"], ["a"], ["ab"]]}, "expected": [null, null, null, true, true]}
+        ],
+        "steps": [
+          {
+            "stepId": "implement-trie-think",
+            "type": "THINKING_GATE",
+            "prompt": "What does each node in a trie represent? What information does each node need to store? How is trie different from a regular tree?",
+            "hints": [
+              "Each node represents a character in the path from root",
+              "Node needs: children (map of char -> node) and is_end flag",
+              "Unlike BST, trie nodes don't store the character - the edge does"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Understands trie node structure with children map and end marker",
+                "points": 2,
+                "errorMappings": ["trie_structure_wrong", "trie_node_design"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Distinguishes between prefix existence and word existence",
+                "points": 2,
+                "errorMappings": ["trie_prefix_vs_word", "trie_end_marker_missing"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies O(m) operations where m is word/prefix length",
+                "points": 1,
+                "errorMappings": ["trie_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "implement-trie-code",
+            "type": "CODING",
+            "prompt": "Implement the TrieNode class and Trie class. Use a dictionary/map for children. Mark word endings with a boolean flag.",
+            "hints": [
+              "TrieNode: children = {}, is_end = False",
+              "Insert: traverse/create nodes, mark last as is_end = True",
+              "Search vs startsWith: search checks is_end, startsWith doesn't"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly implements node traversal and creation",
+                "points": 2,
+                "errorMappings": ["trie_traversal_wrong", "trie_insert_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Properly marks and checks end-of-word flag",
+                "points": 2,
+                "errorMappings": ["trie_end_marker_missing", "trie_search_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Extracts common logic into helper method",
+                "points": 1,
+                "errorMappings": ["trie_code_duplication"]
+              }
+            }
+          },
+          {
+            "stepId": "implement-trie-reflect",
+            "type": "REFLECTION",
+            "prompt": "What's the space complexity of a trie? When is trie better than hash set? How would you implement delete?",
+            "hints": [
+              "Space: O(total characters) in worst case, but shared prefixes save space",
+              "Trie better for: prefix queries, autocomplete, lexicographic ordering",
+              "Delete: traverse to word end, unmark is_end, optionally prune empty branches"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Understands space-time tradeoffs vs hash set",
+                "points": 2,
+                "errorMappings": ["trie_vs_hashset"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Can describe delete operation",
+                "points": 2,
+                "errorMappings": ["trie_delete_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Understands space complexity depends on prefix sharing",
+                "points": 1,
+                "errorMappings": ["trie_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "search-suggestions-system",
+          "title": "Search Suggestions System",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 30,
+          "description": "You are given an array of strings products and a string searchWord. Design a system that suggests at most three product names from products after each character of searchWord is typed. Suggested products should have common prefix with searchWord. If there are more than three products with a common prefix return the three lexicographically minimum products. Return a list of lists of the suggested products after each character of searchWord is typed.",
+          "examples": [
+            {
+              "input": "products = [\"mobile\",\"mouse\",\"moneypot\",\"monitor\",\"mousepad\"], searchWord = \"mouse\"",
+              "output": "[[\"mobile\",\"moneypot\",\"monitor\"],[\"mobile\",\"moneypot\",\"monitor\"],[\"mouse\",\"mousepad\"],[\"mouse\",\"mousepad\"],[\"mouse\",\"mousepad\"]]",
+              "explanation": "After typing 'm', 'mo', 'mou', 'mous', 'mouse', we return top 3 lexicographically sorted products with that prefix."
+            }
+          ],
+          "constraints": [
+            "1 <= products.length <= 1000",
+            "1 <= products[i].length <= 3000",
+            "1 <= sum(products[i].length) <= 2 * 10^4",
+            "1 <= searchWord.length <= 1000",
+            "All strings consist of lowercase English letters"
+          ],
+          "starterCode": {
+            "python": "def suggestedProducts(products: List[str], searchWord: str) -> List[List[str]]:\n    pass",
+            "typescript": "function suggestedProducts(products: string[], searchWord: string): string[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.suggestions = []\n\ndef suggestedProducts(products: List[str], searchWord: str) -> List[List[str]]:\n    products.sort()\n    root = TrieNode()\n    \n    for product in products:\n        node = root\n        for char in product:\n            if char not in node.children:\n                node.children[char] = TrieNode()\n            node = node.children[char]\n            if len(node.suggestions) < 3:\n                node.suggestions.append(product)\n    \n    result = []\n    node = root\n    for i, char in enumerate(searchWord):\n        if node and char in node.children:\n            node = node.children[char]\n            result.append(node.suggestions)\n        else:\n            node = None\n            result.append([])\n    \n    return result",
+            "typescript": "function suggestedProducts(products: string[], searchWord: string): string[][] {\n    products.sort();\n    const result: string[][] = [];\n    let prefix = '';\n    let start = 0;\n    \n    for (const char of searchWord) {\n        prefix += char;\n        // Binary search for first product >= prefix\n        while (start < products.length && products[start] < prefix) {\n            start++;\n        }\n        \n        const suggestions: string[] = [];\n        for (let i = start; i < Math.min(start + 3, products.length); i++) {\n            if (products[i].startsWith(prefix)) {\n                suggestions.push(products[i]);\n            } else {\n                break;\n            }\n        }\n        result.push(suggestions);\n    }\n    \n    return result;\n}"
+          },
+          "testCases": [
+            {"input": {"products": ["mobile", "mouse", "moneypot", "monitor", "mousepad"], "searchWord": "mouse"}, "expected": [["mobile", "moneypot", "monitor"], ["mobile", "moneypot", "monitor"], ["mouse", "mousepad"], ["mouse", "mousepad"], ["mouse", "mousepad"]]},
+            {"input": {"products": ["havana"], "searchWord": "havana"}, "expected": [["havana"], ["havana"], ["havana"], ["havana"], ["havana"], ["havana"]]},
+            {"input": {"products": ["bags", "baggage", "banner", "box", "cloths"], "searchWord": "bags"}, "expected": [["baggage", "bags", "banner"], ["baggage", "bags", "banner"], ["baggage", "bags"], ["bags"]]}
+          ],
+          "steps": [
+            {
+              "stepId": "suggestions-think",
+              "type": "THINKING_GATE",
+              "prompt": "How can you modify a trie to store suggestions at each node? Why sort products first? What's the benefit of storing suggestions during insertion?",
+              "hints": [
+                "Each node stores up to 3 suggestions (products passing through)",
+                "Sorting ensures first 3 encountered are lexicographically smallest",
+                "Pre-computing suggestions makes queries O(1) per character"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies trie with stored suggestions pattern",
+                  "points": 2,
+                  "errorMappings": ["trie_suggestions_pattern", "trie_sorting_missed"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands sorting enables greedy suggestion collection",
+                  "points": 2,
+                  "errorMappings": ["trie_lexicographic_order"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Identifies preprocessing vs query tradeoff",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "suggestions-code",
+              "type": "CODING",
+              "prompt": "Sort products, build trie storing up to 3 suggestions per node. Query by traversing trie with searchWord characters.",
+              "hints": [
+                "Sort products first for lexicographic order",
+                "During insert, add product to node.suggestions if len < 3",
+                "During search, collect suggestions at each character's node"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly stores suggestions during trie construction",
+                  "points": 2,
+                  "errorMappings": ["trie_suggestions_storage_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles missing prefix gracefully (empty list)",
+                  "points": 2,
+                  "errorMappings": ["trie_missing_prefix_handling"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Limits suggestions to 3 per node",
+                  "points": 1,
+                  "errorMappings": ["trie_suggestion_limit"]
+                }
+              }
+            },
+            {
+              "stepId": "suggestions-reflect",
+              "type": "REFLECTION",
+              "prompt": "What's the binary search alternative? When would each approach be better?",
+              "hints": [
+                "Binary search: sort array, find range with prefix for each query",
+                "Trie: O(L) build per word, O(1) per character query",
+                "Binary search: O(n log n) sort, O(log n) per prefix query"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Knows binary search alternative",
+                  "points": 2,
+                  "errorMappings": ["trie_alternative_unknown"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Compares approaches for different scenarios",
+                  "points": 2,
+                  "errorMappings": ["trie_vs_binary_search"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Trie better for many queries, binary search simpler",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "longest-common-prefix",
+          "title": "Longest Common Prefix",
+          "difficulty": "EASY",
+          "estimatedMinutes": 15,
+          "description": "Write a function to find the longest common prefix string amongst an array of strings. If there is no common prefix, return an empty string \"\".",
+          "examples": [
+            {
+              "input": "strs = [\"flower\",\"flow\",\"flight\"]",
+              "output": "\"fl\"",
+              "explanation": "The longest common prefix is 'fl'."
+            },
+            {
+              "input": "strs = [\"dog\",\"racecar\",\"car\"]",
+              "output": "\"\"",
+              "explanation": "There is no common prefix among the input strings."
+            }
+          ],
+          "constraints": [
+            "1 <= strs.length <= 200",
+            "0 <= strs[i].length <= 200",
+            "strs[i] consists of only lowercase English letters"
+          ],
+          "starterCode": {
+            "python": "def longestCommonPrefix(strs: List[str]) -> str:\n    pass",
+            "typescript": "function longestCommonPrefix(strs: string[]): string {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def longestCommonPrefix(strs: List[str]) -> str:\n    if not strs:\n        return ''\n    \n    # Build trie\n    root = {}\n    for word in strs:\n        node = root\n        for char in word:\n            if char not in node:\n                node[char] = {}\n            node = node[char]\n        node['$'] = True  # end marker\n    \n    # Find LCP: traverse while single child and not end\n    prefix = []\n    node = root\n    while len(node) == 1 and '$' not in node:\n        char = next(iter(node))\n        prefix.append(char)\n        node = node[char]\n    \n    return ''.join(prefix)",
+            "typescript": "function longestCommonPrefix(strs: string[]): string {\n    if (strs.length === 0) return '';\n    \n    let prefix = strs[0];\n    for (let i = 1; i < strs.length; i++) {\n        while (strs[i].indexOf(prefix) !== 0) {\n            prefix = prefix.slice(0, -1);\n            if (prefix === '') return '';\n        }\n    }\n    return prefix;\n}"
+          },
+          "testCases": [
+            {"input": {"strs": ["flower", "flow", "flight"]}, "expected": "fl"},
+            {"input": {"strs": ["dog", "racecar", "car"]}, "expected": ""},
+            {"input": {"strs": ["interspecies", "interstellar", "interstate"]}, "expected": "inters"},
+            {"input": {"strs": ["a"]}, "expected": "a"},
+            {"input": {"strs": ["", "b"]}, "expected": ""}
+          ],
+          "steps": [
+            {
+              "stepId": "lcp-think",
+              "type": "THINKING_GATE",
+              "prompt": "How does a trie help find LCP? When do you stop traversing the trie for LCP?",
+              "hints": [
+                "Build trie with all words",
+                "LCP = path from root while there's exactly one child",
+                "Stop when: multiple children, or end-of-word marker found"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies single-child traversal for LCP",
+                  "points": 2,
+                  "errorMappings": ["trie_lcp_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands stopping conditions",
+                  "points": 2,
+                  "errorMappings": ["trie_lcp_termination"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(S) where S is sum of all characters",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "lcp-code",
+              "type": "CODING",
+              "prompt": "Build trie, then traverse from root collecting characters while only one child exists.",
+              "hints": [
+                "Insert all words into trie",
+                "Traverse: while len(children) == 1 and not end_marker",
+                "Collect the single child character at each step"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly builds trie from all strings",
+                  "points": 2,
+                  "errorMappings": ["trie_insert_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles end-of-word marker in LCP calculation",
+                  "points": 2,
+                  "errorMappings": ["trie_lcp_end_marker"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles edge cases (empty string, single string)",
+                  "points": 1,
+                  "errorMappings": ["trie_edge_cases"]
+                }
+              }
+            },
+            {
+              "stepId": "lcp-reflect",
+              "type": "REFLECTION",
+              "prompt": "What are simpler approaches for LCP? When is trie approach worthwhile?",
+              "hints": [
+                "Horizontal: compare strings pairwise",
+                "Vertical: compare characters column by column",
+                "Trie worthwhile if you need multiple prefix queries later"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Knows horizontal/vertical scan alternatives",
+                  "points": 2,
+                  "errorMappings": ["trie_alternative_unknown"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands when trie is overkill vs beneficial",
+                  "points": 2,
+                  "errorMappings": ["trie_vs_simpler"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "All approaches are O(S) for single LCP query",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "replace-words",
+          "title": "Replace Words",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "In English, we have a concept called root, which can be followed by some other word to form another longer word - let's call this word successor. For example, when the root \"an\" is followed by the successor word \"other\", we can form a new word \"another\". Given a dictionary consisting of many roots and a sentence consisting of words separated by spaces, replace all the successors in the sentence with the root forming it. If a successor can be replaced by more than one root, replace it with the root that has the shortest length. Return the sentence after the replacement.",
+          "examples": [
+            {
+              "input": "dictionary = [\"cat\",\"bat\",\"rat\"], sentence = \"the cattle was rattled by the battery\"",
+              "output": "\"the cat was rat by the bat\"",
+              "explanation": "\"cattle\" -> \"cat\", \"rattled\" -> \"rat\", \"battery\" -> \"bat\""
+            },
+            {
+              "input": "dictionary = [\"a\",\"b\",\"c\"], sentence = \"aadsfasf absbs bbab cadsfabd\"",
+              "output": "\"a]a]b c\"",
+              "explanation": "Each word is replaced by its shortest root prefix."
+            }
+          ],
+          "constraints": [
+            "1 <= dictionary.length <= 1000",
+            "1 <= dictionary[i].length <= 100",
+            "dictionary[i] consists of only lower-case letters",
+            "1 <= sentence.length <= 10^6",
+            "sentence consists of only lower-case letters and spaces"
+          ],
+          "starterCode": {
+            "python": "def replaceWords(dictionary: List[str], sentence: str) -> str:\n    pass",
+            "typescript": "function replaceWords(dictionary: string[], sentence: string): string {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def replaceWords(dictionary: List[str], sentence: str) -> str:\n    # Build trie\n    root = {}\n    for word in dictionary:\n        node = root\n        for char in word:\n            if char not in node:\n                node[char] = {}\n            node = node[char]\n        node['$'] = True\n    \n    def find_root(word):\n        node = root\n        for i, char in enumerate(word):\n            if '$' in node:\n                return word[:i]\n            if char not in node:\n                return word\n            node = node[char]\n        return word[:i+1] if '$' in node else word\n    \n    words = sentence.split()\n    return ' '.join(find_root(word) for word in words)",
+            "typescript": "function replaceWords(dictionary: string[], sentence: string): string {\n    const root: any = {};\n    \n    for (const word of dictionary) {\n        let node = root;\n        for (const char of word) {\n            if (!node[char]) node[char] = {};\n            node = node[char];\n        }\n        node['$'] = true;\n    }\n    \n    function findRoot(word: string): string {\n        let node = root;\n        for (let i = 0; i < word.length; i++) {\n            if (node['$']) return word.slice(0, i);\n            if (!node[word[i]]) return word;\n            node = node[word[i]];\n        }\n        return node['$'] ? word : word;\n    }\n    \n    return sentence.split(' ').map(findRoot).join(' ');\n}"
+          },
+          "testCases": [
+            {"input": {"dictionary": ["cat", "bat", "rat"], "sentence": "the cattle was rattled by the battery"}, "expected": "the cat was rat by the bat"},
+            {"input": {"dictionary": ["a", "b", "c"], "sentence": "aadsfasf absbs bbab cadsfabd"}, "expected": "a a b c"},
+            {"input": {"dictionary": ["a", "aa", "aaa"], "sentence": "aaaa"}, "expected": "a"},
+            {"input": {"dictionary": ["catt", "cat", "bat"], "sentence": "cattle"}, "expected": "cat"}
+          ],
+          "steps": [
+            {
+              "stepId": "replace-words-think",
+              "type": "THINKING_GATE",
+              "prompt": "How does trie help find the shortest root? When do you stop searching in the trie?",
+              "hints": [
+                "Build trie from dictionary roots",
+                "For each word, traverse trie until hitting end marker",
+                "First end marker found = shortest root (due to traversal order)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies trie for prefix matching pattern",
+                  "points": 2,
+                  "errorMappings": ["trie_prefix_matching"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands first end marker = shortest root",
+                  "points": 2,
+                  "errorMappings": ["trie_shortest_root"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(dict_chars + sentence_chars)",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "replace-words-code",
+              "type": "CODING",
+              "prompt": "Build trie from dictionary, then for each sentence word, find and return the shortest matching root.",
+              "hints": [
+                "Build trie with end markers",
+                "find_root: traverse until '$' found or no child exists",
+                "Return prefix up to '$' position, or original word if no match"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly builds trie from dictionary",
+                  "points": 2,
+                  "errorMappings": ["trie_insert_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Returns shortest root or original word",
+                  "points": 2,
+                  "errorMappings": ["trie_root_replacement_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles multiple roots with same prefix",
+                  "points": 1,
+                  "errorMappings": ["trie_multiple_roots"]
+                }
+              }
+            },
+            {
+              "stepId": "replace-words-reflect",
+              "type": "REFLECTION",
+              "prompt": "How does this compare to using a hash set of roots? What's the complexity difference?",
+              "hints": [
+                "Hash set: check all prefixes of each word - O(w²) per word",
+                "Trie: O(w) per word, where w is word length",
+                "Trie wins when words are long"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands trie vs hash set tradeoff",
+                  "points": 2,
+                  "errorMappings": ["trie_vs_hashset"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Recognizes trie advantage for long words",
+                  "points": 2,
+                  "errorMappings": ["trie_efficiency_not_understood"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Trie O(w) vs hash set O(w²) per word",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rungLevel": 2,
+      "theme": "Advanced Trie Applications",
+      "canonical": {
+        "problemId": "word-search-ii",
+        "title": "Word Search II",
+        "difficulty": "HARD",
+        "estimatedMinutes": 40,
+        "description": "Given an m x n board of characters and a list of strings words, return all words on the board. Each word must be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once in a word.",
+        "examples": [
+          {
+            "input": "board = [[\"o\",\"a\",\"a\",\"n\"],[\"e\",\"t\",\"a\",\"e\"],[\"i\",\"h\",\"k\",\"r\"],[\"i\",\"f\",\"l\",\"v\"]], words = [\"oath\",\"pea\",\"eat\",\"rain\"]",
+            "output": "[\"eat\",\"oath\"]",
+            "explanation": "Both 'eat' and 'oath' can be found on the board."
+          },
+          {
+            "input": "board = [[\"a\",\"b\"],[\"c\",\"d\"]], words = [\"abcb\"]",
+            "output": "[]",
+            "explanation": "Cannot reuse cells, so 'abcb' cannot be formed."
+          }
+        ],
+        "constraints": [
+          "m == board.length",
+          "n == board[i].length",
+          "1 <= m, n <= 12",
+          "board[i][j] is a lowercase English letter",
+          "1 <= words.length <= 3 * 10^4",
+          "1 <= words[i].length <= 10",
+          "words[i] consists of lowercase English letters",
+          "All the strings of words are unique"
+        ],
+        "starterCode": {
+          "python": "def findWords(board: List[List[str]], words: List[str]) -> List[str]:\n    pass",
+          "typescript": "function findWords(board: string[][], words: string[]): string[] {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def findWords(board: List[List[str]], words: List[str]) -> List[str]:\n    # Build trie\n    root = {}\n    for word in words:\n        node = root\n        for char in word:\n            if char not in node:\n                node[char] = {}\n            node = node[char]\n        node['$'] = word\n    \n    m, n = len(board), len(board[0])\n    result = []\n    \n    def dfs(i, j, node):\n        char = board[i][j]\n        if char not in node:\n            return\n        \n        next_node = node[char]\n        if '$' in next_node:\n            result.append(next_node['$'])\n            del next_node['$']  # avoid duplicates\n        \n        board[i][j] = '#'\n        for di, dj in [(0, 1), (0, -1), (1, 0), (-1, 0)]:\n            ni, nj = i + di, j + dj\n            if 0 <= ni < m and 0 <= nj < n and board[ni][nj] != '#':\n                dfs(ni, nj, next_node)\n        board[i][j] = char\n        \n        # Optimization: prune empty branches\n        if not next_node:\n            del node[char]\n    \n    for i in range(m):\n        for j in range(n):\n            dfs(i, j, root)\n    \n    return result",
+          "typescript": "function findWords(board: string[][], words: string[]): string[] {\n    const root: any = {};\n    for (const word of words) {\n        let node = root;\n        for (const char of word) {\n            if (!node[char]) node[char] = {};\n            node = node[char];\n        }\n        node['$'] = word;\n    }\n    \n    const m = board.length, n = board[0].length;\n    const result: string[] = [];\n    \n    function dfs(i: number, j: number, node: any): void {\n        const char = board[i][j];\n        if (!node[char]) return;\n        \n        const nextNode = node[char];\n        if (nextNode['$']) {\n            result.push(nextNode['$']);\n            delete nextNode['$'];\n        }\n        \n        board[i][j] = '#';\n        const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];\n        for (const [di, dj] of dirs) {\n            const ni = i + di, nj = j + dj;\n            if (ni >= 0 && ni < m && nj >= 0 && nj < n && board[ni][nj] !== '#') {\n                dfs(ni, nj, nextNode);\n            }\n        }\n        board[i][j] = char;\n    }\n    \n    for (let i = 0; i < m; i++) {\n        for (let j = 0; j < n; j++) {\n            dfs(i, j, root);\n        }\n    }\n    \n    return result;\n}"
+        },
+        "testCases": [
+          {"input": {"board": [["o", "a", "a", "n"], ["e", "t", "a", "e"], ["i", "h", "k", "r"], ["i", "f", "l", "v"]], "words": ["oath", "pea", "eat", "rain"]}, "expected": ["oath", "eat"]},
+          {"input": {"board": [["a", "b"], ["c", "d"]], "words": ["abcb"]}, "expected": []},
+          {"input": {"board": [["a"]], "words": ["a"]}, "expected": ["a"]},
+          {"input": {"board": [["a", "a"]], "words": ["aaa"]}, "expected": []}
+        ],
+        "steps": [
+          {
+            "stepId": "word-search-ii-think",
+            "type": "THINKING_GATE",
+            "prompt": "Why is trie better than searching for each word separately? How do you combine trie traversal with grid DFS? What optimizations prevent TLE?",
+            "hints": [
+              "Trie enables searching all words simultaneously",
+              "DFS follows trie edges - prune when no trie path exists",
+              "Optimizations: remove found words from trie, prune empty branches"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies trie + backtracking combination",
+                "points": 2,
+                "errorMappings": ["trie_backtracking_pattern", "trie_word_search_approach"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands trie enables prefix pruning during DFS",
+                "points": 2,
+                "errorMappings": ["trie_pruning_missed"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Identifies optimizations needed to avoid TLE",
+                "points": 1,
+                "errorMappings": ["trie_optimization_missed"]
+              }
+            }
+          },
+          {
+            "stepId": "word-search-ii-code",
+            "type": "CODING",
+            "prompt": "Build trie from words (store word at end node). DFS from each cell, following trie. Mark cells visited, backtrack.",
+            "hints": [
+              "Store actual word at end node: node['$'] = word",
+              "DFS: check if current char exists in trie node before continuing",
+              "Delete found words from trie to avoid duplicates"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly combines trie with grid DFS",
+                "points": 2,
+                "errorMappings": ["trie_dfs_combination_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Properly marks visited and backtracks",
+                "points": 2,
+                "errorMappings": ["trie_visited_marking", "trie_backtrack_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Implements duplicate prevention",
+                "points": 1,
+                "errorMappings": ["trie_duplicate_words"]
+              }
+            }
+          },
+          {
+            "stepId": "word-search-ii-reflect",
+            "type": "REFLECTION",
+            "prompt": "What's the time complexity? How does branch pruning help? What if words share many prefixes?",
+            "hints": [
+              "Worst case: O(m*n*4^L) where L is max word length",
+              "Trie pruning: stop DFS when no trie children match",
+              "Shared prefixes: trie traversal is shared, saving work"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Understands complexity and pruning impact",
+                "points": 2,
+                "errorMappings": ["trie_complexity_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Recognizes benefit of shared prefixes in trie",
+                "points": 2,
+                "errorMappings": ["trie_prefix_sharing"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Compares to naive word-by-word search",
+                "points": 1,
+                "errorMappings": ["trie_vs_naive_search"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "add-and-search-word",
+          "title": "Design Add and Search Words Data Structure",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 30,
+          "description": "Design a data structure that supports adding new words and finding if a string matches any previously added string. Implement the WordDictionary class: WordDictionary() Initializes the object. void addWord(word) Adds word to the data structure. bool search(word) Returns true if there is any string in the data structure that matches word or false otherwise. word may contain dots '.' where dots can be matched with any letter.",
+          "examples": [
+            {
+              "input": "[\"WordDictionary\",\"addWord\",\"addWord\",\"addWord\",\"search\",\"search\",\"search\",\"search\"]\n[[],[\"bad\"],[\"dad\"],[\"mad\"],[\"pad\"],[\"bad\"],[\".ad\"],[\"b..\"]]",
+              "output": "[null,null,null,null,false,true,true,true]",
+              "explanation": "After adding 'bad', 'dad', 'mad': 'pad' not found, 'bad' found, '.ad' matches all three, 'b..' matches 'bad'."
+          }
+          ],
+          "constraints": [
+            "1 <= word.length <= 25",
+            "word in addWord consists of lowercase English letters",
+            "word in search consist of '.' or lowercase English letters",
+            "There will be at most 3 dots in word for search queries",
+            "At most 10^4 calls will be made to addWord and search"
+          ],
+          "starterCode": {
+            "python": "class WordDictionary:\n    def __init__(self):\n        pass\n\n    def addWord(self, word: str) -> None:\n        pass\n\n    def search(self, word: str) -> bool:\n        pass",
+            "typescript": "class WordDictionary {\n    constructor() {\n        \n    }\n\n    addWord(word: string): void {\n        \n    }\n\n    search(word: string): boolean {\n        \n    }\n}"
+          },
+          "referenceSolution": {
+            "python": "class WordDictionary:\n    def __init__(self):\n        self.root = {}\n\n    def addWord(self, word: str) -> None:\n        node = self.root\n        for char in word:\n            if char not in node:\n                node[char] = {}\n            node = node[char]\n        node['$'] = True\n\n    def search(self, word: str) -> bool:\n        def dfs(node, i):\n            if i == len(word):\n                return '$' in node\n            \n            char = word[i]\n            if char == '.':\n                for child in node:\n                    if child != '$' and dfs(node[child], i + 1):\n                        return True\n                return False\n            else:\n                if char not in node:\n                    return False\n                return dfs(node[char], i + 1)\n        \n        return dfs(self.root, 0)",
+            "typescript": "class WordDictionary {\n    private root: any = {};\n\n    addWord(word: string): void {\n        let node = this.root;\n        for (const char of word) {\n            if (!node[char]) node[char] = {};\n            node = node[char];\n        }\n        node['$'] = true;\n    }\n\n    search(word: string): boolean {\n        const dfs = (node: any, i: number): boolean => {\n            if (i === word.length) return '$' in node;\n            \n            const char = word[i];\n            if (char === '.') {\n                for (const key in node) {\n                    if (key !== '$' && dfs(node[key], i + 1)) {\n                        return true;\n                    }\n                }\n                return false;\n            } else {\n                if (!node[char]) return false;\n                return dfs(node[char], i + 1);\n            }\n        };\n        \n        return dfs(this.root, 0);\n    }\n}"
+          },
+          "testCases": [
+            {"input": {"operations": ["WordDictionary", "addWord", "addWord", "addWord", "search", "search", "search", "search"], "values": [[], ["bad"], ["dad"], ["mad"], ["pad"], ["bad"], [".ad"], ["b.."]]}, "expected": [null, null, null, null, false, true, true, true]},
+            {"input": {"operations": ["WordDictionary", "addWord", "search", "search"], "values": [[], ["a"], ["a"], ["."]]}, "expected": [null, null, true, true]},
+            {"input": {"operations": ["WordDictionary", "addWord", "search"], "values": [[], ["ab"], ["a."]]}, "expected": [null, null, true]}
+          ],
+          "steps": [
+            {
+              "stepId": "add-search-think",
+              "type": "THINKING_GATE",
+              "prompt": "How do you handle the '.' wildcard? Why is recursion/DFS needed for wildcard matching?",
+              "hints": [
+                "'.' matches any character - must try all children",
+                "Recursion explores all possible paths when '.' encountered",
+                "Normal characters follow single trie path"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies need for DFS when wildcard present",
+                  "points": 2,
+                  "errorMappings": ["trie_wildcard_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands '.' requires trying all children",
+                  "points": 2,
+                  "errorMappings": ["trie_wildcard_handling"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Recognizes exponential worst case with many wildcards",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "add-search-code",
+              "type": "CODING",
+              "prompt": "Implement addWord as standard trie insert. Implement search with DFS that branches on '.' wildcard.",
+              "hints": [
+                "addWord: same as basic trie insert",
+                "search: recursive DFS, if '.' try all children",
+                "Base case: reached end of word, check '$' marker"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly implements wildcard branching",
+                  "points": 2,
+                  "errorMappings": ["trie_wildcard_branching_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles mix of wildcards and regular chars",
+                  "points": 2,
+                  "errorMappings": ["trie_mixed_pattern_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Skips '$' marker when iterating children",
+                  "points": 1,
+                  "errorMappings": ["trie_marker_in_iteration"]
+                }
+              }
+            },
+            {
+              "stepId": "add-search-reflect",
+              "type": "REFLECTION",
+              "prompt": "What's the worst-case complexity for search? How could you optimize for specific patterns?",
+              "hints": [
+                "Worst case: O(26^dots * n) where dots is wildcard count",
+                "Optimization: group words by length, prune early",
+                "Problem says at most 3 dots, limiting branching"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands exponential branching with wildcards",
+                  "points": 2,
+                  "errorMappings": ["trie_complexity_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Recognizes constraint limiting wildcards",
+                  "points": 2,
+                  "errorMappings": ["trie_constraint_awareness"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Can suggest optimizations for specific cases",
+                  "points": 1,
+                  "errorMappings": ["trie_optimization_missed"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "maximum-xor-of-two-numbers",
+          "title": "Maximum XOR of Two Numbers in an Array",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 30,
+          "description": "Given an integer array nums, return the maximum result of nums[i] XOR nums[j], where 0 <= i <= j < n.",
+          "examples": [
+            {
+              "input": "nums = [3,10,5,25,2,8]",
+              "output": "28",
+              "explanation": "The maximum result is 5 XOR 25 = 28."
+            },
+            {
+              "input": "nums = [14,70,53,83,49,91,36,80,92,51,66,70]",
+              "output": "127",
+              "explanation": "Maximum XOR is 127."
+            }
+          ],
+          "constraints": [
+            "1 <= nums.length <= 2 * 10^5",
+            "0 <= nums[i] <= 2^31 - 1"
+          ],
+          "starterCode": {
+            "python": "def findMaximumXOR(nums: List[int]) -> int:\n    pass",
+            "typescript": "function findMaximumXOR(nums: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def findMaximumXOR(nums: List[int]) -> int:\n    # Build bit trie\n    root = {}\n    max_xor = 0\n    \n    for num in nums:\n        # Insert num into trie\n        node = root\n        for i in range(31, -1, -1):\n            bit = (num >> i) & 1\n            if bit not in node:\n                node[bit] = {}\n            node = node[bit]\n        \n        # Find max XOR with existing numbers\n        node = root\n        curr_xor = 0\n        for i in range(31, -1, -1):\n            bit = (num >> i) & 1\n            # Try to go opposite direction for max XOR\n            want = 1 - bit\n            if want in node:\n                curr_xor |= (1 << i)\n                node = node[want]\n            else:\n                node = node[bit]\n        \n        max_xor = max(max_xor, curr_xor)\n    \n    return max_xor",
+            "typescript": "function findMaximumXOR(nums: number[]): number {\n    const root: any = {};\n    let maxXor = 0;\n    \n    for (const num of nums) {\n        // Insert num into trie\n        let node = root;\n        for (let i = 31; i >= 0; i--) {\n            const bit = (num >> i) & 1;\n            if (!node[bit]) node[bit] = {};\n            node = node[bit];\n        }\n        \n        // Find max XOR with existing numbers\n        node = root;\n        let currXor = 0;\n        for (let i = 31; i >= 0; i--) {\n            const bit = (num >> i) & 1;\n            const want = 1 - bit;\n            if (node[want]) {\n                currXor |= (1 << i);\n                node = node[want];\n            } else {\n                node = node[bit];\n            }\n        }\n        \n        maxXor = Math.max(maxXor, currXor);\n    }\n    \n    return maxXor;\n}"
+          },
+          "testCases": [
+            {"input": {"nums": [3, 10, 5, 25, 2, 8]}, "expected": 28},
+            {"input": {"nums": [14, 70, 53, 83, 49, 91, 36, 80, 92, 51, 66, 70]}, "expected": 127},
+            {"input": {"nums": [0]}, "expected": 0},
+            {"input": {"nums": [1, 2]}, "expected": 3},
+            {"input": {"nums": [8, 10, 2]}, "expected": 10}
+          ],
+          "steps": [
+            {
+              "stepId": "max-xor-think",
+              "type": "THINKING_GATE",
+              "prompt": "How can you use a trie for binary numbers? To maximize XOR, what bit do you want at each position?",
+              "hints": [
+                "Build trie of binary representations (bit by bit)",
+                "XOR is 1 when bits differ - want opposite bit at each position",
+                "Greedy: from MSB to LSB, try to take opposite bit path"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies binary trie for XOR optimization",
+                  "points": 2,
+                  "errorMappings": ["trie_bit_trie_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands greedy opposite-bit strategy",
+                  "points": 2,
+                  "errorMappings": ["trie_xor_greedy"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n * 32) = O(n) for 32-bit integers",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "max-xor-code",
+              "type": "CODING",
+              "prompt": "Build binary trie (32 bits, MSB first). For each number, insert then find max XOR by preferring opposite bits.",
+              "hints": [
+                "Process bits from bit 31 down to 0",
+                "Insert: node[bit] for each bit",
+                "Search: try node[1-bit] first, fall back to node[bit]"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly builds binary trie from MSB to LSB",
+                  "points": 2,
+                  "errorMappings": ["trie_bit_order_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Greedily selects opposite bit when possible",
+                  "points": 2,
+                  "errorMappings": ["trie_xor_selection_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Accumulates XOR result correctly",
+                  "points": 1,
+                  "errorMappings": ["trie_xor_accumulation"]
+                }
+              }
+            },
+            {
+              "stepId": "max-xor-reflect",
+              "type": "REFLECTION",
+              "prompt": "Why process MSB first? How does this compare to O(n²) brute force?",
+              "hints": [
+                "MSB has highest value contribution - greedy from MSB maximizes result",
+                "Brute force: check all pairs O(n²)",
+                "Trie: O(n * 32), huge speedup for large n"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands MSB-first greedy reasoning",
+                  "points": 2,
+                  "errorMappings": ["trie_msb_reasoning"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Compares to brute force approach",
+                  "points": 2,
+                  "errorMappings": ["trie_vs_bruteforce"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n*32) vs O(n²) comparison",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "palindrome-pairs",
+          "title": "Palindrome Pairs",
+          "difficulty": "HARD",
+          "estimatedMinutes": 45,
+          "description": "You are given a 0-indexed array of unique strings words. A palindrome pair is a pair of integers (i, j) such that: 0 <= i, j < words.length, i != j, and words[i] + words[j] (concatenation) is a palindrome. Return all the palindrome pairs.",
+          "examples": [
+            {
+              "input": "words = [\"abcd\",\"dcba\",\"lls\",\"s\",\"sssll\"]",
+              "output": "[[0,1],[1,0],[3,2],[2,4]]",
+              "explanation": "\"abcd\" + \"dcba\" = \"abcddcba\" (palindrome). \"dcba\" + \"abcd\" = \"dcbaabcd\" (palindrome). \"s\" + \"lls\" = \"slls\" (palindrome). \"lls\" + \"sssll\" = \"llssssll\" (palindrome)."
+            },
+            {
+              "input": "words = [\"bat\",\"tab\",\"cat\"]",
+              "output": "[[0,1],[1,0]]",
+              "explanation": "\"bat\" + \"tab\" and \"tab\" + \"bat\" are both palindromes."
+            }
+          ],
+          "constraints": [
+            "1 <= words.length <= 5000",
+            "0 <= words[i].length <= 300",
+            "words[i] consists of lowercase English letters"
+          ],
+          "starterCode": {
+            "python": "def palindromePairs(words: List[str]) -> List[List[int]]:\n    pass",
+            "typescript": "function palindromePairs(words: string[]): number[][] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def palindromePairs(words: List[str]) -> List[List[int]]:\n    def is_palindrome(s):\n        return s == s[::-1]\n    \n    # Build trie of reversed words\n    root = {}\n    for i, word in enumerate(words):\n        node = root\n        for char in reversed(word):\n            if char not in node:\n                node[char] = {}\n            node = node[char]\n        node['$'] = i\n    \n    result = []\n    \n    for i, word in enumerate(words):\n        node = root\n        for j, char in enumerate(word):\n            # Case: reversed word is prefix of current word\n            if '$' in node and node['$'] != i:\n                if is_palindrome(word[j:]):\n                    result.append([i, node['$']])\n            \n            if char not in node:\n                break\n            node = node[char]\n        else:\n            # Finished traversing word\n            # Case: current word is prefix of reversed word\n            def collect_palindrome_suffixes(node, suffix):\n                if '$' in node and node['$'] != i:\n                    if is_palindrome(suffix):\n                        result.append([i, node['$']])\n                for c, child in node.items():\n                    if c != '$':\n                        collect_palindrome_suffixes(child, suffix + c)\n            \n            collect_palindrome_suffixes(node, '')\n    \n    return result",
+            "typescript": "function palindromePairs(words: string[]): number[][] {\n    const isPalindrome = (s: string): boolean => s === s.split('').reverse().join('');\n    \n    const wordMap = new Map<string, number>();\n    for (let i = 0; i < words.length; i++) {\n        wordMap.set(words[i], i);\n    }\n    \n    const result: number[][] = [];\n    \n    for (let i = 0; i < words.length; i++) {\n        const word = words[i];\n        for (let j = 0; j <= word.length; j++) {\n            const prefix = word.slice(0, j);\n            const suffix = word.slice(j);\n            \n            // If prefix is palindrome, check if reversed suffix exists\n            if (isPalindrome(prefix)) {\n                const revSuffix = suffix.split('').reverse().join('');\n                if (wordMap.has(revSuffix) && wordMap.get(revSuffix) !== i) {\n                    result.push([wordMap.get(revSuffix)!, i]);\n                }\n            }\n            \n            // If suffix is palindrome, check if reversed prefix exists\n            if (j < word.length && isPalindrome(suffix)) {\n                const revPrefix = prefix.split('').reverse().join('');\n                if (wordMap.has(revPrefix) && wordMap.get(revPrefix) !== i) {\n                    result.push([i, wordMap.get(revPrefix)!]);\n                }\n            }\n        }\n    }\n    \n    return result;\n}"
+          },
+          "testCases": [
+            {"input": {"words": ["abcd", "dcba", "lls", "s", "sssll"]}, "expected": [[0, 1], [1, 0], [3, 2], [2, 4]]},
+            {"input": {"words": ["bat", "tab", "cat"]}, "expected": [[0, 1], [1, 0]]},
+            {"input": {"words": ["a", ""]}, "expected": [[0, 1], [1, 0]]},
+            {"input": {"words": ["a", "abc", "aba", ""]}, "expected": [[0, 3], [3, 0], [2, 3], [3, 2]]}
+          ],
+          "steps": [
+            {
+              "stepId": "palindrome-pairs-think",
+              "type": "THINKING_GATE",
+              "prompt": "What are the cases for word[i] + word[j] being a palindrome? How does a trie of reversed words help?",
+              "hints": [
+                "Cases: (1) word[i] = reverse of word[j], (2) word[i] is prefix with palindrome suffix, (3) word[j] is prefix with palindrome remaining",
+                "Trie of reversed words: find if reverse exists as prefix",
+                "Check palindrome for remaining part"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies multiple cases for palindrome pairs",
+                  "points": 2,
+                  "errorMappings": ["trie_palindrome_cases"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands reversed trie for prefix matching",
+                  "points": 2,
+                  "errorMappings": ["trie_reversed_trie"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Better than O(n² * m) brute force",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "palindrome-pairs-code",
+              "type": "CODING",
+              "prompt": "Build trie of reversed words. For each word, traverse trie checking for palindrome conditions.",
+              "hints": [
+                "Insert reversed words with their indices",
+                "While traversing, check if remaining suffix is palindrome",
+                "At end of word, collect all trie suffixes that are palindromes"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly builds reversed-word trie",
+                  "points": 2,
+                  "errorMappings": ["trie_reversed_insertion"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Handles all palindrome pair cases",
+                  "points": 2,
+                  "errorMappings": ["trie_palindrome_cases_missed"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Avoids self-pairing (i != j)",
+                  "points": 1,
+                  "errorMappings": ["trie_self_pair"]
+                }
+              }
+            },
+            {
+              "stepId": "palindrome-pairs-reflect",
+              "type": "REFLECTION",
+              "prompt": "What's the complexity? How does the hash map alternative compare?",
+              "hints": [
+                "Trie: O(n * k²) where k is max word length",
+                "Hash map: similar complexity, simpler but more redundant checks",
+                "Both beat O(n² * k) brute force"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands hash map alternative",
+                  "points": 2,
+                  "errorMappings": ["trie_alternative_unknown"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Compares trie vs hash map approaches",
+                  "points": 2,
+                  "errorMappings": ["trie_vs_hashmap_comparison"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both are O(n * k²)",
+                  "points": 1,
+                  "errorMappings": ["trie_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "microLessons": [
+    {
+      "lessonId": "trie_fundamentals",
+      "title": "Trie Data Structure Fundamentals",
+      "content": "A trie (prefix tree) is a tree for storing strings where each node represents a character. Root is empty. Each path from root to a node represents a prefix. Key insight: common prefixes are shared, saving space. Each node has: children (map of char -> node) and is_end flag (marks complete words). Operations are O(m) where m is string length.",
+      "triggerErrorIds": ["trie_structure_wrong", "trie_node_design"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "trie_vs_hash",
+      "title": "Trie vs Hash Set/Map",
+      "content": "Hash set: O(m) insert/search, but no prefix queries. Trie: O(m) insert/search, PLUS O(p) prefix queries, autocomplete, lexicographic ordering. Use hash when: only exact matches needed, memory is tight. Use trie when: prefix operations needed, many strings share prefixes, need ordered traversal.",
+      "triggerErrorIds": ["trie_vs_hashset", "trie_vs_simpler"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_insert",
+      "title": "Trie Insertion",
+      "content": "To insert a word: start at root, for each character: if child doesn't exist, create it; move to child. After last character, mark is_end = True. This creates the path for the word, sharing existing prefix nodes. Time: O(m) where m is word length. Space: O(m) in worst case (no shared prefix).",
+      "triggerErrorIds": ["trie_insert_wrong", "trie_traversal_wrong"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_search_vs_prefix",
+      "title": "Search vs StartsWith",
+      "content": "Search: traverse trie for word, return True only if path exists AND is_end is True. StartsWith: traverse trie for prefix, return True if path exists (ignore is_end). The difference: search requires complete word, startsWith only requires prefix. Both use same traversal, different final check.",
+      "triggerErrorIds": ["trie_prefix_vs_word", "trie_search_wrong"],
+      "prerequisites": ["trie_insert"]
+    },
+    {
+      "lessonId": "trie_end_marker",
+      "title": "The End-of-Word Marker",
+      "content": "The is_end (or '$') marker is crucial! Without it, you can't distinguish between 'app' (a word) and 'app' (just a prefix of 'apple'). Always set is_end = True at the last node of each inserted word. When searching, check is_end for complete words; ignore it for prefix checks.",
+      "triggerErrorIds": ["trie_end_marker_missing"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_implementation",
+      "title": "Trie Node Implementation",
+      "content": "Two common implementations: (1) TrieNode class with children dict and is_end bool. (2) Nested dictionaries where special key '$' marks word end. Nested dict is simpler but mixing data types. Class is cleaner but more verbose. Both are O(m) for operations.",
+      "triggerErrorIds": ["trie_node_design"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_suggestions",
+      "title": "Autocomplete with Trie",
+      "content": "For autocomplete: (1) Traverse to prefix node. (2) Collect all words in subtree (DFS). Optimization: store suggestions at each node during insertion (limited to top k). This gives O(1) suggestions per character typed instead of O(subtree size). Sort words first for lexicographic order.",
+      "triggerErrorIds": ["trie_suggestions_pattern", "trie_suggestions_storage_wrong"],
+      "prerequisites": ["trie_search_vs_prefix"]
+    },
+    {
+      "lessonId": "trie_lcp",
+      "title": "Longest Common Prefix with Trie",
+      "content": "Build trie from all strings. LCP = path from root following single-child nodes until: (1) multiple children exist, or (2) end-of-word marker found. The single-child path represents the common prefix shared by all strings. Handle edge case: empty string in input means LCP is empty.",
+      "triggerErrorIds": ["trie_lcp_pattern", "trie_lcp_termination"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_word_search",
+      "title": "Trie for Word Search II",
+      "content": "For finding multiple words in a grid: build trie from all words, then DFS from each cell following trie paths. Trie enables searching all words simultaneously - if current path isn't in trie, prune immediately. Store actual word at end node for easy retrieval. Remove found words to avoid duplicates.",
+      "triggerErrorIds": ["trie_backtracking_pattern", "trie_word_search_approach"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_pruning",
+      "title": "Trie Pruning for Optimization",
+      "content": "After finding a word in Word Search II, remove it from trie (delete '$' marker). Also prune empty branches: if a node has no children and no end marker, remove it from parent. This prevents re-finding the same word and speeds up subsequent searches.",
+      "triggerErrorIds": ["trie_pruning_missed", "trie_optimization_missed"],
+      "prerequisites": ["trie_word_search"]
+    },
+    {
+      "lessonId": "trie_wildcard",
+      "title": "Wildcard Search in Trie",
+      "content": "For patterns with wildcards (like '.'): when encountering wildcard, try ALL children. This requires recursion/DFS. Regular characters follow single path. Complexity: O(26^w * m) worst case where w is wildcard count. Constraint limiting wildcards is important for performance.",
+      "triggerErrorIds": ["trie_wildcard_pattern", "trie_wildcard_handling"],
+      "prerequisites": ["trie_search_vs_prefix"]
+    },
+    {
+      "lessonId": "trie_binary",
+      "title": "Binary Trie for Bit Operations",
+      "content": "For XOR problems, build trie of binary representations. Each node has at most 2 children (0 and 1). Process bits from MSB to LSB. To maximize XOR, greedily choose opposite bit at each level when possible. This finds the number that differs most from current number.",
+      "triggerErrorIds": ["trie_bit_trie_pattern", "trie_xor_greedy"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_reversed",
+      "title": "Reversed Trie for Suffix Matching",
+      "content": "To find words by suffix or check suffix conditions, build trie of reversed words. Traversing this trie checks suffixes as prefixes. Useful for: palindrome pairs (reversed word as prefix), suffix matching, rhyming words. Same O(m) complexity, different matching direction.",
+      "triggerErrorIds": ["trie_reversed_trie", "trie_reversed_insertion"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_complexity",
+      "title": "Trie Time and Space Complexity",
+      "content": "Time: O(m) for insert, search, startsWith where m is string length. Space: O(total_characters) worst case, but shared prefixes reduce this. For n words of average length m: worst O(n*m), best O(total_unique_prefixes). Trade-off: more memory than hash set, but supports prefix operations.",
+      "triggerErrorIds": ["trie_complexity_wrong"],
+      "prerequisites": ["trie_fundamentals"]
+    },
+    {
+      "lessonId": "trie_delete",
+      "title": "Deleting from Trie",
+      "content": "To delete a word: (1) Find the word (must exist). (2) Unmark is_end. (3) Optionally, prune nodes that are no longer needed (have no children and no is_end). Pruning is recursive from the word's end back toward root. Careful: don't delete nodes that are prefixes of other words.",
+      "triggerErrorIds": ["trie_delete_wrong"],
+      "prerequisites": ["trie_insert"]
+    }
+  ],
+  "errorMappings": [
+    {
+      "errorId": "trie_structure_wrong",
+      "pattern": "(what is trie|trie structure|how does trie work)",
+      "lessonIds": ["trie_fundamentals"],
+      "feedbackTemplate": "A trie is a tree where each node represents a character. Path from root to node = prefix. Children are stored in a map (char -> node). Each node has an is_end flag to mark complete words."
+    },
+    {
+      "errorId": "trie_node_design",
+      "pattern": "(node.*structure|what.*store|TrieNode)",
+      "lessonIds": ["trie_implementation"],
+      "feedbackTemplate": "TrieNode needs: children (dict/map of char -> TrieNode) and is_end (boolean). Alternatively, use nested dicts with '$' as end marker. Both work; class is cleaner, dict is simpler."
+    },
+    {
+      "errorId": "trie_prefix_vs_word",
+      "pattern": "(prefix.*word|search.*startsWith|difference.*search)",
+      "lessonIds": ["trie_search_vs_prefix"],
+      "feedbackTemplate": "search() requires the word to exist AND be marked as complete (is_end = True). startsWith() only requires the prefix path to exist (ignores is_end). Both traverse the same way, different final check."
+    },
+    {
+      "errorId": "trie_end_marker_missing",
+      "pattern": "(is_end|end marker|complete word|\\$)",
+      "lessonIds": ["trie_end_marker"],
+      "feedbackTemplate": "Don't forget the end marker! Set is_end = True at the last character of each inserted word. Without it, you can't distinguish 'app' as a word vs just a prefix of 'apple'."
+    },
+    {
+      "errorId": "trie_insert_wrong",
+      "pattern": "(insert.*wrong|add.*trie|insertion)",
+      "lessonIds": ["trie_insert"],
+      "feedbackTemplate": "Insert pattern: start at root. For each char: if char not in children, create new node; move to children[char]. After loop, set current.is_end = True."
+    },
+    {
+      "errorId": "trie_traversal_wrong",
+      "pattern": "(traverse|navigate|walk.*trie)",
+      "lessonIds": ["trie_insert"],
+      "feedbackTemplate": "Traversal pattern: start at root (node = self.root). For each char: if char not in node.children, path doesn't exist (return None/False); else move to node.children[char]."
+    },
+    {
+      "errorId": "trie_search_wrong",
+      "pattern": "(search.*wrong|find.*wrong|lookup)",
+      "lessonIds": ["trie_search_vs_prefix"],
+      "feedbackTemplate": "Search pattern: traverse to end of word. If any char missing, return False. After traversal, return node.is_end (not just True). The is_end check distinguishes complete words from prefixes."
+    },
+    {
+      "errorId": "trie_code_duplication",
+      "pattern": "(duplicate.*code|repeat.*logic|helper)",
+      "lessonIds": ["trie_implementation"],
+      "feedbackTemplate": "Extract common traversal into a helper: _find_node(prefix) returns the node at end of prefix, or None if not found. Then search() checks is_end, startsWith() just checks not None."
+    },
+    {
+      "errorId": "trie_vs_hashset",
+      "pattern": "(hash set|hashmap|why trie|when.*trie)",
+      "lessonIds": ["trie_vs_hash"],
+      "feedbackTemplate": "Trie vs Hash: Both are O(m) for exact lookup. Trie wins for: prefix queries, autocomplete, lexicographic order. Hash wins for: simpler code, less memory when prefixes aren't shared."
+    },
+    {
+      "errorId": "trie_delete_wrong",
+      "pattern": "(delete|remove.*word|prune)",
+      "lessonIds": ["trie_delete"],
+      "feedbackTemplate": "Delete: find the word, unmark is_end. Optionally prune empty branches (nodes with no children and is_end=False). Be careful: don't prune nodes that are prefixes of other words!"
+    },
+    {
+      "errorId": "trie_suggestions_pattern",
+      "pattern": "(autocomplete|suggestions|type ahead)",
+      "lessonIds": ["trie_suggestions"],
+      "feedbackTemplate": "For autocomplete: traverse to prefix node, then DFS to collect all words in subtree. Optimization: store top-k suggestions at each node during insertion (requires sorting words first)."
+    },
+    {
+      "errorId": "trie_suggestions_storage_wrong",
+      "pattern": "(store.*suggestions|suggestions.*node|pre-compute)",
+      "lessonIds": ["trie_suggestions"],
+      "feedbackTemplate": "Pre-computed suggestions: during insertion, add word to node.suggestions if len < k. Sort words first for lexicographic order. This makes retrieval O(1) per character instead of O(subtree)."
+    },
+    {
+      "errorId": "trie_sorting_missed",
+      "pattern": "(sort first|lexicographic|order.*words)",
+      "lessonIds": ["trie_suggestions"],
+      "feedbackTemplate": "Sort words before building trie for autocomplete! First k words encountered at each node are lexicographically smallest only if input is sorted. Without sorting, suggestions won't be in order."
+    },
+    {
+      "errorId": "trie_lexicographic_order",
+      "pattern": "(lexicographic|alphabetical|sorted order)",
+      "lessonIds": ["trie_suggestions"],
+      "feedbackTemplate": "Trie naturally supports lexicographic ordering: DFS through children in alphabetical order (sort keys) yields words in sorted order. Or pre-sort input for correct suggestion ordering."
+    },
+    {
+      "errorId": "trie_missing_prefix_handling",
+      "pattern": "(prefix not found|no match|empty result)",
+      "lessonIds": ["trie_search_vs_prefix"],
+      "feedbackTemplate": "Handle missing prefixes gracefully! If traversal fails (char not in children), the prefix doesn't exist - return empty list for suggestions, False for startsWith. Don't crash!"
+    },
+    {
+      "errorId": "trie_suggestion_limit",
+      "pattern": "(limit.*3|top k|at most k)",
+      "lessonIds": ["trie_suggestions"],
+      "feedbackTemplate": "Limit suggestions: when storing, check if len(node.suggestions) < k before adding. During retrieval, slice to k if returning more. This bounds memory and output size."
+    },
+    {
+      "errorId": "trie_alternative_unknown",
+      "pattern": "(other approach|alternative|different way)",
+      "lessonIds": ["trie_vs_hash"],
+      "feedbackTemplate": "Alternatives to trie: hash set/map for exact matching, binary search on sorted array for prefix range, suffix array for advanced string queries. Each has different trade-offs."
+    },
+    {
+      "errorId": "trie_vs_binary_search",
+      "pattern": "(binary search|sorted array|two approaches)",
+      "lessonIds": ["trie_vs_hash"],
+      "feedbackTemplate": "Trie vs Binary Search: Both can find prefix matches. Trie: O(m) per query, supports incremental typing. Binary search: O(log n + m) per query, simpler implementation. Trie better for many incremental queries."
+    },
+    {
+      "errorId": "trie_lcp_pattern",
+      "pattern": "(longest common prefix|LCP|common prefix)",
+      "lessonIds": ["trie_lcp"],
+      "feedbackTemplate": "LCP with trie: build trie, then traverse from root while there's exactly one child. Stop when multiple children or end-of-word marker. The path traversed is the LCP."
+    },
+    {
+      "errorId": "trie_lcp_termination",
+      "pattern": "(stop.*LCP|when.*stop|termination)",
+      "lessonIds": ["trie_lcp"],
+      "feedbackTemplate": "Stop LCP traversal when: (1) node has multiple children (prefix diverges), OR (2) node has end marker (a word ends here, shorter words don't share more prefix). Both conditions break the common prefix."
+    },
+    {
+      "errorId": "trie_lcp_end_marker",
+      "pattern": "(end marker.*LCP|short word|word ends)",
+      "lessonIds": ["trie_lcp"],
+      "feedbackTemplate": "If 'a' and 'abc' are both in trie, LCP can't include 'bc' because 'a' ends at first character. Check for end marker while traversing for LCP - it signals the shortest word's end."
+    },
+    {
+      "errorId": "trie_edge_cases",
+      "pattern": "(empty string|single|edge case)",
+      "lessonIds": ["trie_fundamentals"],
+      "feedbackTemplate": "Handle edge cases! Empty string: is_end at root. Single string: LCP is the whole string. Empty input array: return empty string for LCP. No words: search always returns False."
+    },
+    {
+      "errorId": "trie_vs_simpler",
+      "pattern": "(simpler|overkill|easier way)",
+      "lessonIds": ["trie_vs_hash"],
+      "feedbackTemplate": "Trie might be overkill for simple problems! For one-time LCP, character-by-character comparison is simpler. Use trie when: multiple prefix queries, autocomplete needs, or the problem specifically benefits from prefix structure."
+    },
+    {
+      "errorId": "trie_prefix_matching",
+      "pattern": "(prefix match|find prefix|root word)",
+      "lessonIds": ["trie_search_vs_prefix"],
+      "feedbackTemplate": "For 'find shortest prefix': traverse trie, check for end marker at each step. First end marker found = shortest matching prefix. Return immediately - don't continue traversing."
+    },
+    {
+      "errorId": "trie_shortest_root",
+      "pattern": "(shortest root|shortest prefix|first match)",
+      "lessonIds": ["trie_search_vs_prefix"],
+      "feedbackTemplate": "To find shortest matching root: while traversing, check is_end at each node. If True, return the prefix up to this point. The first is_end encountered is the shortest root."
+    },
+    {
+      "errorId": "trie_root_replacement_wrong",
+      "pattern": "(replace.*wrong|return original|no match)",
+      "lessonIds": ["trie_search_vs_prefix"],
+      "feedbackTemplate": "When replacing with root: if root found, return root prefix. If no match (traversal fails before finding is_end), return original word unchanged. Handle both cases!"
+    },
+    {
+      "errorId": "trie_multiple_roots",
+      "pattern": "(multiple roots|several matches|which root)",
+      "lessonIds": ["trie_search_vs_prefix"],
+      "feedbackTemplate": "When multiple roots could match (like 'a' and 'ab'), the first is_end encountered during traversal is the shortest. Since we traverse character by character, shorter roots are found first."
+    },
+    {
+      "errorId": "trie_efficiency_not_understood",
+      "pattern": "(why efficient|how faster|advantage)",
+      "lessonIds": ["trie_vs_hash"],
+      "feedbackTemplate": "Trie efficiency: instead of checking all prefixes of a word (O(m²) with hash set), traverse trie once (O(m)). Each character lookup is O(1). Total: O(m) vs O(m²) for prefix finding."
+    },
+    {
+      "errorId": "trie_backtracking_pattern",
+      "pattern": "(trie.*backtrack|grid.*trie|word search.*trie)",
+      "lessonIds": ["trie_word_search"],
+      "feedbackTemplate": "Trie + Backtracking: build trie from words, then DFS on grid following trie edges. If current char isn't in trie, prune that path. This searches all words simultaneously, much faster than word-by-word."
+    },
+    {
+      "errorId": "trie_word_search_approach",
+      "pattern": "(word search II|multiple words|find all words)",
+      "lessonIds": ["trie_word_search"],
+      "feedbackTemplate": "Word Search II approach: (1) Build trie from all words. (2) DFS from each cell. (3) At each step, check if char exists in current trie node. (4) If end marker found, add word to result. (5) Backtrack."
+    },
+    {
+      "errorId": "trie_pruning_missed",
+      "pattern": "(prune|remove.*found|optimize.*search)",
+      "lessonIds": ["trie_pruning"],
+      "feedbackTemplate": "Optimization: after finding a word, remove it from trie (delete end marker). Also prune empty branches to reduce future search space. This prevents duplicates and speeds up remaining searches."
+    },
+    {
+      "errorId": "trie_optimization_missed",
+      "pattern": "(TLE|too slow|timeout|optimize)",
+      "lessonIds": ["trie_pruning"],
+      "feedbackTemplate": "Common optimizations for Word Search II: (1) Remove found words from trie. (2) Prune empty branches. (3) Early termination when trie is empty. (4) Store word at end node instead of tracking path."
+    },
+    {
+      "errorId": "trie_dfs_combination_wrong",
+      "pattern": "(combine.*DFS|grid.*trie.*wrong|traversal)",
+      "lessonIds": ["trie_word_search"],
+      "feedbackTemplate": "Combining DFS with trie: pass trie node as parameter to DFS. At each cell, check if cell's char is in node.children. If yes, recurse with children[char]. If no, return (prune). Check for end marker at each step."
+    },
+    {
+      "errorId": "trie_visited_marking",
+      "pattern": "(visited|mark.*cell|avoid.*reuse)",
+      "lessonIds": ["trie_word_search"],
+      "feedbackTemplate": "Mark cells as visited during DFS to prevent reuse in same path. Method: board[i][j] = '#', then restore after DFS returns. Or use a visited set. Remember to unmark (backtrack) after exploring!"
+    },
+    {
+      "errorId": "trie_backtrack_wrong",
+      "pattern": "(backtrack|restore|unmark)",
+      "lessonIds": ["trie_word_search"],
+      "feedbackTemplate": "Backtracking: after exploring all directions from a cell, restore its original value. Pattern: save = board[i][j]; board[i][j] = '#'; explore all directions; board[i][j] = save."
+    },
+    {
+      "errorId": "trie_duplicate_words",
+      "pattern": "(duplicate|same word|word twice)",
+      "lessonIds": ["trie_word_search"],
+      "feedbackTemplate": "Prevent duplicate words in result: when finding a word, delete the end marker from trie (del node['$']). This ensures the same word isn't added again from a different path."
+    },
+    {
+      "errorId": "trie_prefix_sharing",
+      "pattern": "(share prefix|common prefix|prefix.*benefit)",
+      "lessonIds": ["trie_complexity"],
+      "feedbackTemplate": "Shared prefixes are trie's key advantage! Words 'apple', 'app', 'application' share 'app' prefix - only stored once. More prefix sharing = less memory and faster searches across multiple words."
+    },
+    {
+      "errorId": "trie_vs_naive_search",
+      "pattern": "(naive|brute force|word by word)",
+      "lessonIds": ["trie_word_search"],
+      "feedbackTemplate": "Naive Word Search: search each word separately, O(W * m*n * 4^L). With trie: search all words together, O(m*n * 4^L). Trie is W times faster by sharing the grid traversal across all words."
+    },
+    {
+      "errorId": "trie_wildcard_pattern",
+      "pattern": "(wildcard|dot|any character)",
+      "lessonIds": ["trie_wildcard"],
+      "feedbackTemplate": "Wildcard '.' matches any character. When you hit '.', try ALL children of current node (except end marker). Use recursion: if any path leads to match, return True. Regular chars follow single path."
+    },
+    {
+      "errorId": "trie_wildcard_handling",
+      "pattern": "(handle dot|match any|wild.*card)",
+      "lessonIds": ["trie_wildcard"],
+      "feedbackTemplate": "Wildcard DFS: if char == '.', loop through all children and recurse. If any returns True, return True. If char is regular, check if it exists in children and recurse. Base case: end of word, check is_end."
+    },
+    {
+      "errorId": "trie_wildcard_branching_wrong",
+      "pattern": "(branch.*wildcard|try all|iterate children)",
+      "lessonIds": ["trie_wildcard"],
+      "feedbackTemplate": "When branching on wildcard: for child in node.children: if child != '$': if dfs(node[child], i+1): return True. Skip the '$' marker - it's not a valid character to match."
+    },
+    {
+      "errorId": "trie_mixed_pattern_wrong",
+      "pattern": "(mix.*wildcard|some dots|partial wildcard)",
+      "lessonIds": ["trie_wildcard"],
+      "feedbackTemplate": "Handle mixed patterns (like 'a.c'): process character by character. Regular char: single path. Wildcard: branch to all children. The recursion naturally handles any mix of regular and wildcard characters."
+    },
+    {
+      "errorId": "trie_marker_in_iteration",
+      "pattern": "(\\$.*iteration|skip marker|end.*children)",
+      "lessonIds": ["trie_wildcard"],
+      "feedbackTemplate": "When iterating children for wildcard matching, skip the end marker ('$' or special key). It's not a character! Check: if key != '$' before recursing into that child."
+    },
+    {
+      "errorId": "trie_constraint_awareness",
+      "pattern": "(constraint|limit.*wildcards|at most)",
+      "lessonIds": ["trie_wildcard"],
+      "feedbackTemplate": "Note constraints! 'At most 3 dots' limits branching factor to 26³ ≈ 17k worst case per search. Without such constraints, wildcard search could be exponentially slow. Constraints make it tractable."
+    },
+    {
+      "errorId": "trie_bit_trie_pattern",
+      "pattern": "(binary trie|bit trie|XOR.*trie)",
+      "lessonIds": ["trie_binary"],
+      "feedbackTemplate": "Binary trie: each node has at most 2 children (0 and 1). Build from binary representations of numbers, MSB to LSB. Useful for XOR problems - can greedily choose opposite bit at each level."
+    },
+    {
+      "errorId": "trie_xor_greedy",
+      "pattern": "(maximize XOR|opposite bit|XOR strategy)",
+      "lessonIds": ["trie_binary"],
+      "feedbackTemplate": "To maximize XOR: at each bit position, XOR is 1 when bits differ. So greedily choose the opposite bit path in trie. If opposite exists, take it and set that result bit to 1. If not, take same bit."
+    },
+    {
+      "errorId": "trie_bit_order_wrong",
+      "pattern": "(bit order|MSB.*LSB|which bit first)",
+      "lessonIds": ["trie_binary"],
+      "feedbackTemplate": "Process bits from MSB (bit 31) to LSB (bit 0). MSB has highest value (2³¹), so we want to maximize high-order bits first. Greedy works because setting a high bit to 1 dominates all lower bits."
+    },
+    {
+      "errorId": "trie_xor_selection_wrong",
+      "pattern": "(select.*bit|choose.*path|wrong bit)",
+      "lessonIds": ["trie_binary"],
+      "feedbackTemplate": "Bit selection: want = 1 - currentBit (opposite). If node[want] exists, go there and add (1 << position) to result. Otherwise, go to node[currentBit] and add nothing. Always have a path since we inserted the number."
+    },
+    {
+      "errorId": "trie_xor_accumulation",
+      "pattern": "(accumulate|build.*result|XOR result)",
+      "lessonIds": ["trie_binary"],
+      "feedbackTemplate": "Accumulate XOR result: currXor |= (1 << i) when taking opposite bit path. This sets the i-th bit of result to 1. If taking same bit path, don't add anything (bit stays 0). Final currXor is the maximum XOR with this number."
+    },
+    {
+      "errorId": "trie_msb_reasoning",
+      "pattern": "(why MSB|high bit|bit significance)",
+      "lessonIds": ["trie_binary"],
+      "feedbackTemplate": "MSB-first because higher bits have higher value. 2³¹ > 2³⁰ + 2²⁹ + ... + 2⁰. So setting bit 31 to 1 is worth more than all lower bits combined. Greedy from MSB guarantees maximum result."
+    },
+    {
+      "errorId": "trie_vs_bruteforce",
+      "pattern": "(brute force|check all pairs|O\\(n.?2\\))",
+      "lessonIds": ["trie_binary"],
+      "feedbackTemplate": "Brute force XOR: check all pairs, O(n²). With binary trie: O(n * 32). For n = 200,000, that's 200,000² = 40 billion vs 200,000 * 32 = 6.4 million operations. Massive speedup!"
+    },
+    {
+      "errorId": "trie_palindrome_cases",
+      "pattern": "(palindrome.*cases|when palindrome|conditions)",
+      "lessonIds": ["trie_reversed"],
+      "feedbackTemplate": "Palindrome pair cases: (1) word1 = reverse(word2) exactly. (2) word1 has palindrome suffix, prefix matches reverse of word2. (3) word1 has palindrome prefix, suffix matches reverse of word2. Check all cases!"
+    },
+    {
+      "errorId": "trie_reversed_trie",
+      "pattern": "(reversed trie|reverse.*words|suffix.*trie)",
+      "lessonIds": ["trie_reversed"],
+      "feedbackTemplate": "Build trie of reversed words. Then for each word, traverse this trie. Finding a complete word means: reverse of that word is a prefix of current word. Combined with palindrome checks, finds all pairs."
+    },
+    {
+      "errorId": "trie_reversed_insertion",
+      "pattern": "(insert reversed|backwards|reverse before insert)",
+      "lessonIds": ["trie_reversed"],
+      "feedbackTemplate": "To build reversed trie: for each word, insert characters in reverse order. for char in reversed(word): ... This makes suffix matching act like prefix matching in the trie."
+    },
+    {
+      "errorId": "trie_palindrome_cases_missed",
+      "pattern": "(missing case|not all pairs|incomplete)",
+      "lessonIds": ["trie_reversed"],
+      "feedbackTemplate": "Check all palindrome pair cases! (1) During traversal, if hit end marker and remaining suffix is palindrome. (2) After traversal, collect all trie suffixes that are palindromes. Both word1+word2 and word2+word1 orders."
+    },
+    {
+      "errorId": "trie_self_pair",
+      "pattern": "(self pair|same index|i != j)",
+      "lessonIds": ["trie_reversed"],
+      "feedbackTemplate": "Avoid self-pairing! When finding matches, check that the found index != current index. Store indices in trie: node['$'] = index. Compare: if node['$'] != i before adding to result."
+    },
+    {
+      "errorId": "trie_vs_hashmap_comparison",
+      "pattern": "(trie.*hashmap|hash.*approach|compare approaches)",
+      "lessonIds": ["trie_vs_hash"],
+      "feedbackTemplate": "Palindrome pairs: both trie and hash map work with similar O(n*k²) complexity. Hash map: simpler, check all prefix/suffix combinations. Trie: more complex but potentially faster with shared prefixes."
+    },
+    {
+      "errorId": "trie_complexity_wrong",
+      "pattern": "(complexity|time|space|big-O)",
+      "lessonIds": ["trie_complexity"],
+      "feedbackTemplate": "Trie complexity: insert/search/startsWith are O(m) where m is word length. Space: O(alphabet_size * total_chars) worst case, but shared prefixes reduce this. For k words of length m: O(k*m) worst, often much better."
+    }
+  ]
+}

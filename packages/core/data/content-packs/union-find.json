@@ -1,0 +1,1392 @@
+{
+  "packId": "union-find-v1",
+  "pattern": "UNION_FIND",
+  "version": "1.0.0",
+  "rungs": [
+    {
+      "rungLevel": 1,
+      "theme": "Basic Union Find",
+      "canonical": {
+        "problemId": "number-of-provinces",
+        "title": "Number of Provinces",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 25,
+        "description": "There are n cities. Some of them are connected, while some are not. If city a is connected directly with city b, and city b is connected directly with city c, then city a is connected indirectly with city c. A province is a group of directly or indirectly connected cities and no other cities outside of the group. You are given an n x n matrix isConnected where isConnected[i][j] = 1 if the ith city and the jth city are directly connected, and isConnected[i][j] = 0 otherwise. Return the total number of provinces.",
+        "examples": [
+          {
+            "input": "isConnected = [[1,1,0],[1,1,0],[0,0,1]]",
+            "output": "2",
+            "explanation": "Cities 0 and 1 are connected (province 1). City 2 is alone (province 2)."
+          },
+          {
+            "input": "isConnected = [[1,0,0],[0,1,0],[0,0,1]]",
+            "output": "3",
+            "explanation": "Each city is its own province."
+          }
+        ],
+        "constraints": [
+          "1 <= n <= 200",
+          "n == isConnected.length",
+          "n == isConnected[i].length",
+          "isConnected[i][j] is 1 or 0",
+          "isConnected[i][i] == 1",
+          "isConnected[i][j] == isConnected[j][i]"
+        ],
+        "starterCode": {
+          "python": "def findCircleNum(isConnected: List[List[int]]) -> int:\n    pass",
+          "typescript": "function findCircleNum(isConnected: number[][]): number {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def findCircleNum(isConnected: List[List[int]]) -> int:\n    n = len(isConnected)\n    parent = list(range(n))\n    rank = [0] * n\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])  # path compression\n        return parent[x]\n    \n    def union(x, y):\n        px, py = find(x), find(y)\n        if px == py:\n            return False\n        # union by rank\n        if rank[px] < rank[py]:\n            px, py = py, px\n        parent[py] = px\n        if rank[px] == rank[py]:\n            rank[px] += 1\n        return True\n    \n    provinces = n\n    for i in range(n):\n        for j in range(i + 1, n):\n            if isConnected[i][j] == 1:\n                if union(i, j):\n                    provinces -= 1\n    \n    return provinces",
+          "typescript": "function findCircleNum(isConnected: number[][]): number {\n    const n = isConnected.length;\n    const parent = Array.from({length: n}, (_, i) => i);\n    const rank = new Array(n).fill(0);\n    \n    function find(x: number): number {\n        if (parent[x] !== x) {\n            parent[x] = find(parent[x]);\n        }\n        return parent[x];\n    }\n    \n    function union(x: number, y: number): boolean {\n        let px = find(x), py = find(y);\n        if (px === py) return false;\n        if (rank[px] < rank[py]) [px, py] = [py, px];\n        parent[py] = px;\n        if (rank[px] === rank[py]) rank[px]++;\n        return true;\n    }\n    \n    let provinces = n;\n    for (let i = 0; i < n; i++) {\n        for (let j = i + 1; j < n; j++) {\n            if (isConnected[i][j] === 1) {\n                if (union(i, j)) provinces--;\n            }\n        }\n    }\n    \n    return provinces;\n}"
+        },
+        "testCases": [
+          {"input": {"isConnected": [[1, 1, 0], [1, 1, 0], [0, 0, 1]]}, "expected": 2},
+          {"input": {"isConnected": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]}, "expected": 3},
+          {"input": {"isConnected": [[1, 1, 1], [1, 1, 1], [1, 1, 1]]}, "expected": 1},
+          {"input": {"isConnected": [[1]]}, "expected": 1},
+          {"input": {"isConnected": [[1, 0, 0, 1], [0, 1, 1, 0], [0, 1, 1, 1], [1, 0, 1, 1]]}, "expected": 1}
+        ],
+        "steps": [
+          {
+            "stepId": "provinces-think",
+            "type": "THINKING_GATE",
+            "prompt": "What is Union-Find? What are the two key operations? What optimizations make it nearly O(1) per operation?",
+            "hints": [
+              "Union-Find tracks disjoint sets (groups) that can be merged",
+              "Find: returns the root/representative of an element's set",
+              "Union: merges two sets by connecting their roots",
+              "Optimizations: path compression (in find) and union by rank"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies Union-Find as the right data structure for connectivity",
+                "points": 2,
+                "errorMappings": ["uf_pattern_not_recognized", "uf_vs_dfs_bfs"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands find and union operations",
+                "points": 2,
+                "errorMappings": ["uf_find_wrong", "uf_union_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Knows path compression and union by rank give O(α(n)) ≈ O(1)",
+                "points": 1,
+                "errorMappings": ["uf_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "provinces-code",
+            "type": "CODING",
+            "prompt": "Implement Union-Find with path compression and union by rank. Count provinces by starting with n and decrementing on each successful union.",
+            "hints": [
+              "Initialize: parent[i] = i (each element is its own root)",
+              "Find with path compression: parent[x] = find(parent[x])",
+              "Union by rank: attach smaller tree under larger tree's root"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly implements find with path compression",
+                "points": 2,
+                "errorMappings": ["uf_path_compression_wrong", "uf_find_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Correctly implements union by rank",
+                "points": 2,
+                "errorMappings": ["uf_union_by_rank_wrong", "uf_union_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Counts components correctly using union return value",
+                "points": 1,
+                "errorMappings": ["uf_counting_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "provinces-reflect",
+            "type": "REFLECTION",
+            "prompt": "How does Union-Find compare to DFS/BFS for this problem? When is Union-Find preferred?",
+            "hints": [
+              "Both are O(n²) for this problem due to matrix traversal",
+              "Union-Find shines for dynamic connectivity (edges added over time)",
+              "DFS/BFS better for one-time traversal, simpler to implement"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Compares Union-Find to DFS/BFS approaches",
+                "points": 2,
+                "errorMappings": ["uf_vs_dfs_bfs"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Knows when Union-Find is preferred",
+                "points": 2,
+                "errorMappings": ["uf_use_cases"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Understands amortized complexity of Union-Find",
+                "points": 1,
+                "errorMappings": ["uf_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "redundant-connection",
+          "title": "Redundant Connection",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "In this problem, a tree is an undirected graph that is connected and has no cycles. You are given a graph that started as a tree with n nodes labeled from 1 to n, with one additional edge added. The added edge has two different vertices chosen from 1 to n, and was not an edge that already existed. The graph is represented as an array edges of length n where edges[i] = [ai, bi] indicates that there is an edge between nodes ai and bi in the graph. Return an edge that can be removed so that the resulting graph is a tree of n nodes. If there are multiple answers, return the answer that occurs last in the input.",
+          "examples": [
+            {
+              "input": "edges = [[1,2],[1,3],[2,3]]",
+              "output": "[2,3]",
+              "explanation": "Removing [2,3] breaks the cycle 1-2-3-1."
+            },
+            {
+              "input": "edges = [[1,2],[2,3],[3,4],[1,4],[1,5]]",
+              "output": "[1,4]",
+              "explanation": "Removing [1,4] breaks the cycle 1-2-3-4-1."
+            }
+          ],
+          "constraints": [
+            "n == edges.length",
+            "3 <= n <= 1000",
+            "edges[i].length == 2",
+            "1 <= ai < bi <= edges.length",
+            "ai != bi",
+            "There are no repeated edges",
+            "The given graph is connected"
+          ],
+          "starterCode": {
+            "python": "def findRedundantConnection(edges: List[List[int]]) -> List[int]:\n    pass",
+            "typescript": "function findRedundantConnection(edges: number[][]): number[] {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def findRedundantConnection(edges: List[List[int]]) -> List[int]:\n    n = len(edges)\n    parent = list(range(n + 1))\n    rank = [0] * (n + 1)\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])\n        return parent[x]\n    \n    def union(x, y):\n        px, py = find(x), find(y)\n        if px == py:\n            return False\n        if rank[px] < rank[py]:\n            px, py = py, px\n        parent[py] = px\n        if rank[px] == rank[py]:\n            rank[px] += 1\n        return True\n    \n    for u, v in edges:\n        if not union(u, v):\n            return [u, v]\n    \n    return []",
+            "typescript": "function findRedundantConnection(edges: number[][]): number[] {\n    const n = edges.length;\n    const parent = Array.from({length: n + 1}, (_, i) => i);\n    const rank = new Array(n + 1).fill(0);\n    \n    function find(x: number): number {\n        if (parent[x] !== x) parent[x] = find(parent[x]);\n        return parent[x];\n    }\n    \n    function union(x: number, y: number): boolean {\n        let px = find(x), py = find(y);\n        if (px === py) return false;\n        if (rank[px] < rank[py]) [px, py] = [py, px];\n        parent[py] = px;\n        if (rank[px] === rank[py]) rank[px]++;\n        return true;\n    }\n    \n    for (const [u, v] of edges) {\n        if (!union(u, v)) return [u, v];\n    }\n    return [];\n}"
+          },
+          "testCases": [
+            {"input": {"edges": [[1, 2], [1, 3], [2, 3]]}, "expected": [2, 3]},
+            {"input": {"edges": [[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]]}, "expected": [1, 4]},
+            {"input": {"edges": [[1, 2], [2, 3], [1, 3]]}, "expected": [1, 3]},
+            {"input": {"edges": [[1, 3], [3, 4], [1, 5], [3, 5], [2, 3]]}, "expected": [3, 5]}
+          ],
+          "steps": [
+            {
+              "stepId": "redundant-think",
+              "type": "THINKING_GATE",
+              "prompt": "How does Union-Find detect a cycle? What does it mean when union returns false?",
+              "hints": [
+                "Union returns false when both nodes already have same root",
+                "Same root = already connected = adding edge creates cycle",
+                "Process edges in order, first failed union is the redundant edge"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies Union-Find for cycle detection",
+                  "points": 2,
+                  "errorMappings": ["uf_cycle_detection"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands failed union indicates cycle",
+                  "points": 2,
+                  "errorMappings": ["uf_union_return_value"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n * α(n)) ≈ O(n) for processing all edges",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "redundant-code",
+              "type": "CODING",
+              "prompt": "Process edges in order. Return the first edge where union fails (both endpoints already connected).",
+              "hints": [
+                "Initialize parent array for nodes 1 to n",
+                "For each edge [u, v], try to union(u, v)",
+                "If union returns false, return [u, v]"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Processes edges in given order",
+                  "points": 2,
+                  "errorMappings": ["uf_edge_order"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Returns first edge causing cycle",
+                  "points": 2,
+                  "errorMappings": ["uf_redundant_edge_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles 1-indexed nodes correctly",
+                  "points": 1,
+                  "errorMappings": ["uf_indexing_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "redundant-reflect",
+              "type": "REFLECTION",
+              "prompt": "What if the graph was directed (Redundant Connection II)? How would the approach change?",
+              "hints": [
+                "Directed: node might have two parents, or there's a cycle",
+                "More complex: need to handle multiple cases",
+                "May need to track parent edges, not just sets"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands directed version is more complex",
+                  "points": 2,
+                  "errorMappings": ["uf_directed_variant"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Identifies the additional cases for directed graphs",
+                  "points": 2,
+                  "errorMappings": ["uf_variant_cases"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both versions remain O(n * α(n))",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "graph-valid-tree",
+          "title": "Graph Valid Tree",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "You have a graph of n nodes labeled from 0 to n - 1. You are given an integer n and a list of edges where edges[i] = [ai, bi] indicates that there is an undirected edge between nodes ai and bi in the graph. Return true if the edges of the given graph make up a valid tree, and false otherwise.",
+          "examples": [
+            {
+              "input": "n = 5, edges = [[0,1],[0,2],[0,3],[1,4]]",
+              "output": "true",
+              "explanation": "The graph forms a valid tree with 5 nodes and 4 edges."
+            },
+            {
+              "input": "n = 5, edges = [[0,1],[1,2],[2,3],[1,3],[1,4]]",
+              "output": "false",
+              "explanation": "The graph has a cycle (1-2-3-1), so it's not a tree."
+            }
+          ],
+          "constraints": [
+            "1 <= n <= 2000",
+            "0 <= edges.length <= 5000",
+            "edges[i].length == 2",
+            "0 <= ai, bi < n",
+            "ai != bi",
+            "There are no self-loops or repeated edges"
+          ],
+          "starterCode": {
+            "python": "def validTree(n: int, edges: List[List[int]]) -> bool:\n    pass",
+            "typescript": "function validTree(n: number, edges: number[][]): boolean {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def validTree(n: int, edges: List[List[int]]) -> bool:\n    if len(edges) != n - 1:\n        return False\n    \n    parent = list(range(n))\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])\n        return parent[x]\n    \n    def union(x, y):\n        px, py = find(x), find(y)\n        if px == py:\n            return False\n        parent[py] = px\n        return True\n    \n    for u, v in edges:\n        if not union(u, v):\n            return False\n    \n    return True",
+            "typescript": "function validTree(n: number, edges: number[][]): boolean {\n    if (edges.length !== n - 1) return false;\n    \n    const parent = Array.from({length: n}, (_, i) => i);\n    \n    function find(x: number): number {\n        if (parent[x] !== x) parent[x] = find(parent[x]);\n        return parent[x];\n    }\n    \n    function union(x: number, y: number): boolean {\n        const px = find(x), py = find(y);\n        if (px === py) return false;\n        parent[py] = px;\n        return true;\n    }\n    \n    for (const [u, v] of edges) {\n        if (!union(u, v)) return false;\n    }\n    return true;\n}"
+          },
+          "testCases": [
+            {"input": {"n": 5, "edges": [[0, 1], [0, 2], [0, 3], [1, 4]]}, "expected": true},
+            {"input": {"n": 5, "edges": [[0, 1], [1, 2], [2, 3], [1, 3], [1, 4]]}, "expected": false},
+            {"input": {"n": 1, "edges": []}, "expected": true},
+            {"input": {"n": 4, "edges": [[0, 1], [2, 3]]}, "expected": false},
+            {"input": {"n": 2, "edges": [[0, 1]]}, "expected": true}
+          ],
+          "steps": [
+            {
+              "stepId": "valid-tree-think",
+              "type": "THINKING_GATE",
+              "prompt": "What are the conditions for a graph to be a valid tree? How can Union-Find verify each condition?",
+              "hints": [
+                "Tree = connected + no cycles",
+                "For n nodes: exactly n-1 edges required",
+                "No cycles: every union should succeed (no same-root unions)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies tree conditions: connected, acyclic, n-1 edges",
+                  "points": 2,
+                  "errorMappings": ["uf_tree_conditions"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands n-1 edges is necessary for tree",
+                  "points": 2,
+                  "errorMappings": ["uf_edge_count_check"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n * α(n)) with early edge count check",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "valid-tree-code",
+              "type": "CODING",
+              "prompt": "First check edge count (must be n-1). Then verify no cycles using Union-Find.",
+              "hints": [
+                "Quick check: if edges.length != n - 1, return False immediately",
+                "Process all edges with union",
+                "If any union fails (cycle), return False"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Checks edge count first as optimization",
+                  "points": 2,
+                  "errorMappings": ["uf_edge_count_check"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Uses union return value for cycle detection",
+                  "points": 2,
+                  "errorMappings": ["uf_union_return_value"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles n=1 with no edges correctly",
+                  "points": 1,
+                  "errorMappings": ["uf_edge_cases"]
+                }
+              }
+            },
+            {
+              "stepId": "valid-tree-reflect",
+              "type": "REFLECTION",
+              "prompt": "Why is the edge count check sufficient for connectivity (along with no cycles)? What's an alternative approach?",
+              "hints": [
+                "n-1 edges + no cycles = must be connected (tree property)",
+                "Alternative: DFS from node 0, check all visited + no back edges",
+                "Union-Find is simpler when you just need yes/no"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands why edge count implies connectivity",
+                  "points": 2,
+                  "errorMappings": ["uf_tree_property"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Knows DFS alternative",
+                  "points": 2,
+                  "errorMappings": ["uf_vs_dfs_bfs"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both approaches are O(n + e)",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "number-of-connected-components",
+          "title": "Number of Connected Components in an Undirected Graph",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 20,
+          "description": "You have a graph of n nodes. You are given an integer n and an array edges where edges[i] = [ai, bi] indicates that there is an edge between ai and bi in the graph. Return the number of connected components in the graph.",
+          "examples": [
+            {
+              "input": "n = 5, edges = [[0,1],[1,2],[3,4]]",
+              "output": "2",
+              "explanation": "Components: {0,1,2} and {3,4}"
+            },
+            {
+              "input": "n = 5, edges = [[0,1],[1,2],[2,3],[3,4]]",
+              "output": "1",
+              "explanation": "All nodes are connected in one component."
+            }
+          ],
+          "constraints": [
+            "1 <= n <= 2000",
+            "1 <= edges.length <= 5000",
+            "edges[i].length == 2",
+            "0 <= ai, bi < n",
+            "ai != bi",
+            "There are no repeated edges"
+          ],
+          "starterCode": {
+            "python": "def countComponents(n: int, edges: List[List[int]]) -> int:\n    pass",
+            "typescript": "function countComponents(n: number, edges: number[][]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def countComponents(n: int, edges: List[List[int]]) -> int:\n    parent = list(range(n))\n    rank = [0] * n\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])\n        return parent[x]\n    \n    def union(x, y):\n        px, py = find(x), find(y)\n        if px == py:\n            return False\n        if rank[px] < rank[py]:\n            px, py = py, px\n        parent[py] = px\n        if rank[px] == rank[py]:\n            rank[px] += 1\n        return True\n    \n    components = n\n    for u, v in edges:\n        if union(u, v):\n            components -= 1\n    \n    return components",
+            "typescript": "function countComponents(n: number, edges: number[][]): number {\n    const parent = Array.from({length: n}, (_, i) => i);\n    const rank = new Array(n).fill(0);\n    \n    function find(x: number): number {\n        if (parent[x] !== x) parent[x] = find(parent[x]);\n        return parent[x];\n    }\n    \n    function union(x: number, y: number): boolean {\n        let px = find(x), py = find(y);\n        if (px === py) return false;\n        if (rank[px] < rank[py]) [px, py] = [py, px];\n        parent[py] = px;\n        if (rank[px] === rank[py]) rank[px]++;\n        return true;\n    }\n    \n    let components = n;\n    for (const [u, v] of edges) {\n        if (union(u, v)) components--;\n    }\n    return components;\n}"
+          },
+          "testCases": [
+            {"input": {"n": 5, "edges": [[0, 1], [1, 2], [3, 4]]}, "expected": 2},
+            {"input": {"n": 5, "edges": [[0, 1], [1, 2], [2, 3], [3, 4]]}, "expected": 1},
+            {"input": {"n": 5, "edges": []}, "expected": 5},
+            {"input": {"n": 1, "edges": []}, "expected": 1},
+            {"input": {"n": 4, "edges": [[0, 1], [2, 3]]}, "expected": 2}
+          ],
+          "steps": [
+            {
+              "stepId": "count-components-think",
+              "type": "THINKING_GATE",
+              "prompt": "How do you count components using Union-Find? What does a successful union represent?",
+              "hints": [
+                "Start with n components (each node is its own component)",
+                "Each successful union merges two components into one",
+                "Final count = n - (number of successful unions)"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies component counting via union operations",
+                  "points": 2,
+                  "errorMappings": ["uf_counting_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands successful union decrements component count",
+                  "points": 2,
+                  "errorMappings": ["uf_counting_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(e * α(n)) for e edges",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "count-components-code",
+              "type": "CODING",
+              "prompt": "Initialize component count as n. Decrement for each successful union.",
+              "hints": [
+                "Start: components = n",
+                "For each edge, if union succeeds, components -= 1",
+                "Return final component count"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly tracks component count",
+                  "points": 2,
+                  "errorMappings": ["uf_counting_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Only decrements on successful union",
+                  "points": 2,
+                  "errorMappings": ["uf_union_return_value"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles case with no edges",
+                  "points": 1,
+                  "errorMappings": ["uf_edge_cases"]
+                }
+              }
+            },
+            {
+              "stepId": "count-components-reflect",
+              "type": "REFLECTION",
+              "prompt": "What's an alternative way to count components with Union-Find? How does DFS compare?",
+              "hints": [
+                "Alternative: count unique roots at the end (find(i) == i)",
+                "DFS: start from each unvisited node, each DFS is one component",
+                "Both are O(n + e), Union-Find has better constants for dynamic graphs"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Knows alternative counting methods",
+                  "points": 2,
+                  "errorMappings": ["uf_counting_alternatives"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Compares with DFS approach",
+                  "points": 2,
+                  "errorMappings": ["uf_vs_dfs_bfs"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Union-Find better for incremental updates",
+                  "points": 1,
+                  "errorMappings": ["uf_use_cases"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rungLevel": 2,
+      "theme": "Advanced Union Find Applications",
+      "canonical": {
+        "problemId": "accounts-merge",
+        "title": "Accounts Merge",
+        "difficulty": "MEDIUM",
+        "estimatedMinutes": 35,
+        "description": "Given a list of accounts where each element accounts[i] is a list of strings, where the first element accounts[i][0] is a name, and the rest of the elements are emails representing emails of the account. Now, we would like to merge these accounts. Two accounts definitely belong to the same person if there is some common email to both accounts. Note that even if two accounts have the same name, they may belong to different people as people could have the same name. A person can have any number of accounts initially, but all of their accounts definitely have the same name. After merging the accounts, return the accounts in the following format: the first element of each account is the name, and the rest of the elements are emails in sorted order. The accounts themselves can be returned in any order.",
+        "examples": [
+          {
+            "input": "accounts = [[\"John\",\"johnsmith@mail.com\",\"john_newyork@mail.com\"],[\"John\",\"johnsmith@mail.com\",\"john00@mail.com\"],[\"Mary\",\"mary@mail.com\"],[\"John\",\"johnnybravo@mail.com\"]]",
+            "output": "[[\"John\",\"john00@mail.com\",\"john_newyork@mail.com\",\"johnsmith@mail.com\"],[\"Mary\",\"mary@mail.com\"],[\"John\",\"johnnybravo@mail.com\"]]",
+            "explanation": "First and second John's share 'johnsmith@mail.com', so they merge. Third John has no shared emails."
+          }
+        ],
+        "constraints": [
+          "1 <= accounts.length <= 1000",
+          "2 <= accounts[i].length <= 10",
+          "1 <= accounts[i][j].length <= 30",
+          "accounts[i][0] consists of English letters",
+          "accounts[i][j] (for j > 0) is a valid email"
+        ],
+        "starterCode": {
+          "python": "def accountsMerge(accounts: List[List[str]]) -> List[List[str]]:\n    pass",
+          "typescript": "function accountsMerge(accounts: string[][]): string[][] {\n    \n}"
+        },
+        "referenceSolution": {
+          "python": "def accountsMerge(accounts: List[List[str]]) -> List[List[str]]:\n    from collections import defaultdict\n    \n    parent = {}\n    email_to_name = {}\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])\n        return parent[x]\n    \n    def union(x, y):\n        parent[find(x)] = find(y)\n    \n    # Build union-find structure\n    for account in accounts:\n        name = account[0]\n        first_email = account[1]\n        for email in account[1:]:\n            if email not in parent:\n                parent[email] = email\n            email_to_name[email] = name\n            union(email, first_email)\n    \n    # Group emails by root\n    groups = defaultdict(list)\n    for email in parent:\n        groups[find(email)].append(email)\n    \n    # Build result\n    result = []\n    for root, emails in groups.items():\n        result.append([email_to_name[root]] + sorted(emails))\n    \n    return result",
+          "typescript": "function accountsMerge(accounts: string[][]): string[][] {\n    const parent = new Map<string, string>();\n    const emailToName = new Map<string, string>();\n    \n    function find(x: string): string {\n        if (parent.get(x) !== x) {\n            parent.set(x, find(parent.get(x)!));\n        }\n        return parent.get(x)!;\n    }\n    \n    function union(x: string, y: string): void {\n        parent.set(find(x), find(y));\n    }\n    \n    for (const account of accounts) {\n        const name = account[0];\n        const firstEmail = account[1];\n        for (let i = 1; i < account.length; i++) {\n            const email = account[i];\n            if (!parent.has(email)) parent.set(email, email);\n            emailToName.set(email, name);\n            union(email, firstEmail);\n        }\n    }\n    \n    const groups = new Map<string, string[]>();\n    for (const email of parent.keys()) {\n        const root = find(email);\n        if (!groups.has(root)) groups.set(root, []);\n        groups.get(root)!.push(email);\n    }\n    \n    const result: string[][] = [];\n    for (const [root, emails] of groups) {\n        result.push([emailToName.get(root)!, ...emails.sort()]);\n    }\n    return result;\n}"
+        },
+        "testCases": [
+          {"input": {"accounts": [["John", "johnsmith@mail.com", "john_newyork@mail.com"], ["John", "johnsmith@mail.com", "john00@mail.com"], ["Mary", "mary@mail.com"], ["John", "johnnybravo@mail.com"]]}, "expected": [["John", "john00@mail.com", "john_newyork@mail.com", "johnsmith@mail.com"], ["Mary", "mary@mail.com"], ["John", "johnnybravo@mail.com"]]},
+          {"input": {"accounts": [["Gabe", "Gabe0@m.co", "Gabe3@m.co", "Gabe1@m.co"], ["Kevin", "Kevin3@m.co", "Kevin5@m.co", "Kevin0@m.co"], ["Ethan", "Ethan5@m.co", "Ethan4@m.co", "Ethan0@m.co"], ["Hanzo", "Hanzo3@m.co", "Hanzo1@m.co", "Hanzo0@m.co"], ["Fern", "Fern5@m.co", "Fern1@m.co", "Fern0@m.co"]]}, "expected": [["Gabe", "Gabe0@m.co", "Gabe1@m.co", "Gabe3@m.co"], ["Kevin", "Kevin0@m.co", "Kevin3@m.co", "Kevin5@m.co"], ["Ethan", "Ethan0@m.co", "Ethan4@m.co", "Ethan5@m.co"], ["Hanzo", "Hanzo0@m.co", "Hanzo1@m.co", "Hanzo3@m.co"], ["Fern", "Fern0@m.co", "Fern1@m.co", "Fern5@m.co"]]}
+        ],
+        "steps": [
+          {
+            "stepId": "accounts-merge-think",
+            "type": "THINKING_GATE",
+            "prompt": "How do you model this as a Union-Find problem? What are the elements being unioned? How do you handle that emails (not indices) need to be grouped?",
+            "hints": [
+              "Union emails directly (strings as keys, not integer indices)",
+              "All emails in an account belong together - union them",
+              "After processing, group emails by their root email"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Identifies Union-Find on email strings",
+                "points": 2,
+                "errorMappings": ["uf_string_keys", "uf_accounts_merge_pattern"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Understands to union all emails in each account",
+                "points": 2,
+                "errorMappings": ["uf_accounts_union_strategy"]
+              },
+              "complexityAnalysis": {
+                "criteria": "O(NK * α(NK)) where N accounts, K emails each",
+                "points": 1,
+                "errorMappings": ["uf_complexity_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "accounts-merge-code",
+            "type": "CODING",
+            "prompt": "Union all emails in each account. Track email-to-name mapping. Group by root and sort.",
+            "hints": [
+              "Use dict for parent (string keys)",
+              "Union each email with first email in account",
+              "Keep email_to_name map for result construction",
+              "Group by find(email), then sort emails in each group"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Correctly implements Union-Find with string keys",
+                "points": 2,
+                "errorMappings": ["uf_string_keys", "uf_find_wrong"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Properly groups emails by root",
+                "points": 2,
+                "errorMappings": ["uf_grouping_wrong"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Sorts emails and formats output correctly",
+                "points": 1,
+                "errorMappings": ["uf_output_format_wrong"]
+              }
+            }
+          },
+          {
+            "stepId": "accounts-merge-reflect",
+            "type": "REFLECTION",
+            "prompt": "How would you solve this with DFS on a graph? What are the tradeoffs?",
+            "hints": [
+              "Build graph: emails are nodes, edges connect emails in same account",
+              "DFS from each unvisited email to find connected component",
+              "Union-Find is more elegant here, DFS needs explicit graph"
+            ],
+            "rubric": {
+              "patternRecognition": {
+                "criteria": "Understands graph/DFS alternative",
+                "points": 2,
+                "errorMappings": ["uf_vs_dfs_bfs"]
+              },
+              "invariantUnderstanding": {
+                "criteria": "Compares implementation complexity",
+                "points": 2,
+                "errorMappings": ["uf_alternative_comparison"]
+              },
+              "complexityAnalysis": {
+                "criteria": "Both are O(NK * log(NK)) due to sorting",
+                "points": 1,
+                "errorMappings": ["uf_complexity_wrong"]
+              }
+            }
+          }
+        ]
+      },
+      "siblings": [
+        {
+          "problemId": "satisfiability-of-equality-equations",
+          "title": "Satisfiability of Equality Equations",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "You are given an array of strings equations that represent relationships between variables where each string equations[i] is of length 4 and takes one of two different forms: \"xi==xj\" or \"xi!=xj\". Here, xi and xj are lowercase letters (not necessarily different) that represent one-letter variable names. Return true if it is possible to assign integers to variable names so as to satisfy all the given equations, or false otherwise.",
+          "examples": [
+            {
+              "input": "equations = [\"a==b\",\"b!=a\"]",
+              "output": "false",
+              "explanation": "If a == b, then b == a. But b != a contradicts this."
+            },
+            {
+              "input": "equations = [\"b==a\",\"a==b\"]",
+              "output": "true",
+              "explanation": "Both equations are consistent."
+            },
+            {
+              "input": "equations = [\"a==b\",\"b==c\",\"a==c\"]",
+              "output": "true",
+              "explanation": "All transitively equal, consistent."
+            }
+          ],
+          "constraints": [
+            "1 <= equations.length <= 500",
+            "equations[i].length == 4",
+            "equations[i][0] is a lowercase letter",
+            "equations[i][1] is either '=' or '!'",
+            "equations[i][2] is '='",
+            "equations[i][3] is a lowercase letter"
+          ],
+          "starterCode": {
+            "python": "def equationsPossible(equations: List[str]) -> bool:\n    pass",
+            "typescript": "function equationsPossible(equations: string[]): boolean {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def equationsPossible(equations: List[str]) -> bool:\n    parent = {chr(i): chr(i) for i in range(ord('a'), ord('z') + 1)}\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])\n        return parent[x]\n    \n    def union(x, y):\n        parent[find(x)] = find(y)\n    \n    # Process equalities first\n    for eq in equations:\n        if eq[1] == '=':\n            union(eq[0], eq[3])\n    \n    # Check inequalities\n    for eq in equations:\n        if eq[1] == '!':\n            if find(eq[0]) == find(eq[3]):\n                return False\n    \n    return True",
+            "typescript": "function equationsPossible(equations: string[]): boolean {\n    const parent: {[key: string]: string} = {};\n    for (let i = 0; i < 26; i++) {\n        const c = String.fromCharCode(97 + i);\n        parent[c] = c;\n    }\n    \n    function find(x: string): string {\n        if (parent[x] !== x) parent[x] = find(parent[x]);\n        return parent[x];\n    }\n    \n    function union(x: string, y: string): void {\n        parent[find(x)] = find(y);\n    }\n    \n    // Process equalities first\n    for (const eq of equations) {\n        if (eq[1] === '=') union(eq[0], eq[3]);\n    }\n    \n    // Check inequalities\n    for (const eq of equations) {\n        if (eq[1] === '!') {\n            if (find(eq[0]) === find(eq[3])) return false;\n        }\n    }\n    \n    return true;\n}"
+          },
+          "testCases": [
+            {"input": {"equations": ["a==b", "b!=a"]}, "expected": false},
+            {"input": {"equations": ["b==a", "a==b"]}, "expected": true},
+            {"input": {"equations": ["a==b", "b==c", "a==c"]}, "expected": true},
+            {"input": {"equations": ["a==b", "b!=c", "c==a"]}, "expected": false},
+            {"input": {"equations": ["c==c", "b==d", "x!=z"]}, "expected": true}
+          ],
+          "steps": [
+            {
+              "stepId": "equations-think",
+              "type": "THINKING_GATE",
+              "prompt": "Why process equalities before inequalities? How does Union-Find help check consistency?",
+              "hints": [
+                "Equalities define what must be in the same set",
+                "Process all '==' first to build connected components",
+                "Then check '!=' - both variables must be in different sets"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies two-pass approach: equalities then inequalities",
+                  "points": 2,
+                  "errorMappings": ["uf_equation_order"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands inequality check uses find()",
+                  "points": 2,
+                  "errorMappings": ["uf_inequality_check"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n * α(26)) ≈ O(n) for n equations",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "equations-code",
+              "type": "CODING",
+              "prompt": "First pass: union variables in '==' equations. Second pass: check '!=' equations for conflicts.",
+              "hints": [
+                "Initialize parent for all 26 letters",
+                "First pass: union(eq[0], eq[3]) for all '=='",
+                "Second pass: if find(eq[0]) == find(eq[3]) for '!=', return False"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly processes equations in two passes",
+                  "points": 2,
+                  "errorMappings": ["uf_equation_order"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Properly parses equation strings",
+                  "points": 2,
+                  "errorMappings": ["uf_equation_parsing"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Returns True only if no conflicts found",
+                  "points": 1,
+                  "errorMappings": ["uf_return_logic"]
+                }
+              }
+            },
+            {
+              "stepId": "equations-reflect",
+              "type": "REFLECTION",
+              "prompt": "What if we had weighted equations like 'a/b = 2'? How would Union-Find need to change?",
+              "hints": [
+                "Weighted Union-Find: track ratio between node and root",
+                "find() returns root AND cumulative weight",
+                "Union needs to calculate weight between new connection"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands weighted Union-Find concept",
+                  "points": 2,
+                  "errorMappings": ["uf_weighted_variant"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Knows weight tracking requires path calculation",
+                  "points": 2,
+                  "errorMappings": ["uf_weighted_implementation"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Complexity remains similar",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "longest-consecutive-sequence",
+          "title": "Longest Consecutive Sequence",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 25,
+          "description": "Given an unsorted array of integers nums, return the length of the longest consecutive elements sequence. You must write an algorithm that runs in O(n) time.",
+          "examples": [
+            {
+              "input": "nums = [100,4,200,1,3,2]",
+              "output": "4",
+              "explanation": "The longest consecutive sequence is [1, 2, 3, 4]. Its length is 4."
+            },
+            {
+              "input": "nums = [0,3,7,2,5,8,4,6,0,1]",
+              "output": "9",
+              "explanation": "The longest consecutive sequence is [0, 1, 2, 3, 4, 5, 6, 7, 8]. Its length is 9."
+            }
+          ],
+          "constraints": [
+            "0 <= nums.length <= 10^5",
+            "-10^9 <= nums[i] <= 10^9"
+          ],
+          "starterCode": {
+            "python": "def longestConsecutive(nums: List[int]) -> int:\n    pass",
+            "typescript": "function longestConsecutive(nums: number[]): number {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def longestConsecutive(nums: List[int]) -> int:\n    if not nums:\n        return 0\n    \n    parent = {}\n    size = {}\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])\n        return parent[x]\n    \n    def union(x, y):\n        px, py = find(x), find(y)\n        if px == py:\n            return\n        if size[px] < size[py]:\n            px, py = py, px\n        parent[py] = px\n        size[px] += size[py]\n    \n    for num in nums:\n        if num in parent:\n            continue\n        parent[num] = num\n        size[num] = 1\n        \n        if num - 1 in parent:\n            union(num, num - 1)\n        if num + 1 in parent:\n            union(num, num + 1)\n    \n    return max(size.values()) if size else 0",
+            "typescript": "function longestConsecutive(nums: number[]): number {\n    if (nums.length === 0) return 0;\n    \n    const parent = new Map<number, number>();\n    const size = new Map<number, number>();\n    \n    function find(x: number): number {\n        if (parent.get(x) !== x) parent.set(x, find(parent.get(x)!));\n        return parent.get(x)!;\n    }\n    \n    function union(x: number, y: number): void {\n        let px = find(x), py = find(y);\n        if (px === py) return;\n        if (size.get(px)! < size.get(py)!) [px, py] = [py, px];\n        parent.set(py, px);\n        size.set(px, size.get(px)! + size.get(py)!);\n    }\n    \n    for (const num of nums) {\n        if (parent.has(num)) continue;\n        parent.set(num, num);\n        size.set(num, 1);\n        \n        if (parent.has(num - 1)) union(num, num - 1);\n        if (parent.has(num + 1)) union(num, num + 1);\n    }\n    \n    return Math.max(...size.values());\n}"
+          },
+          "testCases": [
+            {"input": {"nums": [100, 4, 200, 1, 3, 2]}, "expected": 4},
+            {"input": {"nums": [0, 3, 7, 2, 5, 8, 4, 6, 0, 1]}, "expected": 9},
+            {"input": {"nums": []}, "expected": 0},
+            {"input": {"nums": [1]}, "expected": 1},
+            {"input": {"nums": [1, 2, 0, 1]}, "expected": 3}
+          ],
+          "steps": [
+            {
+              "stepId": "consecutive-think",
+              "type": "THINKING_GATE",
+              "prompt": "How can Union-Find solve this? When do you union two numbers? How do you track sequence lengths?",
+              "hints": [
+                "Union a number with its neighbors (num-1 and num+1) if they exist",
+                "Track size of each set (not just rank)",
+                "Largest set size is the longest consecutive sequence"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies Union-Find with neighbor checking",
+                  "points": 2,
+                  "errorMappings": ["uf_consecutive_pattern"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands size tracking for answer",
+                  "points": 2,
+                  "errorMappings": ["uf_size_tracking"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n) with hash map for neighbor lookup",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "consecutive-code",
+              "type": "CODING",
+              "prompt": "For each number, union with num-1 and num+1 if they exist. Track set sizes. Return max size.",
+              "hints": [
+                "Use dict/map for parent and size (numbers as keys)",
+                "Skip duplicates (if num already in parent)",
+                "After union, update size of new root",
+                "Return max(size.values())"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Uses dict for dynamic number keys",
+                  "points": 2,
+                  "errorMappings": ["uf_string_keys"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Correctly updates sizes during union",
+                  "points": 2,
+                  "errorMappings": ["uf_size_update_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles empty array and duplicates",
+                  "points": 1,
+                  "errorMappings": ["uf_edge_cases"]
+                }
+              }
+            },
+            {
+              "stepId": "consecutive-reflect",
+              "type": "REFLECTION",
+              "prompt": "There's a simpler O(n) solution using just a hash set. When is Union-Find overkill?",
+              "hints": [
+                "Hash set approach: for each start of sequence, count consecutives",
+                "Union-Find is overkill for static problem, better for dynamic",
+                "Union-Find useful if numbers added/queried over time"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Knows simpler hash set solution",
+                  "points": 2,
+                  "errorMappings": ["uf_simpler_alternative"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands when Union-Find is overkill",
+                  "points": 2,
+                  "errorMappings": ["uf_use_cases"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Both are O(n), hash set has better constants",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "problemId": "smallest-string-with-swaps",
+          "title": "Smallest String With Swaps",
+          "difficulty": "MEDIUM",
+          "estimatedMinutes": 30,
+          "description": "You are given a string s, and an array of pairs of indices in the string pairs where pairs[i] = [a, b] indicates 2 indices (0-indexed) of the string. You can swap the characters at any pair of indices in the given pairs any number of times. Return the lexicographically smallest string that s can be changed to after using the swaps.",
+          "examples": [
+            {
+              "input": "s = \"dcab\", pairs = [[0,3],[1,2]]",
+              "output": "\"bacd\"",
+              "explanation": "Swap s[0] and s[3]: dcab -> bcad. Swap s[1] and s[2]: bcad -> bacd."
+            },
+            {
+              "input": "s = \"dcab\", pairs = [[0,3],[1,2],[0,2]]",
+              "output": "\"abcd\"",
+              "explanation": "With transitive swaps, indices 0,2,3 and 1,2 connect to 0,1,2,3. Sort all to get 'abcd'."
+            }
+          ],
+          "constraints": [
+            "1 <= s.length <= 10^5",
+            "0 <= pairs.length <= 10^5",
+            "0 <= pairs[i][0], pairs[i][1] < s.length",
+            "s only contains lower case English letters"
+          ],
+          "starterCode": {
+            "python": "def smallestStringWithSwaps(s: str, pairs: List[List[int]]) -> str:\n    pass",
+            "typescript": "function smallestStringWithSwaps(s: string, pairs: number[][]): string {\n    \n}"
+          },
+          "referenceSolution": {
+            "python": "def smallestStringWithSwaps(s: str, pairs: List[List[int]]) -> str:\n    from collections import defaultdict\n    \n    n = len(s)\n    parent = list(range(n))\n    \n    def find(x):\n        if parent[x] != x:\n            parent[x] = find(parent[x])\n        return parent[x]\n    \n    def union(x, y):\n        parent[find(x)] = find(y)\n    \n    for a, b in pairs:\n        union(a, b)\n    \n    # Group indices by their root\n    groups = defaultdict(list)\n    for i in range(n):\n        groups[find(i)].append(i)\n    \n    # Build result\n    result = list(s)\n    for indices in groups.values():\n        chars = sorted(result[i] for i in indices)\n        for i, idx in enumerate(sorted(indices)):\n            result[idx] = chars[i]\n    \n    return ''.join(result)",
+            "typescript": "function smallestStringWithSwaps(s: string, pairs: number[][]): string {\n    const n = s.length;\n    const parent = Array.from({length: n}, (_, i) => i);\n    \n    function find(x: number): number {\n        if (parent[x] !== x) parent[x] = find(parent[x]);\n        return parent[x];\n    }\n    \n    function union(x: number, y: number): void {\n        parent[find(x)] = find(y);\n    }\n    \n    for (const [a, b] of pairs) {\n        union(a, b);\n    }\n    \n    const groups = new Map<number, number[]>();\n    for (let i = 0; i < n; i++) {\n        const root = find(i);\n        if (!groups.has(root)) groups.set(root, []);\n        groups.get(root)!.push(i);\n    }\n    \n    const result = s.split('');\n    for (const indices of groups.values()) {\n        const chars = indices.map(i => s[i]).sort();\n        const sortedIndices = [...indices].sort((a, b) => a - b);\n        for (let i = 0; i < sortedIndices.length; i++) {\n            result[sortedIndices[i]] = chars[i];\n        }\n    }\n    \n    return result.join('');\n}"
+          },
+          "testCases": [
+            {"input": {"s": "dcab", "pairs": [[0, 3], [1, 2]]}, "expected": "bacd"},
+            {"input": {"s": "dcab", "pairs": [[0, 3], [1, 2], [0, 2]]}, "expected": "abcd"},
+            {"input": {"s": "cba", "pairs": [[0, 1], [1, 2]]}, "expected": "abc"},
+            {"input": {"s": "abc", "pairs": []}, "expected": "abc"},
+            {"input": {"s": "a", "pairs": []}, "expected": "a"}
+          ],
+          "steps": [
+            {
+              "stepId": "swaps-think",
+              "type": "THINKING_GATE",
+              "prompt": "If you can swap indices a,b and b,c, what does that mean for a and c? How does Union-Find help?",
+              "hints": [
+                "Transitive swaps: if a-b and b-c swappable, a-c effectively swappable",
+                "Union-Find groups all transitively swappable indices",
+                "Within each group, characters can be rearranged freely"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Identifies transitivity of swaps",
+                  "points": 2,
+                  "errorMappings": ["uf_transitivity"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Understands free rearrangement within groups",
+                  "points": 2,
+                  "errorMappings": ["uf_group_rearrangement"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "O(n log n) due to sorting within groups",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            },
+            {
+              "stepId": "swaps-code",
+              "type": "CODING",
+              "prompt": "Union all swap pairs. Group indices by root. For each group, sort characters and assign to sorted positions.",
+              "hints": [
+                "Process all pairs with union",
+                "Group indices by find(i)",
+                "For each group: sort indices, sort chars, assign smallest char to smallest index"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Correctly groups indices after union operations",
+                  "points": 2,
+                  "errorMappings": ["uf_grouping_wrong"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Sorts both indices and characters within groups",
+                  "points": 2,
+                  "errorMappings": ["uf_sort_both_wrong"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Handles no pairs case (string unchanged)",
+                  "points": 1,
+                  "errorMappings": ["uf_edge_cases"]
+                }
+              }
+            },
+            {
+              "stepId": "swaps-reflect",
+              "type": "REFLECTION",
+              "prompt": "Why is it valid to sort characters within a connected component? What if swaps were limited to k times?",
+              "hints": [
+                "Any permutation achievable with enough transitive swaps (bubble sort argument)",
+                "Limited swaps: much harder, might need BFS/different approach",
+                "Union-Find captures 'unlimited swaps' connectivity perfectly"
+              ],
+              "rubric": {
+                "patternRecognition": {
+                  "criteria": "Understands unlimited swaps allow full sorting",
+                  "points": 2,
+                  "errorMappings": ["uf_unlimited_swaps"]
+                },
+                "invariantUnderstanding": {
+                  "criteria": "Recognizes limited swaps is different problem",
+                  "points": 2,
+                  "errorMappings": ["uf_variant_cases"]
+                },
+                "complexityAnalysis": {
+                  "criteria": "Limited swaps might need O(n!) in worst case",
+                  "points": 1,
+                  "errorMappings": ["uf_complexity_wrong"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "microLessons": [
+    {
+      "lessonId": "uf_fundamentals",
+      "title": "Union-Find (Disjoint Set Union) Fundamentals",
+      "content": "Union-Find maintains a collection of disjoint sets and supports: (1) Find(x): returns the root/representative of x's set. (2) Union(x, y): merges the sets containing x and y. Initially, each element is its own set. Uses a parent array where parent[x] points toward the root. When parent[x] == x, x is a root.",
+      "triggerErrorIds": ["uf_pattern_not_recognized", "uf_fundamentals_missing"],
+      "prerequisites": []
+    },
+    {
+      "lessonId": "uf_find_operation",
+      "title": "The Find Operation",
+      "content": "Find(x) returns the root of x's set. Basic implementation: follow parent pointers until parent[x] == x. With path compression optimization: while finding, make each node point directly to root. This flattens the tree, making future finds O(1). Code: if parent[x] != x: parent[x] = find(parent[x]); return parent[x].",
+      "triggerErrorIds": ["uf_find_wrong", "uf_path_compression_wrong"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_union_operation",
+      "title": "The Union Operation",
+      "content": "Union(x, y) merges two sets: find roots of both, make one root point to the other. Basic: parent[find(x)] = find(y). With union by rank: attach smaller tree under larger tree's root. This keeps trees balanced. Rank approximates tree height. If ranks equal, increment the new root's rank.",
+      "triggerErrorIds": ["uf_union_wrong", "uf_union_by_rank_wrong"],
+      "prerequisites": ["uf_find_operation"]
+    },
+    {
+      "lessonId": "uf_path_compression",
+      "title": "Path Compression Optimization",
+      "content": "Path compression makes find() nearly O(1) amortized. During find, make every node on the path point directly to the root. Two variants: (1) Full compression (recursive): parent[x] = find(parent[x]). (2) Path halving (iterative): make each node point to its grandparent. Both achieve O(α(n)) amortized, where α is inverse Ackermann (effectively constant).",
+      "triggerErrorIds": ["uf_path_compression_wrong"],
+      "prerequisites": ["uf_find_operation"]
+    },
+    {
+      "lessonId": "uf_union_by_rank",
+      "title": "Union by Rank/Size Optimization",
+      "content": "Union by rank keeps trees balanced. Track rank (approximate height) or size of each tree. When unioning, attach smaller tree under larger tree's root. This prevents degenerate chains. Combined with path compression, gives O(α(n)) per operation. Initialize: rank[i] = 0 or size[i] = 1 for all i.",
+      "triggerErrorIds": ["uf_union_by_rank_wrong"],
+      "prerequisites": ["uf_union_operation"]
+    },
+    {
+      "lessonId": "uf_complexity",
+      "title": "Union-Find Time Complexity",
+      "content": "Without optimizations: O(n) per operation (chain of n elements). With path compression only: O(log n) amortized. With union by rank only: O(log n). With both: O(α(n)) amortized, where α(n) ≤ 4 for all practical n. α is the inverse Ackermann function - effectively O(1). Space: O(n) for parent and rank arrays.",
+      "triggerErrorIds": ["uf_complexity_wrong"],
+      "prerequisites": ["uf_path_compression", "uf_union_by_rank"]
+    },
+    {
+      "lessonId": "uf_cycle_detection",
+      "title": "Cycle Detection with Union-Find",
+      "content": "To detect if adding edge (u, v) creates a cycle: check if find(u) == find(v). If they have the same root, they're already connected - adding this edge creates a cycle. If different roots, union them (no cycle). This is the key insight for Redundant Connection and Graph Valid Tree problems.",
+      "triggerErrorIds": ["uf_cycle_detection", "uf_union_return_value"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_counting_components",
+      "title": "Counting Connected Components",
+      "content": "To count components: (1) Start with n components. (2) Each successful union (different roots) decreases count by 1. (3) Final count = n - successful_unions. Alternative: count unique roots at the end - count elements where parent[i] == i (after path compression may need to call find(i) first).",
+      "triggerErrorIds": ["uf_counting_wrong", "uf_counting_pattern"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_vs_graph_traversal",
+      "title": "Union-Find vs DFS/BFS",
+      "content": "Both can solve connectivity problems. DFS/BFS: better for one-time queries, finding paths, simpler implementation. Union-Find: better for dynamic connectivity (edges added over time), multiple queries, space-efficient. For static graphs, DFS is often simpler. For dynamic updates, Union-Find shines.",
+      "triggerErrorIds": ["uf_vs_dfs_bfs", "uf_use_cases"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_string_keys",
+      "title": "Union-Find with Non-Integer Keys",
+      "content": "For non-integer elements (strings, objects), use a dictionary/map instead of array for parent. Initialize: when seeing new element, set parent[x] = x. Find and union work the same way. Common in Accounts Merge, equation problems. Example: parent = {} initially, if x not in parent: parent[x] = x.",
+      "triggerErrorIds": ["uf_string_keys"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_size_tracking",
+      "title": "Tracking Set Sizes",
+      "content": "Sometimes you need set sizes (not just connectivity). Track size[root] for each root. On union: size[new_root] += size[old_root]. Only root's size is accurate - other nodes' sizes are stale. Use find() to get root before reading size. Useful for: Longest Consecutive Sequence, largest component queries.",
+      "triggerErrorIds": ["uf_size_tracking", "uf_size_update_wrong"],
+      "prerequisites": ["uf_union_operation"]
+    },
+    {
+      "lessonId": "uf_grouping",
+      "title": "Grouping Elements by Component",
+      "content": "To list all elements in each component: iterate through all elements, group by find(x). Use a dict: groups[find(x)].append(x). This gives O(n * α(n)) grouping. After grouping, each key in groups is a root, and its value is the list of all elements in that set.",
+      "triggerErrorIds": ["uf_grouping_wrong"],
+      "prerequisites": ["uf_find_operation"]
+    },
+    {
+      "lessonId": "uf_two_pass",
+      "title": "Two-Pass Pattern for Constraints",
+      "content": "Some problems have 'must be equal' and 'must be different' constraints. Pattern: (1) First pass: union all 'equals'. (2) Second pass: check all 'not equals' - if find(a) == find(b), there's a conflict. Order matters - equalities must be processed first to build the full connectivity.",
+      "triggerErrorIds": ["uf_equation_order", "uf_inequality_check"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_transitivity",
+      "title": "Union-Find Captures Transitivity",
+      "content": "Union-Find naturally handles transitivity. If A connects to B, and B connects to C, then find(A) == find(C) after both unions. This is key for: transitive equality (a==b, b==c implies a==c), transitive swaps, any equivalence relation. You don't need to explicitly compute transitive closure.",
+      "triggerErrorIds": ["uf_transitivity"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_weighted",
+      "title": "Weighted Union-Find",
+      "content": "For problems with ratios or distances (like a/b = 2), extend Union-Find with weights. Each node stores weight relative to its parent. Find returns root AND cumulative weight. Union calculates weight between new connection. Used in: Evaluate Division, currency conversion problems.",
+      "triggerErrorIds": ["uf_weighted_variant", "uf_weighted_implementation"],
+      "prerequisites": ["uf_fundamentals"]
+    },
+    {
+      "lessonId": "uf_initialization",
+      "title": "Union-Find Initialization",
+      "content": "Initialize correctly! For n elements: parent = [0, 1, 2, ..., n-1] (each element is its own parent). rank = [0, 0, ..., 0] or size = [1, 1, ..., 1]. For 1-indexed problems, use size n+1. For dynamic/string keys, use dict and initialize on first encounter.",
+      "triggerErrorIds": ["uf_indexing_wrong", "uf_initialization_wrong"],
+      "prerequisites": ["uf_fundamentals"]
+    }
+  ],
+  "errorMappings": [
+    {
+      "errorId": "uf_pattern_not_recognized",
+      "pattern": "(when.*union find|should I use|connectivity)",
+      "lessonIds": ["uf_fundamentals", "uf_vs_graph_traversal"],
+      "feedbackTemplate": "Union-Find is ideal for: dynamic connectivity queries, detecting cycles in undirected graphs, grouping equivalent elements, and problems where you need to merge sets. If you're checking 'are A and B connected?', consider Union-Find."
+    },
+    {
+      "errorId": "uf_find_wrong",
+      "pattern": "(find.*wrong|root.*wrong|parent.*traversal)",
+      "lessonIds": ["uf_find_operation"],
+      "feedbackTemplate": "Find should return the root of element's set. Pattern: if parent[x] != x, recursively find parent's root. With path compression: parent[x] = find(parent[x]). Make sure to return parent[x] at the end."
+    },
+    {
+      "errorId": "uf_union_wrong",
+      "pattern": "(union.*wrong|merge.*wrong|connect.*wrong)",
+      "lessonIds": ["uf_union_operation"],
+      "feedbackTemplate": "Union merges two sets by connecting their roots. First find both roots: px = find(x), py = find(y). If px == py, already same set. Otherwise, parent[py] = px (or with rank optimization)."
+    },
+    {
+      "errorId": "uf_path_compression_wrong",
+      "pattern": "(path compression|flatten|optimization)",
+      "lessonIds": ["uf_path_compression"],
+      "feedbackTemplate": "Path compression: in find(), after finding the root, update parent[x] = root. Recursive version: parent[x] = find(parent[x]). This flattens the tree for future operations."
+    },
+    {
+      "errorId": "uf_union_by_rank_wrong",
+      "pattern": "(rank.*wrong|by rank|by size|balance)",
+      "lessonIds": ["uf_union_by_rank"],
+      "feedbackTemplate": "Union by rank: attach smaller tree under larger. Compare ranks of roots. If rank[px] < rank[py], swap them. Then parent[py] = px. If ranks were equal, increment rank[px]. This keeps trees balanced."
+    },
+    {
+      "errorId": "uf_complexity_wrong",
+      "pattern": "(complexity|time|O\\(|big-?O)",
+      "lessonIds": ["uf_complexity"],
+      "feedbackTemplate": "Union-Find with both optimizations: O(α(n)) per operation, where α is inverse Ackermann function - effectively O(1). Without optimizations: O(n) worst case. Space: O(n) for parent and rank arrays."
+    },
+    {
+      "errorId": "uf_cycle_detection",
+      "pattern": "(cycle|detect cycle|already connected)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "To detect cycles: before adding edge (u,v), check if find(u) == find(v). If same root, they're already connected - this edge would create a cycle. Return true/the edge. If different roots, union them (no cycle)."
+    },
+    {
+      "errorId": "uf_union_return_value",
+      "pattern": "(union.*return|return.*union|successful union)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "Make union return true/false: if find(x) == find(y), return false (already connected). Otherwise, merge and return true (successful merge). This helps count components and detect cycles."
+    },
+    {
+      "errorId": "uf_counting_wrong",
+      "pattern": "(count.*wrong|components.*wrong|number of)",
+      "lessonIds": ["uf_counting_components"],
+      "feedbackTemplate": "To count components: start with n, decrement on each successful union. Or at the end, count unique roots: sum(1 for i if find(i) == i). Make sure to use find() after path compression."
+    },
+    {
+      "errorId": "uf_counting_pattern",
+      "pattern": "(how.*count|counting strategy|track.*components)",
+      "lessonIds": ["uf_counting_components"],
+      "feedbackTemplate": "Component counting: either track running count (n minus successful unions) or count roots at end. Running count is more efficient - you already compute union success, just decrement a counter."
+    },
+    {
+      "errorId": "uf_vs_dfs_bfs",
+      "pattern": "(dfs|bfs|graph traversal|alternative)",
+      "lessonIds": ["uf_vs_graph_traversal"],
+      "feedbackTemplate": "Union-Find vs DFS/BFS: UF is better for dynamic updates (edges added over time), multiple connectivity queries. DFS is simpler for one-time traversal, path finding. Both can solve static connectivity."
+    },
+    {
+      "errorId": "uf_use_cases",
+      "pattern": "(when to use|suitable|appropriate)",
+      "lessonIds": ["uf_vs_graph_traversal"],
+      "feedbackTemplate": "Use Union-Find for: dynamic connectivity, cycle detection in undirected graphs, grouping by equivalence, Kruskal's MST. Use DFS/BFS for: path finding, shortest path, one-time component counting in static graphs."
+    },
+    {
+      "errorId": "uf_string_keys",
+      "pattern": "(string.*key|non-integer|dict.*parent|map.*parent)",
+      "lessonIds": ["uf_string_keys"],
+      "feedbackTemplate": "For non-integer keys (strings, etc.), use dict/map instead of array. Initialize: parent = {}. On first encounter: if x not in parent: parent[x] = x. Find and union work the same way."
+    },
+    {
+      "errorId": "uf_size_tracking",
+      "pattern": "(size.*track|set size|component size)",
+      "lessonIds": ["uf_size_tracking"],
+      "feedbackTemplate": "Track size[root] for each root. Initialize: size[i] = 1. In union: size[new_root] += size[old_root]. Only root's size is valid - use find() to get root before reading size."
+    },
+    {
+      "errorId": "uf_size_update_wrong",
+      "pattern": "(size update|update size|size.*wrong)",
+      "lessonIds": ["uf_size_tracking"],
+      "feedbackTemplate": "Size update happens in union: after finding roots px, py, before setting parent[py] = px, do size[px] += size[py]. The root that absorbs the other set gains its size."
+    },
+    {
+      "errorId": "uf_grouping_wrong",
+      "pattern": "(group.*wrong|grouping|collect.*component)",
+      "lessonIds": ["uf_grouping"],
+      "feedbackTemplate": "To group elements: iterate all elements, group by find(i). Use dict: for i in range(n): groups[find(i)].append(i). Each key is a root, value is list of all elements in that set."
+    },
+    {
+      "errorId": "uf_equation_order",
+      "pattern": "(order.*equation|process.*first|equality.*before)",
+      "lessonIds": ["uf_two_pass"],
+      "feedbackTemplate": "For equality/inequality constraints: process equalities FIRST (build sets), then check inequalities. If you check inequality before processing all equalities, you might miss transitive connections."
+    },
+    {
+      "errorId": "uf_inequality_check",
+      "pattern": "(inequality|not equal|!=|check.*different)",
+      "lessonIds": ["uf_two_pass"],
+      "feedbackTemplate": "After processing all equalities, check inequalities: if find(a) == find(b) for a != b constraint, there's a conflict. The equality processing built the connectivity; now we verify no conflicts."
+    },
+    {
+      "errorId": "uf_equation_parsing",
+      "pattern": "(parse.*equation|string.*format|extract)",
+      "lessonIds": ["uf_two_pass"],
+      "feedbackTemplate": "Parse equations correctly! For 'a==b': eq[0] is 'a', eq[1] is '=' or '!', eq[3] is 'b'. Check eq[1] to determine equality vs inequality. Variables are single lowercase letters."
+    },
+    {
+      "errorId": "uf_transitivity",
+      "pattern": "(transitive|if a=b and b=c|chain)",
+      "lessonIds": ["uf_transitivity"],
+      "feedbackTemplate": "Union-Find handles transitivity automatically! If you union(a,b) and union(b,c), then find(a) == find(c). No explicit transitive closure needed. This is key for equivalence relations."
+    },
+    {
+      "errorId": "uf_weighted_variant",
+      "pattern": "(weighted|ratio|a/b|division)",
+      "lessonIds": ["uf_weighted"],
+      "feedbackTemplate": "Weighted Union-Find: each node stores weight relative to parent. find() returns (root, cumulative_weight). union() calculates weight between nodes. Used for ratio/division queries like 'Evaluate Division' problem."
+    },
+    {
+      "errorId": "uf_weighted_implementation",
+      "pattern": "(implement.*weighted|weight.*path|cumulative)",
+      "lessonIds": ["uf_weighted"],
+      "feedbackTemplate": "Weighted find: track weight[x] = x's value relative to parent. In find, accumulate: weight[x] *= weight[parent[x]] during path compression. In union, calculate: weight[px] = (weight[y] * given_ratio) / weight[x]."
+    },
+    {
+      "errorId": "uf_indexing_wrong",
+      "pattern": "(index.*wrong|0-indexed|1-indexed|off by one)",
+      "lessonIds": ["uf_initialization"],
+      "feedbackTemplate": "Check indexing! If nodes are 1 to n, use parent = list(range(n+1)) or size n+1. If 0 to n-1, use size n. Match the problem's indexing. Off-by-one errors are common in Union-Find."
+    },
+    {
+      "errorId": "uf_initialization_wrong",
+      "pattern": "(initialize|setup|start.*wrong)",
+      "lessonIds": ["uf_initialization"],
+      "feedbackTemplate": "Initialize correctly: parent[i] = i for all i (each element is its own root initially). rank[i] = 0 or size[i] = 1. For n elements: parent = list(range(n)) in Python, Array.from({length: n}, (_, i) => i) in JS."
+    },
+    {
+      "errorId": "uf_edge_cases",
+      "pattern": "(edge case|empty|single|no edges)",
+      "lessonIds": ["uf_fundamentals"],
+      "feedbackTemplate": "Handle edge cases! Empty input: 0 components or appropriate default. Single element: 1 component. No edges: n components (each node is isolated). Test these cases explicitly."
+    },
+    {
+      "errorId": "uf_edge_count_check",
+      "pattern": "(n-1 edges|tree.*edges|edge count)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "Tree property: exactly n-1 edges for n nodes. Quick check: if edges.length != n-1, not a valid tree. Combined with no-cycle check (all unions succeed), this fully validates a tree."
+    },
+    {
+      "errorId": "uf_tree_conditions",
+      "pattern": "(valid tree|tree conditions|connected.*acyclic)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "Valid tree = connected + acyclic. For n nodes: exactly n-1 edges, and all unions succeed (no cycle). If edges < n-1, disconnected. If edges > n-1 or any union fails, has cycle."
+    },
+    {
+      "errorId": "uf_tree_property",
+      "pattern": "(why n-1|edge count.*connected|implies)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "With exactly n-1 edges and no cycles, the graph must be connected. Proof: n-1 edges in an acyclic graph = tree. A tree with n nodes is always connected. So n-1 edges + no cycles = valid tree."
+    },
+    {
+      "errorId": "uf_redundant_edge_wrong",
+      "pattern": "(redundant|extra edge|which edge)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "The redundant edge is the one that creates a cycle - when both endpoints are already connected (same root). Process edges in order; the first edge where union fails is the answer (or last such edge if multiple)."
+    },
+    {
+      "errorId": "uf_edge_order",
+      "pattern": "(order.*edges|process.*order|last.*input)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "Process edges in given order! For 'last redundant edge', iterate through edges; the last one that fails union (creates cycle) is the answer. Order matters when multiple edges could be removed."
+    },
+    {
+      "errorId": "uf_directed_variant",
+      "pattern": "(directed|redundant.*II|two parents)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "Directed graphs are more complex! A node might have two parents (invalid in tree), or there's a cycle. Need to handle multiple cases: two parents without cycle, cycle without two parents, or both."
+    },
+    {
+      "errorId": "uf_variant_cases",
+      "pattern": "(multiple cases|different scenarios|which case)",
+      "lessonIds": ["uf_cycle_detection"],
+      "feedbackTemplate": "Some problems have multiple cases. For directed redundant connection: Case 1: node with two parents, no cycle - remove second parent edge. Case 2: cycle exists - remove cycle edge. Case 3: both - remove edge that's both in cycle and second parent."
+    },
+    {
+      "errorId": "uf_accounts_merge_pattern",
+      "pattern": "(accounts|merge accounts|email.*group)",
+      "lessonIds": ["uf_string_keys", "uf_grouping"],
+      "feedbackTemplate": "Accounts Merge: union all emails in each account (they belong to same person). Emails are keys (strings). After unioning, group emails by root. Each group is one person's merged account."
+    },
+    {
+      "errorId": "uf_accounts_union_strategy",
+      "pattern": "(union.*emails|connect.*account|merge strategy)",
+      "lessonIds": ["uf_string_keys"],
+      "feedbackTemplate": "For each account, union all its emails together. Simple way: pick first email as anchor, union every other email with it. This connects all emails in the account through the anchor."
+    },
+    {
+      "errorId": "uf_output_format_wrong",
+      "pattern": "(output format|result format|sort.*output)",
+      "lessonIds": ["uf_grouping"],
+      "feedbackTemplate": "Check output format! Accounts Merge: [name, email1, email2, ...] with emails sorted. After grouping by root, sort emails within each group. Prepend the name (from email_to_name map)."
+    },
+    {
+      "errorId": "uf_alternative_comparison",
+      "pattern": "(compare.*approach|tradeoff|which.*better)",
+      "lessonIds": ["uf_vs_graph_traversal"],
+      "feedbackTemplate": "Both Union-Find and DFS can solve connectivity problems. Union-Find: elegant for merging, O(α(n)) per operation, handles dynamic edges well. DFS: simpler to implement, naturally finds actual paths, good for one-time queries."
+    },
+    {
+      "errorId": "uf_return_logic",
+      "pattern": "(return.*wrong|when return|final answer)",
+      "lessonIds": ["uf_two_pass"],
+      "feedbackTemplate": "Return logic: for satisfiability, return True only if ALL inequality checks pass. Return False immediately on first conflict. Don't forget to return True at the end if no conflicts found."
+    },
+    {
+      "errorId": "uf_consecutive_pattern",
+      "pattern": "(consecutive|neighbor|num-1.*num\\+1)",
+      "lessonIds": ["uf_fundamentals"],
+      "feedbackTemplate": "For Longest Consecutive: union each number with its neighbors (num-1, num+1) if they exist. Use dict for parent since numbers can be any value. Track sizes to find largest set = longest sequence."
+    },
+    {
+      "errorId": "uf_simpler_alternative",
+      "pattern": "(simpler|overkill|hash set)",
+      "lessonIds": ["uf_vs_graph_traversal"],
+      "feedbackTemplate": "For Longest Consecutive, hash set solution is simpler: put all in set, for each sequence start (num where num-1 not in set), count consecutive. Union-Find works but is overkill for this static problem."
+    },
+    {
+      "errorId": "uf_counting_alternatives",
+      "pattern": "(count.*alternative|other way.*count|different method)",
+      "lessonIds": ["uf_counting_components"],
+      "feedbackTemplate": "Alternative component counting: count elements where find(i) == i (roots). But after path compression, non-roots might still have parent[i] == i if find() wasn't called. Safer: count unique find(i) values for all i."
+    },
+    {
+      "errorId": "uf_group_rearrangement",
+      "pattern": "(rearrange|sort within|free to swap)",
+      "lessonIds": ["uf_transitivity"],
+      "feedbackTemplate": "Within a connected component (Union-Find group), elements can be freely rearranged if swaps are transitive and unlimited. Sort elements within each group and assign optimally. Union-Find identifies what can be rearranged together."
+    },
+    {
+      "errorId": "uf_sort_both_wrong",
+      "pattern": "(sort.*indices|sort.*chars|both sorted)",
+      "lessonIds": ["uf_grouping"],
+      "feedbackTemplate": "For Smallest String With Swaps: within each group, sort BOTH the indices and the characters. Assign smallest character to smallest index, second smallest to second smallest, etc. This achieves lexicographically smallest result."
+    },
+    {
+      "errorId": "uf_unlimited_swaps",
+      "pattern": "(unlimited|any number|any permutation)",
+      "lessonIds": ["uf_transitivity"],
+      "feedbackTemplate": "With unlimited transitive swaps, any permutation within a connected group is achievable. Think of it like bubble sort - you can always sort by repeated adjacent swaps. Union-Find groups = independently sortable segments."
+    },
+    {
+      "errorId": "uf_fundamentals_missing",
+      "pattern": "(what is union|disjoint set|basic.*uf)",
+      "lessonIds": ["uf_fundamentals"],
+      "feedbackTemplate": "Union-Find (Disjoint Set Union) maintains groups that can be merged. Two operations: find(x) returns group ID, union(x,y) merges groups. Start with each element in its own group. Key optimizations: path compression and union by rank."
+    }
+  ]
+}
