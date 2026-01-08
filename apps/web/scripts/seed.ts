@@ -85,11 +85,11 @@ Constraints:
     rung: 1,
     targetComplexity: 'O(n)',
     testCases: [
-      { input: '[2, 1, 5, 1, 3, 2], k = 3', expectedOutput: '9', isHidden: false, explanation: 'Subarray [5, 1, 3]' },
-      { input: '[2, 3, 4, 1, 5], k = 2', expectedOutput: '7', isHidden: false, explanation: 'Subarray [3, 4]' },
-      { input: '[1, 1, 1, 1, 1], k = 3', expectedOutput: '3', isHidden: false },
-      { input: '[-1, -2, -3, -4], k = 2', expectedOutput: '-3', isHidden: true, explanation: 'Handle negatives' },
-      { input: '[5], k = 1', expectedOutput: '5', isHidden: true, explanation: 'Single element' },
+      { input: '[[2, 1, 5, 1, 3, 2], 3]', expectedOutput: '9', isHidden: false, explanation: 'Subarray [5, 1, 3]' },
+      { input: '[[2, 3, 4, 1, 5], 2]', expectedOutput: '7', isHidden: false, explanation: 'Subarray [3, 4]' },
+      { input: '[[1, 1, 1, 1, 1], 3]', expectedOutput: '3', isHidden: false },
+      { input: '[[-1, -2, -3, -4], 2]', expectedOutput: '-3', isHidden: true, explanation: 'Handle negatives' },
+      { input: '[[5], 1]', expectedOutput: '5', isHidden: true, explanation: 'Single element' },
     ],
     hints: [
       'What if you calculated the sum of the first k elements first?',
@@ -158,11 +158,11 @@ Constraints:
     rung: 1,
     targetComplexity: 'O(n)',
     testCases: [
-      { input: '[2, 7, 11, 15], target = 9', expectedOutput: '[1, 2]', isHidden: false },
-      { input: '[2, 3, 4], target = 6', expectedOutput: '[1, 3]', isHidden: false },
-      { input: '[-1, 0], target = -1', expectedOutput: '[1, 2]', isHidden: false },
-      { input: '[1, 2, 3, 4, 5], target = 9', expectedOutput: '[4, 5]', isHidden: true },
-      { input: '[5, 25, 75], target = 100', expectedOutput: '[2, 3]', isHidden: true },
+      { input: '[[2, 7, 11, 15], 9]', expectedOutput: '[1, 2]', isHidden: false },
+      { input: '[[2, 3, 4], 6]', expectedOutput: '[1, 3]', isHidden: false },
+      { input: '[[-1, 0], -1]', expectedOutput: '[1, 2]', isHidden: false },
+      { input: '[[1, 2, 3, 4, 5], 9]', expectedOutput: '[4, 5]', isHidden: true },
+      { input: '[[5, 25, 75], 100]', expectedOutput: '[2, 3]', isHidden: true },
     ],
     hints: [
       'Since the array is sorted, what does it mean if the sum is too large or too small?',
@@ -231,11 +231,11 @@ Constraints:
     rung: 1,
     targetComplexity: 'O(log n)',
     testCases: [
-      { input: '[-1, 0, 3, 5, 9, 12], target = 9', expectedOutput: '4', isHidden: false },
-      { input: '[-1, 0, 3, 5, 9, 12], target = 2', expectedOutput: '-1', isHidden: false },
-      { input: '[5], target = 5', expectedOutput: '0', isHidden: false },
-      { input: '[1, 2, 3], target = 1', expectedOutput: '0', isHidden: true },
-      { input: '[1, 2, 3], target = 3', expectedOutput: '2', isHidden: true },
+      { input: '[[-1, 0, 3, 5, 9, 12], 9]', expectedOutput: '4', isHidden: false },
+      { input: '[[-1, 0, 3, 5, 9, 12], 2]', expectedOutput: '-1', isHidden: false },
+      { input: '[[5], 5]', expectedOutput: '0', isHidden: false },
+      { input: '[[1, 2, 3], 1]', expectedOutput: '0', isHidden: true },
+      { input: '[[1, 2, 3], 3]', expectedOutput: '2', isHidden: true },
     ],
     hints: [
       'Compare the target with the middle element.',
@@ -380,11 +380,11 @@ Constraints:
     rung: 1,
     targetComplexity: 'O(1) per query',
     testCases: [
-      { input: '[-2, 0, 3, -5, 2, -1], sumRange(0, 2)', expectedOutput: '1', isHidden: false },
-      { input: '[-2, 0, 3, -5, 2, -1], sumRange(2, 5)', expectedOutput: '-1', isHidden: false },
-      { input: '[-2, 0, 3, -5, 2, -1], sumRange(0, 5)', expectedOutput: '-3', isHidden: false },
-      { input: '[1, 2, 3], sumRange(0, 0)', expectedOutput: '1', isHidden: true },
-      { input: '[1], sumRange(0, 0)', expectedOutput: '1', isHidden: true },
+      { input: '[[-2, 0, 3, -5, 2, -1], 0, 2]', expectedOutput: '1', isHidden: false },
+      { input: '[[-2, 0, 3, -5, 2, -1], 2, 5]', expectedOutput: '-1', isHidden: false },
+      { input: '[[-2, 0, 3, -5, 2, -1], 0, 5]', expectedOutput: '-3', isHidden: false },
+      { input: '[[1, 2, 3], 0, 0]', expectedOutput: '1', isHidden: true },
+      { input: '[[1], 0, 0]', expectedOutput: '1', isHidden: true },
     ],
     hints: [
       'If you had precomputed sum(0, i) for all i, could you answer queries faster?',
@@ -467,7 +467,13 @@ async function seed() {
       console.log('Demo tenant already exists');
     }
 
-    // Delete existing problems for this tenant
+    // Delete existing data for this tenant (respecting foreign key order)
+    console.log('Clearing existing steps...');
+    await client`DELETE FROM steps WHERE attempt_id IN (SELECT id FROM attempts WHERE tenant_id = ${TENANT_ID}::uuid)`;
+    console.log('Clearing existing attempts...');
+    await client`DELETE FROM attempts WHERE tenant_id = ${TENANT_ID}::uuid`;
+    console.log('Clearing existing skills...');
+    await client`DELETE FROM skills WHERE tenant_id = ${TENANT_ID}::uuid`;
     console.log('Clearing existing problems...');
     await client`DELETE FROM problems WHERE tenant_id = ${TENANT_ID}::uuid`;
 
