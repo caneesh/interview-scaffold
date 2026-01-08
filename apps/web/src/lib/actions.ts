@@ -6,9 +6,9 @@
  * NO business logic here - just orchestration.
  */
 
-import { TenantId, UserId, PatternId, ProblemId } from '@learning/core';
-import { createDailySession, getNextMicroDrill, getMEPRecommendation, startPatternDiscovery, answerDiscoveryQuestion, getDiscoveryPatterns } from '@learning/core';
-import type { CreateDailySessionResponseDTO, GetNextDrillResponseDTO } from '@learning/contracts';
+import { TenantId, UserId, PatternId, ProblemId } from '@scaffold/core';
+import { createDailySession, getNextMicroDrill, getMEPRecommendation, startPatternDiscovery, answerDiscoveryQuestion, getDiscoveryPatterns } from '@scaffold/core';
+import type { CreateDailySessionResponseDTO, GetNextDrillResponseDTO } from '@scaffold/contracts';
 import { contentRepo, progressRepo, eventSink, clock } from './adapters';
 
 const DEFAULT_TENANT_ID = TenantId(process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ?? 'default');

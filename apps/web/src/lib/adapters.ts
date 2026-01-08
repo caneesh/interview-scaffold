@@ -4,12 +4,12 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { TenantId } from '@learning/core';
-import { SupabaseContentRepo, SupabaseProgressRepo } from '@learning/adapter-db';
-import { SupabaseAuthContext } from '@learning/adapter-auth';
-import { SupabaseEventSink, BufferedEventSink } from '@learning/adapter-analytics';
-import { createProxiedClaudeProvider, CachedLLMProvider, InMemoryCacheStore } from '@learning/adapter-llm';
-import { SystemClock } from '@learning/core';
+import { TenantId } from '@scaffold/core';
+import { SupabaseContentRepo, SupabaseProgressRepo } from '@scaffold/adapter-db';
+import { SupabaseAuthContext } from '@scaffold/adapter-auth';
+import { SupabaseEventSink, BufferedEventSink } from '@scaffold/adapter-analytics';
+import { createProxiedClaudeProvider, CachedLLMProvider, InMemoryCacheStore } from '@scaffold/adapter-llm';
+import { SystemClock } from '@scaffold/core';
 
 // Environment variables (should be in .env.local)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';

@@ -267,11 +267,11 @@ Constraints:
     rung: 1,
     targetComplexity: 'O(n)',
     testCases: [
-      { input: '[3, 9, 20, null, null, 15, 7]', expectedOutput: '3', isHidden: false },
-      { input: '[1, null, 2]', expectedOutput: '2', isHidden: false },
-      { input: '[]', expectedOutput: '0', isHidden: false },
-      { input: '[1]', expectedOutput: '1', isHidden: true },
-      { input: '[1, 2, 3, 4, 5]', expectedOutput: '3', isHidden: true },
+      { input: '[[3, 9, 20, null, null, 15, 7]]', expectedOutput: '3', isHidden: false },
+      { input: '[[1, null, 2]]', expectedOutput: '2', isHidden: false },
+      { input: '[[]]', expectedOutput: '0', isHidden: false },
+      { input: '[[1]]', expectedOutput: '1', isHidden: true },
+      { input: '[[1, 2, 3, 4, 5]]', expectedOutput: '3', isHidden: true },
     ],
     hints: [
       'The depth of a node is 1 + the maximum depth of its children.',

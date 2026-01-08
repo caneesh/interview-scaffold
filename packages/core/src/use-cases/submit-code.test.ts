@@ -8,6 +8,7 @@ import type { ContentRepo } from '../ports/content-repo.js';
 import type { EventSink } from '../ports/event-sink.js';
 import type { Clock } from '../ports/clock.js';
 import type { IdGenerator } from '../ports/id-generator.js';
+import type { SkillRepo } from '../ports/skill-repo.js';
 
 // ============ Test Helpers ============
 
@@ -82,6 +83,13 @@ function createMockDeps(overrides: Partial<SubmitCodeDeps> = {}): SubmitCodeDeps
       findByPatternAndRung: vi.fn().mockResolvedValue([]),
       findAll: vi.fn().mockResolvedValue([]),
     } as unknown as ContentRepo,
+    skillRepo: {
+      findByUserAndPattern: vi.fn().mockResolvedValue(null),
+      findAllByUser: vi.fn().mockResolvedValue([]),
+      getSkillMatrix: vi.fn().mockResolvedValue({ userId: 'user-1', skills: [] }),
+      save: vi.fn().mockImplementation((s) => Promise.resolve(s)),
+      update: vi.fn().mockImplementation((s) => Promise.resolve(s)),
+    } as unknown as SkillRepo,
     eventSink: {
       emit: vi.fn().mockResolvedValue(undefined),
     } as EventSink,
