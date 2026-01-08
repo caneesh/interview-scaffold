@@ -1254,6 +1254,339 @@ Constraints:
       'BFS level by level, tracking visited words to avoid cycles.',
     ],
   },
+  // BINARY_SEARCH - Rung 3
+  {
+    title: 'Find Minimum in Rotated Sorted Array',
+    statement: `Given a sorted rotated array of unique elements, return the minimum element.
+
+The array was originally sorted in ascending order, then rotated between 1 and n times.
+
+Example 1:
+Input: nums = [3, 4, 5, 1, 2]
+Output: 1
+Explanation: The original array was [1, 2, 3, 4, 5] rotated 3 times.
+
+Example 2:
+Input: nums = [4, 5, 6, 7, 0, 1, 2]
+Output: 0
+
+Example 3:
+Input: nums = [11, 13, 15, 17]
+Output: 11
+Explanation: The array was not rotated.
+
+Constraints:
+- n == nums.length
+- 1 <= n <= 5000
+- All integers are unique
+- nums is sorted and rotated`,
+    pattern: 'BINARY_SEARCH',
+    rung: 3,
+    targetComplexity: 'O(log n)',
+    testCases: [
+      { input: '[[3, 4, 5, 1, 2]]', expectedOutput: '1', isHidden: false },
+      { input: '[[4, 5, 6, 7, 0, 1, 2]]', expectedOutput: '0', isHidden: false },
+      { input: '[[11, 13, 15, 17]]', expectedOutput: '11', isHidden: false },
+      { input: '[[2, 1]]', expectedOutput: '1', isHidden: true },
+      { input: '[[1]]', expectedOutput: '1', isHidden: true },
+    ],
+    hints: [
+      'The minimum is at the rotation point where the sequence breaks.',
+      'Use binary search: compare mid with right to determine which half has the minimum.',
+      'If nums[mid] > nums[right], minimum is in right half.',
+      'If nums[mid] <= nums[right], minimum is in left half (including mid).',
+      'while (left < right) { mid = (left + right) / 2; if (nums[mid] > nums[right]) left = mid + 1; else right = mid; }',
+    ],
+  },
+  // DFS - Rung 3
+  {
+    title: 'Number of Islands',
+    statement: `Given an m x n 2D binary grid which represents a map of '1's (land) and '0's (water), return the number of islands.
+
+An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are surrounded by water.
+
+Example 1:
+Input: grid = [
+  ["1","1","1","1","0"],
+  ["1","1","0","1","0"],
+  ["1","1","0","0","0"],
+  ["0","0","0","0","0"]
+]
+Output: 1
+
+Example 2:
+Input: grid = [
+  ["1","1","0","0","0"],
+  ["1","1","0","0","0"],
+  ["0","0","1","0","0"],
+  ["0","0","0","1","1"]
+]
+Output: 3
+
+Constraints:
+- m == grid.length
+- n == grid[i].length
+- 1 <= m, n <= 300
+- grid[i][j] is '0' or '1'`,
+    pattern: 'DFS',
+    rung: 3,
+    targetComplexity: 'O(m * n)',
+    testCases: [
+      { input: '[[["1","1","1","1","0"],["1","1","0","1","0"],["1","1","0","0","0"],["0","0","0","0","0"]]]', expectedOutput: '1', isHidden: false },
+      { input: '[[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]]', expectedOutput: '3', isHidden: false },
+      { input: '[[["1"]]]', expectedOutput: '1', isHidden: false },
+      { input: '[[["0"]]]', expectedOutput: '0', isHidden: true },
+      { input: '[[["1","0"],["0","1"]]]', expectedOutput: '2', isHidden: true },
+    ],
+    hints: [
+      'Iterate through the grid. When you find a "1", that is a new island.',
+      'Use DFS to mark all connected land cells as visited.',
+      'You can mark visited cells by changing "1" to "0" or using a visited set.',
+      'DFS in 4 directions: up, down, left, right.',
+      'Count how many times you start a new DFS from an unvisited "1".',
+    ],
+  },
+  // PREFIX_SUM - Rung 3
+  {
+    title: 'Product of Array Except Self',
+    statement: `Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i].
+
+The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer.
+
+You must write an algorithm that runs in O(n) time and without using the division operation.
+
+Example 1:
+Input: nums = [1, 2, 3, 4]
+Output: [24, 12, 8, 6]
+
+Example 2:
+Input: nums = [-1, 1, 0, -3, 3]
+Output: [0, 0, 9, 0, 0]
+
+Constraints:
+- 2 <= nums.length <= 10^5
+- -30 <= nums[i] <= 30
+- The product of any prefix or suffix fits in a 32-bit integer`,
+    pattern: 'PREFIX_SUM',
+    rung: 3,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[[1, 2, 3, 4]]', expectedOutput: '[24, 12, 8, 6]', isHidden: false },
+      { input: '[[-1, 1, 0, -3, 3]]', expectedOutput: '[0, 0, 9, 0, 0]', isHidden: false },
+      { input: '[[1, 2]]', expectedOutput: '[2, 1]', isHidden: false },
+      { input: '[[0, 0]]', expectedOutput: '[0, 0]', isHidden: true },
+      { input: '[[2, 3, 4, 5]]', expectedOutput: '[60, 40, 30, 24]', isHidden: true },
+    ],
+    hints: [
+      'Think about prefix and suffix products instead of sums.',
+      'answer[i] = (product of all elements before i) * (product of all elements after i)',
+      'First pass: compute prefix products. Second pass: multiply by suffix products.',
+      'You can do this in O(1) extra space by building the answer array in two passes.',
+      'Pass 1: answer[i] = prefix product. Pass 2: answer[i] *= suffix product (track suffix as you go).',
+    ],
+  },
+  // GREEDY - Rung 3
+  {
+    title: 'Gas Station',
+    statement: `There are n gas stations along a circular route, where the amount of gas at the ith station is gas[i].
+
+You have a car with an unlimited gas tank and it costs cost[i] of gas to travel from the ith station to its next (i + 1)th station. You begin the journey with an empty tank at one of the gas stations.
+
+Given two integer arrays gas and cost, return the starting gas station's index if you can travel around the circuit once in the clockwise direction, otherwise return -1.
+
+If there exists a solution, it is guaranteed to be unique.
+
+Example 1:
+Input: gas = [1, 2, 3, 4, 5], cost = [3, 4, 5, 1, 2]
+Output: 3
+Explanation: Start at station 3, tank = 0 + 4 = 4, travel to 4: tank = 4 - 1 + 5 = 8, travel to 0: tank = 8 - 2 + 1 = 7...
+
+Example 2:
+Input: gas = [2, 3, 4], cost = [3, 4, 3]
+Output: -1
+
+Constraints:
+- n == gas.length == cost.length
+- 1 <= n <= 10^5
+- 0 <= gas[i], cost[i] <= 10^4`,
+    pattern: 'GREEDY',
+    rung: 3,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[[1, 2, 3, 4, 5], [3, 4, 5, 1, 2]]', expectedOutput: '3', isHidden: false },
+      { input: '[[2, 3, 4], [3, 4, 3]]', expectedOutput: '-1', isHidden: false },
+      { input: '[[5, 1, 2, 3, 4], [4, 4, 1, 5, 1]]', expectedOutput: '4', isHidden: false },
+      { input: '[[1], [1]]', expectedOutput: '0', isHidden: true },
+      { input: '[[3, 1, 1], [1, 2, 2]]', expectedOutput: '0', isHidden: true },
+    ],
+    hints: [
+      'If total gas >= total cost, a solution must exist.',
+      'If you cannot reach station i+1 from station i, no station between start and i can be the answer.',
+      'Track current tank and total surplus. If current goes negative, reset start to next station.',
+      'The greedy insight: if we fail at station i, start fresh from i+1.',
+      'One pass: track total and current surplus. If current < 0, reset start = i + 1, current = 0.',
+    ],
+  },
+  // HEAP - Rung 3
+  {
+    title: 'Merge K Sorted Lists',
+    statement: `You are given an array of k linked-lists lists, each linked-list is sorted in ascending order.
+
+Merge all the linked-lists into one sorted linked-list and return it.
+
+Example 1:
+Input: lists = [[1,4,5],[1,3,4],[2,6]]
+Output: [1,1,2,3,4,4,5,6]
+Explanation: Merging [1,4,5], [1,3,4], [2,6] gives [1,1,2,3,4,4,5,6]
+
+Example 2:
+Input: lists = []
+Output: []
+
+Example 3:
+Input: lists = [[]]
+Output: []
+
+Constraints:
+- k == lists.length
+- 0 <= k <= 10^4
+- 0 <= lists[i].length <= 500
+- -10^4 <= lists[i][j] <= 10^4
+- lists[i] is sorted in ascending order
+- Total nodes across all lists <= 10^4`,
+    pattern: 'HEAP',
+    rung: 3,
+    targetComplexity: 'O(n log k)',
+    testCases: [
+      { input: '[[[1,4,5],[1,3,4],[2,6]]]', expectedOutput: '[1,1,2,3,4,4,5,6]', isHidden: false },
+      { input: '[[]]', expectedOutput: '[]', isHidden: false },
+      { input: '[[[]]]', expectedOutput: '[]', isHidden: false },
+      { input: '[[[1],[2],[3]]]', expectedOutput: '[1,2,3]', isHidden: true },
+      { input: '[[[1,2,3]]]', expectedOutput: '[1,2,3]', isHidden: true },
+    ],
+    hints: [
+      'Use a min-heap to always get the smallest element across all lists.',
+      'Initialize heap with the first element of each non-empty list.',
+      'Pop minimum, add to result, push the next element from that list.',
+      'Alternative: divide and conquer - merge pairs of lists recursively.',
+      'Heap solution: O(n log k) where n is total elements, k is number of lists.',
+    ],
+  },
+  // TRIE - Rung 3
+  {
+    title: 'Design Add and Search Words Data Structure',
+    statement: `Design a data structure that supports adding new words and finding if a string matches any previously added string.
+
+Implement the WordDictionary class:
+- WordDictionary() Initializes the object.
+- void addWord(word) Adds word to the data structure.
+- bool search(word) Returns true if there is any string that matches word. word may contain dots '.' where dots can match any letter.
+
+Example:
+Input: ["WordDictionary","addWord","addWord","addWord","search","search","search","search"]
+       [[],["bad"],["dad"],["mad"],["pad"],["bad"],[".ad"],["b.."]]
+Output: [null,null,null,null,false,true,true,true]
+
+Constraints:
+- 1 <= word.length <= 25
+- word in addWord consists of lowercase English letters
+- word in search consists of '.' or lowercase English letters
+- There will be at most 3 dots in word for search queries`,
+    pattern: 'TRIE',
+    rung: 3,
+    targetComplexity: 'O(m) add, O(26^d * m) search',
+    testCases: [
+      { input: '[["addWord", "bad"], ["addWord", "dad"], ["search", "pad"]]', expectedOutput: 'false', isHidden: false },
+      { input: '[["addWord", "bad"], ["search", "bad"]]', expectedOutput: 'true', isHidden: false },
+      { input: '[["addWord", "bad"], ["search", ".ad"]]', expectedOutput: 'true', isHidden: false },
+      { input: '[["addWord", "bad"], ["search", "b.."]]', expectedOutput: 'true', isHidden: true },
+      { input: '[["addWord", "a"], ["search", "."]]', expectedOutput: 'true', isHidden: true },
+    ],
+    hints: [
+      'Use a Trie for efficient prefix-based storage.',
+      'addWord is standard Trie insertion.',
+      'search requires handling "." - try all possible characters at that position.',
+      'Use DFS/backtracking for search when encountering ".".',
+      'For ".", iterate through all children of the current node and recurse.',
+    ],
+  },
+  // UNION_FIND - Rung 3
+  {
+    title: 'Accounts Merge',
+    statement: `Given a list of accounts where accounts[i] = [name, email1, email2, ...], merge accounts belonging to the same person. Two accounts belong to the same person if they share a common email.
+
+Return the accounts in the format [name, email1, email2, ...] where emails are sorted. Accounts can be returned in any order.
+
+Example 1:
+Input: accounts = [["John","johnsmith@mail.com","john_newyork@mail.com"],["John","johnsmith@mail.com","john00@mail.com"],["Mary","mary@mail.com"],["John","johnnybravo@mail.com"]]
+Output: [["John","john00@mail.com","john_newyork@mail.com","johnsmith@mail.com"],["Mary","mary@mail.com"],["John","johnnybravo@mail.com"]]
+
+Example 2:
+Input: accounts = [["Gabe","Gabe0@m.co","Gabe3@m.co","Gabe1@m.co"],["Kevin","Kevin3@m.co","Kevin5@m.co","Kevin0@m.co"],["Ethan","Ethan5@m.co","Ethan4@m.co","Ethan0@m.co"],["Hanzo","Hanzo3@m.co","Hanzo1@m.co","Hanzo0@m.co"],["Fern","Fern5@m.co","Fern1@m.co","Fern0@m.co"]]
+Output: [["Ethan","Ethan0@m.co","Ethan4@m.co","Ethan5@m.co"],["Gabe","Gabe0@m.co","Gabe1@m.co","Gabe3@m.co"],["Hanzo","Hanzo0@m.co","Hanzo1@m.co","Hanzo3@m.co"],["Kevin","Kevin0@m.co","Kevin3@m.co","Kevin5@m.co"],["Fern","Fern0@m.co","Fern1@m.co","Fern5@m.co"]]
+
+Constraints:
+- 1 <= accounts.length <= 1000
+- 2 <= accounts[i].length <= 10
+- 1 <= accounts[i][j].length <= 30`,
+    pattern: 'UNION_FIND',
+    rung: 3,
+    targetComplexity: 'O(n * α(n))',
+    testCases: [
+      { input: '[[["John","a@m.com","b@m.com"],["John","a@m.com","c@m.com"]]]', expectedOutput: '[["John","a@m.com","b@m.com","c@m.com"]]', isHidden: false },
+      { input: '[[["Mary","m@m.com"],["John","j@m.com"]]]', expectedOutput: '[["John","j@m.com"],["Mary","m@m.com"]]', isHidden: false },
+      { input: '[[["A","a@m.com"]]]', expectedOutput: '[["A","a@m.com"]]', isHidden: false },
+      { input: '[[["A","a@m.com","b@m.com"],["B","b@m.com","c@m.com"]]]', expectedOutput: '[["A","a@m.com","b@m.com","c@m.com"]]', isHidden: true },
+    ],
+    hints: [
+      'Model this as a graph problem where emails are nodes.',
+      'Emails in the same account are connected. Use Union-Find to group them.',
+      'Map each email to an index, union all emails in each account.',
+      'After processing, group emails by their root. Use the first account name found for each group.',
+      'Sort emails within each merged account before returning.',
+    ],
+  },
+  // INTERVAL_MERGING - Rung 3
+  {
+    title: 'Meeting Rooms II',
+    statement: `Given an array of meeting time intervals where intervals[i] = [starti, endi], return the minimum number of conference rooms required.
+
+Example 1:
+Input: intervals = [[0, 30], [5, 10], [15, 20]]
+Output: 2
+Explanation: We need two rooms: one for [0,30] and one for [5,10] then [15,20].
+
+Example 2:
+Input: intervals = [[7, 10], [2, 4]]
+Output: 1
+Explanation: Meetings don't overlap, one room is enough.
+
+Example 3:
+Input: intervals = [[0, 10], [5, 15], [10, 20]]
+Output: 2
+Explanation: [0,10] and [5,15] overlap. [10,20] can use room freed by [0,10].
+
+Constraints:
+- 1 <= intervals.length <= 10^4
+- 0 <= starti < endi <= 10^6`,
+    pattern: 'INTERVAL_MERGING',
+    rung: 3,
+    targetComplexity: 'O(n log n)',
+    testCases: [
+      { input: '[[[0, 30], [5, 10], [15, 20]]]', expectedOutput: '2', isHidden: false },
+      { input: '[[[7, 10], [2, 4]]]', expectedOutput: '1', isHidden: false },
+      { input: '[[[0, 10], [5, 15], [10, 20]]]', expectedOutput: '2', isHidden: false },
+      { input: '[[[1, 5], [2, 6], [3, 7], [4, 8]]]', expectedOutput: '4', isHidden: true },
+      { input: '[[[1, 2]]]', expectedOutput: '1', isHidden: true },
+    ],
+    hints: [
+      'Think about when rooms become free and when new meetings start.',
+      'Sort meetings by start time. Use a min-heap to track end times of ongoing meetings.',
+      'For each meeting: if earliest ending meeting is done, reuse that room. Otherwise, add a new room.',
+      'Heap size at any point = number of rooms in use.',
+      'Alternative: Use two arrays (start times, end times), sort both, use two pointers.',
+    ],
+  },
 ];
 
 async function seed() {
