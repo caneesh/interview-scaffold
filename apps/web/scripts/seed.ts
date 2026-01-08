@@ -626,6 +626,240 @@ Constraints:
       'intervals.sort((a, b) => a[0] - b[0]); for each interval: if overlaps, merge; else add new interval to result.',
     ],
   },
+  // BINARY_SEARCH - Rung 2
+  {
+    title: 'Search in Rotated Sorted Array',
+    statement: `Given a sorted array that has been rotated at some pivot, search for a target value.
+
+The array was originally sorted in ascending order, then rotated between 1 and n times.
+
+Example 1:
+Input: nums = [4, 5, 6, 7, 0, 1, 2], target = 0
+Output: 4
+
+Example 2:
+Input: nums = [4, 5, 6, 7, 0, 1, 2], target = 3
+Output: -1
+
+Constraints:
+- 1 <= nums.length <= 5000
+- All values are unique
+- nums was rotated at some pivot
+- You must achieve O(log n) runtime`,
+    pattern: 'BINARY_SEARCH',
+    rung: 2,
+    targetComplexity: 'O(log n)',
+    testCases: [
+      { input: '[[4, 5, 6, 7, 0, 1, 2], 0]', expectedOutput: '4', isHidden: false },
+      { input: '[[4, 5, 6, 7, 0, 1, 2], 3]', expectedOutput: '-1', isHidden: false },
+      { input: '[[1], 0]', expectedOutput: '-1', isHidden: false },
+      { input: '[[1], 1]', expectedOutput: '0', isHidden: true },
+      { input: '[[3, 1], 1]', expectedOutput: '1', isHidden: true },
+    ],
+    hints: [
+      'One half of the array is always sorted. How can you determine which half?',
+      'Compare nums[mid] with nums[left] to determine which half is sorted.',
+      'If the sorted half contains the target, search there. Otherwise, search the other half.',
+      'If nums[left] <= nums[mid], left half is sorted. Check if target is in [left, mid].',
+      'if (nums[left] <= nums[mid]) { if (target >= nums[left] && target < nums[mid]) right = mid - 1; else left = mid + 1; }',
+    ],
+  },
+  // DFS - Rung 2
+  {
+    title: 'Path Sum',
+    statement: `Given the root of a binary tree and an integer targetSum, return true if the tree has a root-to-leaf path such that adding up all the values along the path equals targetSum.
+
+A leaf is a node with no children.
+
+Example 1:
+Input: root = [5, 4, 8, 11, null, 13, 4, 7, 2, null, null, null, 1], targetSum = 22
+Output: true
+Explanation: The path 5 -> 4 -> 11 -> 2 sums to 22.
+
+Example 2:
+Input: root = [1, 2, 3], targetSum = 5
+Output: false
+
+Constraints:
+- The number of nodes in the tree is in the range [0, 5000]
+- -1000 <= Node.val <= 1000
+- -1000 <= targetSum <= 1000`,
+    pattern: 'DFS',
+    rung: 2,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[[5, 4, 8, 11, null, 13, 4, 7, 2, null, null, null, 1], 22]', expectedOutput: 'true', isHidden: false },
+      { input: '[[1, 2, 3], 5]', expectedOutput: 'false', isHidden: false },
+      { input: '[[], 0]', expectedOutput: 'false', isHidden: false },
+      { input: '[[1, 2], 1]', expectedOutput: 'false', isHidden: true },
+      { input: '[[1], 1]', expectedOutput: 'true', isHidden: true },
+    ],
+    hints: [
+      'Use DFS to traverse from root to each leaf.',
+      'Subtract the current node value from targetSum as you traverse.',
+      'At a leaf node, check if the remaining sum equals the leaf value.',
+      'Base case: if node is null, return false. If leaf and val equals remaining sum, return true.',
+      'return hasPathSum(node.left, sum - node.val) || hasPathSum(node.right, sum - node.val);',
+    ],
+  },
+  // BFS - Rung 2
+  {
+    title: 'Rotting Oranges',
+    statement: `You are given an m x n grid where each cell can have one of three values:
+- 0 representing an empty cell
+- 1 representing a fresh orange
+- 2 representing a rotten orange
+
+Every minute, any fresh orange adjacent (4-directionally) to a rotten orange becomes rotten.
+
+Return the minimum number of minutes until no cell has a fresh orange. If impossible, return -1.
+
+Example 1:
+Input: grid = [[2, 1, 1], [1, 1, 0], [0, 1, 1]]
+Output: 4
+
+Example 2:
+Input: grid = [[2, 1, 1], [0, 1, 1], [1, 0, 1]]
+Output: -1
+Explanation: The orange in the bottom left corner is never reached.
+
+Constraints:
+- m == grid.length
+- n == grid[i].length
+- 1 <= m, n <= 10
+- grid[i][j] is 0, 1, or 2`,
+    pattern: 'BFS',
+    rung: 2,
+    targetComplexity: 'O(m * n)',
+    testCases: [
+      { input: '[[[2, 1, 1], [1, 1, 0], [0, 1, 1]]]', expectedOutput: '4', isHidden: false },
+      { input: '[[[2, 1, 1], [0, 1, 1], [1, 0, 1]]]', expectedOutput: '-1', isHidden: false },
+      { input: '[[[0, 2]]]', expectedOutput: '0', isHidden: false },
+      { input: '[[[2, 2], [1, 1]]]', expectedOutput: '1', isHidden: true },
+      { input: '[[[1]]]', expectedOutput: '-1', isHidden: true },
+    ],
+    hints: [
+      'This is a multi-source BFS problem. Start from all rotten oranges simultaneously.',
+      'Add all initially rotten oranges to a queue.',
+      'Process level by level, counting minutes. Each level represents one minute.',
+      'Track fresh orange count. If any remain after BFS, return -1.',
+      'const directions = [[0,1], [0,-1], [1,0], [-1,0]]; BFS spreading to adjacent cells.',
+    ],
+  },
+  // DYNAMIC_PROGRAMMING - Rung 2
+  {
+    title: 'House Robber',
+    statement: `You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed. The only constraint is that adjacent houses have security systems connected - if two adjacent houses are robbed, the police will be alerted.
+
+Given an integer array nums representing the amount of money at each house, return the maximum amount you can rob without alerting the police.
+
+Example 1:
+Input: nums = [1, 2, 3, 1]
+Output: 4
+Explanation: Rob house 1 (money = 1) and house 3 (money = 3). Total = 4.
+
+Example 2:
+Input: nums = [2, 7, 9, 3, 1]
+Output: 12
+Explanation: Rob house 1 (money = 2), house 3 (money = 9), house 5 (money = 1). Total = 12.
+
+Constraints:
+- 1 <= nums.length <= 100
+- 0 <= nums[i] <= 400`,
+    pattern: 'DYNAMIC_PROGRAMMING',
+    rung: 2,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[[1, 2, 3, 1]]', expectedOutput: '4', isHidden: false },
+      { input: '[[2, 7, 9, 3, 1]]', expectedOutput: '12', isHidden: false },
+      { input: '[[2, 1, 1, 2]]', expectedOutput: '4', isHidden: false },
+      { input: '[[1]]', expectedOutput: '1', isHidden: true },
+      { input: '[[1, 2]]', expectedOutput: '2', isHidden: true },
+    ],
+    hints: [
+      'At each house, you have two choices: rob it or skip it.',
+      'If you rob house i, you cannot rob house i-1, so you take nums[i] + dp[i-2].',
+      'If you skip house i, you take dp[i-1].',
+      'dp[i] = max(dp[i-1], dp[i-2] + nums[i])',
+      'You can optimize space to O(1) by keeping only the previous two values.',
+    ],
+  },
+  // BACKTRACKING - Rung 2
+  {
+    title: 'Permutations',
+    statement: `Given an array nums of distinct integers, return all possible permutations. You can return the answer in any order.
+
+Example 1:
+Input: nums = [1, 2, 3]
+Output: [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]
+
+Example 2:
+Input: nums = [0, 1]
+Output: [[0, 1], [1, 0]]
+
+Example 3:
+Input: nums = [1]
+Output: [[1]]
+
+Constraints:
+- 1 <= nums.length <= 6
+- -10 <= nums[i] <= 10
+- All integers are unique`,
+    pattern: 'BACKTRACKING',
+    rung: 2,
+    targetComplexity: 'O(n * n!)',
+    testCases: [
+      { input: '[[1, 2, 3]]', expectedOutput: '[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]', isHidden: false },
+      { input: '[[0, 1]]', expectedOutput: '[[0, 1], [1, 0]]', isHidden: false },
+      { input: '[[1]]', expectedOutput: '[[1]]', isHidden: false },
+      { input: '[[1, 2]]', expectedOutput: '[[1, 2], [2, 1]]', isHidden: true },
+    ],
+    hints: [
+      'Unlike subsets, permutations use all elements but in different orders.',
+      'Track which elements have been used with a boolean array or set.',
+      'At each position, try placing each unused element.',
+      'function backtrack(current, used) { if (current.length === nums.length) { result.push([...current]); return; } for each unused num: add to current, mark used, recurse, backtrack }',
+      'Alternatively, use swapping: swap elements at each position with all elements after it.',
+    ],
+  },
+  // GREEDY - Rung 2
+  {
+    title: 'Jump Game',
+    statement: `You are given an integer array nums. You are initially positioned at the array's first index, and each element represents your maximum jump length at that position.
+
+Return true if you can reach the last index, or false otherwise.
+
+Example 1:
+Input: nums = [2, 3, 1, 1, 4]
+Output: true
+Explanation: Jump 1 step from index 0 to 1, then 3 steps to the last index.
+
+Example 2:
+Input: nums = [3, 2, 1, 0, 4]
+Output: false
+Explanation: You will always arrive at index 3, whose value is 0, so you can never reach the last index.
+
+Constraints:
+- 1 <= nums.length <= 10^4
+- 0 <= nums[i] <= 10^5`,
+    pattern: 'GREEDY',
+    rung: 2,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[[2, 3, 1, 1, 4]]', expectedOutput: 'true', isHidden: false },
+      { input: '[[3, 2, 1, 0, 4]]', expectedOutput: 'false', isHidden: false },
+      { input: '[[0]]', expectedOutput: 'true', isHidden: false },
+      { input: '[[2, 0, 0]]', expectedOutput: 'true', isHidden: true },
+      { input: '[[1, 0, 1, 0]]', expectedOutput: 'false', isHidden: true },
+    ],
+    hints: [
+      'Track the maximum index you can reach as you iterate.',
+      'At each index i, update maxReach = max(maxReach, i + nums[i]).',
+      'If at any point i > maxReach, you cannot proceed further.',
+      'If maxReach >= last index, return true.',
+      'for (let i = 0; i <= maxReach && i < n; i++) { maxReach = Math.max(maxReach, i + nums[i]); }',
+    ],
+  },
 ];
 
 async function seed() {
