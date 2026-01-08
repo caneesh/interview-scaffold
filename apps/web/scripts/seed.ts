@@ -1053,6 +1053,207 @@ Constraints:
       'Two intervals overlap if: interval.start <= newInterval.end && interval.end >= newInterval.start',
     ],
   },
+  // DYNAMIC_PROGRAMMING - Rung 3
+  {
+    title: 'Coin Change',
+    statement: `You are given an integer array coins representing coins of different denominations and an integer amount representing a total amount of money.
+
+Return the fewest number of coins needed to make up that amount. If that amount cannot be made up, return -1.
+
+You may assume you have an infinite number of each kind of coin.
+
+Example 1:
+Input: coins = [1, 2, 5], amount = 11
+Output: 3
+Explanation: 11 = 5 + 5 + 1
+
+Example 2:
+Input: coins = [2], amount = 3
+Output: -1
+
+Example 3:
+Input: coins = [1], amount = 0
+Output: 0
+
+Constraints:
+- 1 <= coins.length <= 12
+- 1 <= coins[i] <= 2^31 - 1
+- 0 <= amount <= 10^4`,
+    pattern: 'DYNAMIC_PROGRAMMING',
+    rung: 3,
+    targetComplexity: 'O(amount * n)',
+    testCases: [
+      { input: '[[1, 2, 5], 11]', expectedOutput: '3', isHidden: false },
+      { input: '[[2], 3]', expectedOutput: '-1', isHidden: false },
+      { input: '[[1], 0]', expectedOutput: '0', isHidden: false },
+      { input: '[[1, 2, 5], 100]', expectedOutput: '20', isHidden: true },
+      { input: '[[186, 419, 83, 408], 6249]', expectedOutput: '20', isHidden: true },
+    ],
+    hints: [
+      'This is an unbounded knapsack problem. Think about building up to the amount.',
+      'dp[i] = minimum coins needed to make amount i.',
+      'For each amount, try using each coin and take the minimum.',
+      'dp[i] = min(dp[i], dp[i - coin] + 1) for each coin where i >= coin.',
+      'Initialize dp[0] = 0, dp[1..amount] = Infinity. Return dp[amount] or -1 if Infinity.',
+    ],
+  },
+  // BACKTRACKING - Rung 3
+  {
+    title: 'N-Queens',
+    statement: `The n-queens puzzle is the problem of placing n queens on an n x n chessboard such that no two queens attack each other.
+
+Given an integer n, return all distinct solutions to the n-queens puzzle. Each solution contains a distinct board configuration where 'Q' indicates a queen and '.' indicates an empty space.
+
+Example 1:
+Input: n = 4
+Output: [[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]
+
+Example 2:
+Input: n = 1
+Output: [["Q"]]
+
+Constraints:
+- 1 <= n <= 9`,
+    pattern: 'BACKTRACKING',
+    rung: 3,
+    targetComplexity: 'O(n!)',
+    testCases: [
+      { input: '4', expectedOutput: '[[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]', isHidden: false },
+      { input: '1', expectedOutput: '[["Q"]]', isHidden: false },
+      { input: '2', expectedOutput: '[]', isHidden: false },
+      { input: '3', expectedOutput: '[]', isHidden: true },
+    ],
+    hints: [
+      'Place queens row by row. For each row, try each column.',
+      'Track which columns, diagonals, and anti-diagonals are under attack.',
+      'For position (row, col): diagonal = row - col, anti-diagonal = row + col.',
+      'Use sets to track: columns, diagonals (r-c), anti-diagonals (r+c).',
+      'Backtrack: place queen, recurse to next row, remove queen.',
+    ],
+  },
+  // SLIDING_WINDOW - Rung 3
+  {
+    title: 'Minimum Window Substring',
+    statement: `Given two strings s and t, return the minimum window substring of s such that every character in t (including duplicates) is included in the window.
+
+If there is no such substring, return the empty string "".
+
+Example 1:
+Input: s = "ADOBECODEBANC", t = "ABC"
+Output: "BANC"
+Explanation: The minimum window substring "BANC" includes 'A', 'B', and 'C' from string t.
+
+Example 2:
+Input: s = "a", t = "a"
+Output: "a"
+
+Example 3:
+Input: s = "a", t = "aa"
+Output: ""
+Explanation: Both 'a's from t must be included, but s only has one 'a'.
+
+Constraints:
+- 1 <= s.length, t.length <= 10^5
+- s and t consist of uppercase and lowercase English letters`,
+    pattern: 'SLIDING_WINDOW',
+    rung: 3,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '["ADOBECODEBANC", "ABC"]', expectedOutput: '"BANC"', isHidden: false },
+      { input: '["a", "a"]', expectedOutput: '"a"', isHidden: false },
+      { input: '["a", "aa"]', expectedOutput: '""', isHidden: false },
+      { input: '["ab", "b"]', expectedOutput: '"b"', isHidden: true },
+      { input: '["cabwefgewcwaefgcf", "cae"]', expectedOutput: '"cwae"', isHidden: true },
+    ],
+    hints: [
+      'Use two pointers and a frequency map to track characters needed.',
+      'Expand the window (right pointer) until all characters are found.',
+      'Contract the window (left pointer) while maintaining validity to find minimum.',
+      'Track how many unique characters are still needed vs how many are satisfied.',
+      'When window is valid, update result if smaller, then shrink from left.',
+    ],
+  },
+  // TWO_POINTERS - Rung 3
+  {
+    title: '3Sum',
+    statement: `Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.
+
+Notice that the solution set must not contain duplicate triplets.
+
+Example 1:
+Input: nums = [-1, 0, 1, 2, -1, -4]
+Output: [[-1, -1, 2], [-1, 0, 1]]
+
+Example 2:
+Input: nums = [0, 1, 1]
+Output: []
+
+Example 3:
+Input: nums = [0, 0, 0]
+Output: [[0, 0, 0]]
+
+Constraints:
+- 3 <= nums.length <= 3000
+- -10^5 <= nums[i] <= 10^5`,
+    pattern: 'TWO_POINTERS',
+    rung: 3,
+    targetComplexity: 'O(n²)',
+    testCases: [
+      { input: '[[-1, 0, 1, 2, -1, -4]]', expectedOutput: '[[-1, -1, 2], [-1, 0, 1]]', isHidden: false },
+      { input: '[[0, 1, 1]]', expectedOutput: '[]', isHidden: false },
+      { input: '[[0, 0, 0]]', expectedOutput: '[[0, 0, 0]]', isHidden: false },
+      { input: '[[-2, 0, 1, 1, 2]]', expectedOutput: '[[-2, 0, 2], [-2, 1, 1]]', isHidden: true },
+    ],
+    hints: [
+      'Sort the array first. This enables the two-pointer technique.',
+      'Fix one element, then use two pointers to find pairs that sum to its negative.',
+      'Skip duplicates to avoid duplicate triplets.',
+      'For each i, use left = i+1, right = n-1, and find pairs summing to -nums[i].',
+      'After finding a triplet, skip duplicates: while (nums[left] === nums[left+1]) left++',
+    ],
+  },
+  // BFS - Rung 3
+  {
+    title: 'Word Ladder',
+    statement: `A transformation sequence from word beginWord to word endWord using a dictionary wordList is a sequence beginWord -> s1 -> s2 -> ... -> sk such that:
+- Every adjacent pair of words differs by a single letter.
+- Every si is in wordList. Note that beginWord does not need to be in wordList.
+- sk == endWord
+
+Given beginWord, endWord, and wordList, return the number of words in the shortest transformation sequence, or 0 if no such sequence exists.
+
+Example 1:
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]
+Output: 5
+Explanation: hit -> hot -> dot -> dog -> cog
+
+Example 2:
+Input: beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log"]
+Output: 0
+Explanation: endWord "cog" is not in wordList.
+
+Constraints:
+- 1 <= beginWord.length <= 10
+- endWord.length == beginWord.length
+- 1 <= wordList.length <= 5000
+- All words have the same length and consist of lowercase English letters`,
+    pattern: 'BFS',
+    rung: 3,
+    targetComplexity: 'O(n * m²)',
+    testCases: [
+      { input: '["hit", "cog", ["hot", "dot", "dog", "lot", "log", "cog"]]', expectedOutput: '5', isHidden: false },
+      { input: '["hit", "cog", ["hot", "dot", "dog", "lot", "log"]]', expectedOutput: '0', isHidden: false },
+      { input: '["a", "c", ["a", "b", "c"]]', expectedOutput: '2', isHidden: false },
+      { input: '["hot", "dog", ["hot", "dog"]]', expectedOutput: '0', isHidden: true },
+    ],
+    hints: [
+      'This is a shortest path problem - use BFS.',
+      'Each word is a node; edges connect words differing by one letter.',
+      'Build a graph or generate neighbors on the fly.',
+      'Use pattern matching: for "hot", patterns are "*ot", "h*t", "ho*".',
+      'BFS level by level, tracking visited words to avoid cycles.',
+    ],
+  },
 ];
 
 async function seed() {
