@@ -435,6 +435,196 @@ Constraints:
       'This works because buying/selling on the same day is allowed (you can chain transactions).',
     ],
   },
+  // BACKTRACKING - Rung 1
+  {
+    title: 'Subsets',
+    statement: `Given an integer array nums of unique elements, return all possible subsets (the power set).
+
+The solution set must not contain duplicate subsets. Return the solution in any order.
+
+Example 1:
+Input: nums = [1, 2, 3]
+Output: [[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]
+
+Example 2:
+Input: nums = [0]
+Output: [[], [0]]
+
+Constraints:
+- 1 <= nums.length <= 10
+- -10 <= nums[i] <= 10
+- All the numbers of nums are unique`,
+    pattern: 'BACKTRACKING',
+    rung: 1,
+    targetComplexity: 'O(n * 2^n)',
+    testCases: [
+      { input: '[[1, 2, 3]]', expectedOutput: '[[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]', isHidden: false },
+      { input: '[[0]]', expectedOutput: '[[], [0]]', isHidden: false },
+      { input: '[[1, 2]]', expectedOutput: '[[], [1], [2], [1, 2]]', isHidden: false },
+      { input: '[[]]', expectedOutput: '[[]]', isHidden: true },
+      { input: '[[1, 2, 3, 4]]', expectedOutput: '[[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3], [4], [1, 4], [2, 4], [1, 2, 4], [3, 4], [1, 3, 4], [2, 3, 4], [1, 2, 3, 4]]', isHidden: true },
+    ],
+    hints: [
+      'Each element can either be included or excluded from a subset.',
+      'Use backtracking: at each step, decide to include or skip the current element.',
+      'Build the subset incrementally, adding to result when you reach the end.',
+      'function backtrack(start, current) { result.push([...current]); for (i = start; i < nums.length; i++) { current.push(nums[i]); backtrack(i+1, current); current.pop(); } }',
+      'Start with backtrack(0, []) to generate all subsets.',
+    ],
+  },
+  // HEAP - Rung 1
+  {
+    title: 'Kth Largest Element in an Array',
+    statement: `Given an integer array nums and an integer k, return the kth largest element in the array.
+
+Note that it is the kth largest element in the sorted order, not the kth distinct element.
+
+You must solve it in O(n) average time complexity (using a heap or quickselect).
+
+Example 1:
+Input: nums = [3, 2, 1, 5, 6, 4], k = 2
+Output: 5
+
+Example 2:
+Input: nums = [3, 2, 3, 1, 2, 4, 5, 5, 6], k = 4
+Output: 4
+
+Constraints:
+- 1 <= k <= nums.length <= 10^5
+- -10^4 <= nums[i] <= 10^4`,
+    pattern: 'HEAP',
+    rung: 1,
+    targetComplexity: 'O(n log k)',
+    testCases: [
+      { input: '[[3, 2, 1, 5, 6, 4], 2]', expectedOutput: '5', isHidden: false },
+      { input: '[[3, 2, 3, 1, 2, 4, 5, 5, 6], 4]', expectedOutput: '4', isHidden: false },
+      { input: '[[1], 1]', expectedOutput: '1', isHidden: false },
+      { input: '[[7, 6, 5, 4, 3, 2, 1], 5]', expectedOutput: '3', isHidden: true },
+      { input: '[[1, 2, 3, 4, 5], 1]', expectedOutput: '5', isHidden: true },
+    ],
+    hints: [
+      'You could sort the array, but that is O(n log n). Can you do better?',
+      'Maintain a min-heap of size k. The top of the heap is the kth largest.',
+      'For each element, if heap size < k, add it. Else if element > heap top, remove top and add element.',
+      'In JavaScript, you can implement a simple min-heap or use sorting for this problem size.',
+      'Alternative: Use quickselect algorithm for O(n) average case.',
+    ],
+  },
+  // TRIE - Rung 1
+  {
+    title: 'Implement Trie (Prefix Tree)',
+    statement: `A trie (pronounced "try") is a tree data structure used to efficiently store and retrieve keys in a dataset of strings.
+
+Implement the Trie class:
+- Trie() Initializes the trie object.
+- void insert(String word) Inserts the string word into the trie.
+- boolean search(String word) Returns true if the string word is in the trie, false otherwise.
+- boolean startsWith(String prefix) Returns true if there is any word that starts with prefix.
+
+Example:
+Input: ["Trie", "insert", "search", "search", "startsWith", "insert", "search"]
+       [[], ["apple"], ["apple"], ["app"], ["app"], ["app"], ["app"]]
+Output: [null, null, true, false, true, null, true]
+
+Constraints:
+- 1 <= word.length, prefix.length <= 2000
+- word and prefix consist only of lowercase English letters`,
+    pattern: 'TRIE',
+    rung: 1,
+    targetComplexity: 'O(m) per operation',
+    testCases: [
+      { input: '[["insert", "apple"], ["search", "apple"]]', expectedOutput: 'true', isHidden: false },
+      { input: '[["insert", "apple"], ["search", "app"]]', expectedOutput: 'false', isHidden: false },
+      { input: '[["insert", "apple"], ["startsWith", "app"]]', expectedOutput: 'true', isHidden: false },
+      { input: '[["insert", "app"], ["insert", "apple"], ["search", "app"]]', expectedOutput: 'true', isHidden: true },
+      { input: '[["search", "a"]]', expectedOutput: 'false', isHidden: true },
+    ],
+    hints: [
+      'Each node in a trie has children for each possible character (a-z).',
+      'Use an object/Map where keys are characters and values are child nodes.',
+      'Mark nodes where words end with an isEnd flag.',
+      'insert: traverse/create nodes for each char, mark last as end. search: traverse and check isEnd. startsWith: just traverse.',
+      'class TrieNode { constructor() { this.children = {}; this.isEnd = false; } }',
+    ],
+  },
+  // UNION_FIND - Rung 1
+  {
+    title: 'Number of Connected Components',
+    statement: `You have n nodes labeled from 0 to n-1. You are given an integer n and a list of edges where edges[i] = [ai, bi] indicates an undirected edge between nodes ai and bi.
+
+Return the number of connected components in the graph.
+
+Example 1:
+Input: n = 5, edges = [[0, 1], [1, 2], [3, 4]]
+Output: 2
+Explanation: Components are {0, 1, 2} and {3, 4}.
+
+Example 2:
+Input: n = 5, edges = [[0, 1], [1, 2], [2, 3], [3, 4]]
+Output: 1
+
+Constraints:
+- 1 <= n <= 2000
+- 0 <= edges.length <= 5000
+- edges[i].length == 2
+- 0 <= ai, bi < n
+- ai != bi
+- No duplicate edges`,
+    pattern: 'UNION_FIND',
+    rung: 1,
+    targetComplexity: 'O(n + m * α(n))',
+    testCases: [
+      { input: '[5, [[0, 1], [1, 2], [3, 4]]]', expectedOutput: '2', isHidden: false },
+      { input: '[5, [[0, 1], [1, 2], [2, 3], [3, 4]]]', expectedOutput: '1', isHidden: false },
+      { input: '[4, []]', expectedOutput: '4', isHidden: false },
+      { input: '[3, [[0, 1], [1, 2], [0, 2]]]', expectedOutput: '1', isHidden: true },
+      { input: '[1, []]', expectedOutput: '1', isHidden: true },
+    ],
+    hints: [
+      'Use Union-Find (Disjoint Set Union) data structure.',
+      'Initialize each node as its own parent. For each edge, union the two nodes.',
+      'Count unique roots at the end (nodes where parent[i] === i).',
+      'Optimize with path compression: in find(), set parent[x] = find(parent[x]).',
+      'function find(x) { if (parent[x] !== x) parent[x] = find(parent[x]); return parent[x]; } function union(x, y) { parent[find(x)] = find(y); }',
+    ],
+  },
+  // INTERVAL_MERGING - Rung 1
+  {
+    title: 'Merge Intervals',
+    statement: `Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.
+
+Example 1:
+Input: intervals = [[1, 3], [2, 6], [8, 10], [15, 18]]
+Output: [[1, 6], [8, 10], [15, 18]]
+Explanation: [1, 3] and [2, 6] overlap, merge into [1, 6].
+
+Example 2:
+Input: intervals = [[1, 4], [4, 5]]
+Output: [[1, 5]]
+Explanation: [1, 4] and [4, 5] are considered overlapping.
+
+Constraints:
+- 1 <= intervals.length <= 10^4
+- intervals[i].length == 2
+- 0 <= starti <= endi <= 10^4`,
+    pattern: 'INTERVAL_MERGING',
+    rung: 1,
+    targetComplexity: 'O(n log n)',
+    testCases: [
+      { input: '[[[1, 3], [2, 6], [8, 10], [15, 18]]]', expectedOutput: '[[1, 6], [8, 10], [15, 18]]', isHidden: false },
+      { input: '[[[1, 4], [4, 5]]]', expectedOutput: '[[1, 5]]', isHidden: false },
+      { input: '[[[1, 4], [0, 4]]]', expectedOutput: '[[0, 4]]', isHidden: false },
+      { input: '[[[1, 4], [2, 3]]]', expectedOutput: '[[1, 4]]', isHidden: true },
+      { input: '[[[1, 4]]]', expectedOutput: '[[1, 4]]', isHidden: true },
+    ],
+    hints: [
+      'First, sort intervals by start time.',
+      'Two intervals overlap if the first ends after or when the second starts.',
+      'Iterate through sorted intervals, merging when current overlaps with previous.',
+      'For merge: newEnd = Math.max(prev.end, curr.end)',
+      'intervals.sort((a, b) => a[0] - b[0]); for each interval: if overlaps, merge; else add new interval to result.',
+    ],
+  },
 ];
 
 async function seed() {
