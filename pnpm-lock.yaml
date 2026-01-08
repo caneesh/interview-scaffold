@@ -29,6 +29,9 @@ importers:
       '@scaffold/adapter-llm':
         specifier: workspace:*
         version: link:../../packages/adapter-llm
+      '@scaffold/adapter-piston':
+        specifier: workspace:*
+        version: link:../../packages/adapter-piston
       '@scaffold/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -124,6 +127,19 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
+  packages/adapter-piston:
+    dependencies:
+      '@scaffold/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.19.27
       typescript:
         specifier: ^5.4.0
         version: 5.9.3

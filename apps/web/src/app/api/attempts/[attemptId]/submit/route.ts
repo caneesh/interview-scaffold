@@ -1,31 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitCode } from '@scaffold/core/use-cases';
-import type { CodeExecutor } from '@scaffold/core/use-cases';
 import { SubmitCodeRequestSchema } from '@scaffold/contracts';
-import { attemptRepo, contentRepo, eventSink, clock, idGenerator, getLLMValidation } from '@/lib/deps';
-import type { TestResultData } from '@scaffold/core/entities';
+import { attemptRepo, contentRepo, eventSink, clock, idGenerator, codeExecutor, getLLMValidation } from '@/lib/deps';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
-
-/**
- * Simple code executor for demo - in production, use sandboxed execution
- */
-const demoCodeExecutor: CodeExecutor = {
-  async execute(
-    _code: string,
-    _language: string,
-    testCases: readonly { input: string; expectedOutput: string }[]
-  ): Promise<readonly TestResultData[]> {
-    // Demo: simulate test execution
-    // In production, this would run code in a sandboxed environment
-    return testCases.map((tc) => ({
-      input: tc.input,
-      expected: tc.expectedOutput,
-      actual: tc.expectedOutput, // Demo: always pass
-      passed: true,
-      error: null,
-    }));
-  },
-};
 
 /**
  * POST /api/attempts/[attemptId]/submit
@@ -78,7 +55,7 @@ export async function POST(
         eventSink,
         clock,
         idGenerator,
-        codeExecutor: demoCodeExecutor,
+        codeExecutor,
         llmValidation: getLLMValidation(problemStatement),
       }
     );

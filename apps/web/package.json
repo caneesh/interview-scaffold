@@ -15,6 +15,7 @@
     "@scaffold/adapter-auth": "workspace:*",
     "@scaffold/adapter-db": "workspace:*",
     "@scaffold/adapter-llm": "workspace:*",
+    "@scaffold/adapter-piston": "workspace:*",
     "@scaffold/contracts": "workspace:*",
     "@scaffold/core": "workspace:*",
     "dotenv": "^17.2.3",
