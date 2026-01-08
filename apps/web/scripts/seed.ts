@@ -860,6 +860,199 @@ Constraints:
       'for (let i = 0; i <= maxReach && i < n; i++) { maxReach = Math.max(maxReach, i + nums[i]); }',
     ],
   },
+  // PREFIX_SUM - Rung 2
+  {
+    title: 'Subarray Sum Equals K',
+    statement: `Given an array of integers nums and an integer k, return the total number of subarrays whose sum equals to k.
+
+A subarray is a contiguous non-empty sequence of elements within an array.
+
+Example 1:
+Input: nums = [1, 1, 1], k = 2
+Output: 2
+Explanation: [1, 1] appears twice.
+
+Example 2:
+Input: nums = [1, 2, 3], k = 3
+Output: 2
+Explanation: [1, 2] and [3] both sum to 3.
+
+Constraints:
+- 1 <= nums.length <= 2 * 10^4
+- -1000 <= nums[i] <= 1000
+- -10^7 <= k <= 10^7`,
+    pattern: 'PREFIX_SUM',
+    rung: 2,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[[1, 1, 1], 2]', expectedOutput: '2', isHidden: false },
+      { input: '[[1, 2, 3], 3]', expectedOutput: '2', isHidden: false },
+      { input: '[[1], 0]', expectedOutput: '0', isHidden: false },
+      { input: '[[1, -1, 0], 0]', expectedOutput: '3', isHidden: true },
+      { input: '[[0, 0, 0], 0]', expectedOutput: '6', isHidden: true },
+    ],
+    hints: [
+      'Brute force is O(n²). Can you use prefix sums to speed this up?',
+      'If prefixSum[j] - prefixSum[i] = k, then sum from i+1 to j equals k.',
+      'Use a HashMap to store the count of each prefix sum seen so far.',
+      'For each position, check if (currentSum - k) exists in the map.',
+      'map.set(0, 1) initially; for each num: sum += num; count += map.get(sum - k) || 0; map.set(sum, (map.get(sum) || 0) + 1);',
+    ],
+  },
+  // HEAP - Rung 2
+  {
+    title: 'Top K Frequent Elements',
+    statement: `Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.
+
+Example 1:
+Input: nums = [1, 1, 1, 2, 2, 3], k = 2
+Output: [1, 2]
+
+Example 2:
+Input: nums = [1], k = 1
+Output: [1]
+
+Constraints:
+- 1 <= nums.length <= 10^5
+- -10^4 <= nums[i] <= 10^4
+- k is in the range [1, the number of unique elements]
+- The answer is guaranteed to be unique
+
+Follow up: Your algorithm's time complexity must be better than O(n log n).`,
+    pattern: 'HEAP',
+    rung: 2,
+    targetComplexity: 'O(n log k)',
+    testCases: [
+      { input: '[[1, 1, 1, 2, 2, 3], 2]', expectedOutput: '[1, 2]', isHidden: false },
+      { input: '[[1], 1]', expectedOutput: '[1]', isHidden: false },
+      { input: '[[1, 2], 2]', expectedOutput: '[1, 2]', isHidden: false },
+      { input: '[[4, 1, -1, 2, -1, 2, 3], 2]', expectedOutput: '[-1, 2]', isHidden: true },
+    ],
+    hints: [
+      'First, count the frequency of each element using a HashMap.',
+      'Then find the k elements with highest frequencies.',
+      'Use a min-heap of size k. Keep only the k most frequent elements.',
+      'For each element, if heap size < k, add it. Else if freq > heap top freq, replace.',
+      'Alternative: Use bucket sort where index = frequency for O(n) solution.',
+    ],
+  },
+  // TRIE - Rung 2
+  {
+    title: 'Word Search II',
+    statement: `Given an m x n board of characters and a list of words, return all words on the board.
+
+Each word must be constructed from letters of sequentially adjacent cells (horizontally or vertically). The same cell may not be used more than once in a word.
+
+Example 1:
+Input: board = [["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], words = ["oath","pea","eat","rain"]
+Output: ["eat","oath"]
+
+Example 2:
+Input: board = [["a","b"],["c","d"]], words = ["abcb"]
+Output: []
+
+Constraints:
+- m == board.length, n == board[i].length
+- 1 <= m, n <= 12
+- 1 <= words.length <= 3 * 10^4
+- 1 <= words[i].length <= 10`,
+    pattern: 'TRIE',
+    rung: 2,
+    targetComplexity: 'O(m * n * 4^L)',
+    testCases: [
+      { input: '[[["o","a","a","n"],["e","t","a","e"],["i","h","k","r"],["i","f","l","v"]], ["oath","pea","eat","rain"]]', expectedOutput: '["eat", "oath"]', isHidden: false },
+      { input: '[[["a","b"],["c","d"]], ["abcb"]]', expectedOutput: '[]', isHidden: false },
+      { input: '[[["a"]], ["a"]]', expectedOutput: '["a"]', isHidden: false },
+      { input: '[[["a","a"]], ["aaa"]]', expectedOutput: '[]', isHidden: true },
+    ],
+    hints: [
+      'Build a Trie from all the words for efficient prefix matching.',
+      'For each cell, start a DFS and traverse the Trie simultaneously.',
+      'Prune branches when no word starts with the current prefix.',
+      'Mark cells as visited during DFS, restore after backtracking.',
+      'When you find a complete word (node.isEnd), add it to results and optionally remove from Trie to avoid duplicates.',
+    ],
+  },
+  // UNION_FIND - Rung 2
+  {
+    title: 'Redundant Connection',
+    statement: `In this problem, a tree is an undirected graph that is connected and has no cycles.
+
+You are given a graph that started as a tree with n nodes (1 to n), with one additional edge added. The added edge has two different vertices and connects vertices that were not already connected.
+
+Return an edge that can be removed so that the resulting graph is a tree of n nodes. If there are multiple answers, return the edge that occurs last in the input.
+
+Example 1:
+Input: edges = [[1, 2], [1, 3], [2, 3]]
+Output: [2, 3]
+
+Example 2:
+Input: edges = [[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]]
+Output: [1, 4]
+
+Constraints:
+- n == edges.length
+- 3 <= n <= 1000
+- edges[i].length == 2
+- 1 <= ai < bi <= n
+- No repeated edges`,
+    pattern: 'UNION_FIND',
+    rung: 2,
+    targetComplexity: 'O(n * α(n))',
+    testCases: [
+      { input: '[[[1, 2], [1, 3], [2, 3]]]', expectedOutput: '[2, 3]', isHidden: false },
+      { input: '[[[1, 2], [2, 3], [3, 4], [1, 4], [1, 5]]]', expectedOutput: '[1, 4]', isHidden: false },
+      { input: '[[[1, 2], [1, 3], [1, 4], [3, 4]]]', expectedOutput: '[3, 4]', isHidden: false },
+      { input: '[[[1, 2], [2, 3], [1, 3]]]', expectedOutput: '[1, 3]', isHidden: true },
+    ],
+    hints: [
+      'Process edges one by one. The redundant edge connects two already-connected nodes.',
+      'Use Union-Find to track connected components.',
+      'For each edge [u, v]: if find(u) == find(v), this edge creates a cycle.',
+      'The last edge that would create a cycle is the answer.',
+      'function find(x) { if (parent[x] !== x) parent[x] = find(parent[x]); return parent[x]; }',
+    ],
+  },
+  // INTERVAL_MERGING - Rung 2
+  {
+    title: 'Insert Interval',
+    statement: `You are given an array of non-overlapping intervals sorted by their start time, and a new interval to insert.
+
+Insert the new interval into the intervals (merge if necessary) and return the result as a new list of non-overlapping intervals.
+
+Example 1:
+Input: intervals = [[1, 3], [6, 9]], newInterval = [2, 5]
+Output: [[1, 5], [6, 9]]
+
+Example 2:
+Input: intervals = [[1, 2], [3, 5], [6, 7], [8, 10], [12, 16]], newInterval = [4, 8]
+Output: [[1, 2], [3, 10], [12, 16]]
+Explanation: The new interval [4, 8] overlaps with [3, 5], [6, 7], [8, 10].
+
+Constraints:
+- 0 <= intervals.length <= 10^4
+- intervals[i].length == 2
+- 0 <= starti <= endi <= 10^5
+- intervals is sorted by starti in ascending order
+- newInterval.length == 2`,
+    pattern: 'INTERVAL_MERGING',
+    rung: 2,
+    targetComplexity: 'O(n)',
+    testCases: [
+      { input: '[[[1, 3], [6, 9]], [2, 5]]', expectedOutput: '[[1, 5], [6, 9]]', isHidden: false },
+      { input: '[[[1, 2], [3, 5], [6, 7], [8, 10], [12, 16]], [4, 8]]', expectedOutput: '[[1, 2], [3, 10], [12, 16]]', isHidden: false },
+      { input: '[[], [5, 7]]', expectedOutput: '[[5, 7]]', isHidden: false },
+      { input: '[[[1, 5]], [2, 3]]', expectedOutput: '[[1, 5]]', isHidden: true },
+      { input: '[[[1, 5]], [6, 8]]', expectedOutput: '[[1, 5], [6, 8]]', isHidden: true },
+    ],
+    hints: [
+      'Split the problem into three parts: before, overlapping, and after.',
+      'Add all intervals that end before newInterval starts.',
+      'Merge all intervals that overlap with newInterval.',
+      'Add all intervals that start after newInterval ends.',
+      'Two intervals overlap if: interval.start <= newInterval.end && interval.end >= newInterval.start',
+    ],
+  },
 ];
 
 async function seed() {
