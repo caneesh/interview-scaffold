@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitCode } from '@scaffold/core/use-cases';
 import { SubmitCodeRequestSchema } from '@scaffold/contracts';
-import { attemptRepo, contentRepo, eventSink, clock, idGenerator, codeExecutor, getLLMValidation } from '@/lib/deps';
+import { attemptRepo, contentRepo, skillRepo, eventSink, clock, idGenerator, codeExecutor, getLLMValidation } from '@/lib/deps';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
@@ -52,6 +52,7 @@ export async function POST(
       {
         attemptRepo,
         contentRepo,
+        skillRepo,
         eventSink,
         clock,
         idGenerator,
@@ -66,6 +67,7 @@ export async function POST(
       passed: result.passed,
       validation: result.validation,
       gatingDecision: result.gatingDecision,
+      score: result.score,
     });
   } catch (error) {
     if (error instanceof Error && 'code' in error) {

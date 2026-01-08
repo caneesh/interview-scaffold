@@ -1,12 +1,15 @@
 import type { TenantId } from '../entities/tenant.js';
-import type { AttemptId, Attempt } from '../entities/attempt.js';
+import type { AttemptId, Attempt, AttemptScore } from '../entities/attempt.js';
 import type { TestResultData, CodingData, CodingValidationData } from '../entities/step.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
 import type { ContentRepo } from '../ports/content-repo.js';
+import type { SkillRepo } from '../ports/skill-repo.js';
 import type { EventSink } from '../ports/event-sink.js';
 import type { Clock } from '../ports/clock.js';
 import type { IdGenerator } from '../ports/id-generator.js';
 import { hasPassedThinkingGate, hasPassedReflection, needsReflection } from '../entities/attempt.js';
+import { computeNewScore, RUNG_UNLOCK_THRESHOLD } from '../entities/skill-state.js';
+import { computeAttemptScore } from './compute-attempt-score.js';
 import { ERROR_TYPES } from '../validation/types.js';
 import type { GatingDecision, ErrorEvent, ErrorType } from '../validation/types.js';
 import { gradeSubmission } from '../validation/rubric.js';
@@ -29,11 +32,13 @@ export interface SubmitCodeOutput {
   readonly passed: boolean;
   readonly validation: CodingValidationData;
   readonly gatingDecision: GatingDecision;
+  readonly score?: AttemptScore; // Only present when COMPLETED
 }
 
 export interface SubmitCodeDeps {
   readonly attemptRepo: AttemptRepo;
   readonly contentRepo: ContentRepo;
+  readonly skillRepo: SkillRepo;
   readonly eventSink: EventSink;
   readonly clock: Clock;
   readonly idGenerator: IdGenerator;
@@ -64,7 +69,7 @@ export async function submitCode(
   deps: SubmitCodeDeps
 ): Promise<SubmitCodeOutput> {
   const { tenantId, userId, attemptId, code, language } = input;
-  const { attemptRepo, contentRepo, eventSink, clock, idGenerator, codeExecutor } = deps;
+  const { attemptRepo, contentRepo, skillRepo, eventSink, clock, idGenerator, codeExecutor } = deps;
 
   const attempt = await attemptRepo.findById(tenantId, attemptId);
   if (!attempt) {
@@ -303,6 +308,59 @@ export async function submitCode(
 
   await attemptRepo.update(updatedAttempt);
 
+  // ============ Persist Skill Score on Completion ============
+  let attemptScore: AttemptScore | undefined;
+
+  if (nextState === 'COMPLETED') {
+    // Compute attempt score
+    const scoreResult = computeAttemptScore({ attempt: updatedAttempt });
+    attemptScore = scoreResult.score;
+
+    // Update or create skill state
+    const existingSkill = await skillRepo.findByUserAndPattern(
+      tenantId,
+      userId,
+      attempt.pattern,
+      attempt.rung
+    );
+
+    if (existingSkill) {
+      // Update with new score using exponential moving average
+      const newScore = computeNewScore(
+        existingSkill.score,
+        existingSkill.attemptsCount,
+        attemptScore.overall
+      );
+
+      await skillRepo.update({
+        ...existingSkill,
+        score: newScore,
+        attemptsCount: existingSkill.attemptsCount + 1,
+        lastAttemptAt: now,
+        updatedAt: now,
+        // Set unlockedAt if crossing threshold for first time
+        unlockedAt:
+          newScore >= RUNG_UNLOCK_THRESHOLD && !existingSkill.unlockedAt
+            ? now
+            : existingSkill.unlockedAt,
+      });
+    } else {
+      // Create new skill state
+      await skillRepo.save({
+        id: idGenerator.generate(),
+        tenantId,
+        userId,
+        pattern: attempt.pattern,
+        rung: attempt.rung,
+        score: attemptScore.overall,
+        attemptsCount: 1,
+        lastAttemptAt: now,
+        unlockedAt: attemptScore.overall >= RUNG_UNLOCK_THRESHOLD ? now : null,
+        updatedAt: now,
+      });
+    }
+  }
+
   const startedAt = attempt.steps.length > 0
     ? attempt.steps[attempt.steps.length - 1]?.completedAt ?? attempt.startedAt
     : attempt.startedAt;
@@ -325,5 +383,6 @@ export async function submitCode(
     passed: allTestsPassed && gatingDecision.action === 'PROCEED',
     validation,
     gatingDecision,
+    score: attemptScore,
   };
 }
