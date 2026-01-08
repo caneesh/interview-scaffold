@@ -6,17 +6,19 @@ node_modules/
 dist/
 .next/
 out/
+.turbo/
 
 # Environment
 .env
 .env.local
 .env.*.local
 
-# IDE
+# IDE/Editor
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
@@ -26,9 +28,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
-
-# Turbo
-.turbo/
 
 # Test
 coverage/
