@@ -11,9 +11,7 @@ This section lists discrepancies between UI, documentation, and actual implement
 | Daily Session MEP selection | `/daily` Block B | **Connected** | Full practice flow with MEP problem selection |
 | Daily Session spaced review | `/daily` Block A | Hardcoded question | No spaced repetition logic; same question always |
 | Daily Session persistence | `/daily` complete | Session not persisted | Attempts are saved, but session-level data is not |
-| Interview Mode problem | `/interview` | No problem displayed | Users write code for an undefined problem |
-| Interview Mode submission | `/interview` | Not executed | Code is never validated; no feedback |
-| Interview Mode results | `/interview` | Not graded | No scoring or skill updates |
+| Interview Mode | `/interview` | **Connected** | Full 6-step interview flow with backend integration |
 | Pattern Explorer | `/explorer` | Minimal placeholder | Route exists but shows little content |
 | Skills Dashboard | `/skills` | API works, UI minimal | Data available but not well visualized |
 
@@ -192,13 +190,13 @@ This section lists discrepancies between UI, documentation, and actual implement
 
 ## Recommendations for Engineering
 
-1. **Connect Daily/Interview modes to backend** - High priority; users expect these to work
-2. **Add integration tests for critical paths** - Code submission flow especially
-3. **Implement proper error boundaries** - Currently errors may crash components
-4. **Add request validation middleware** - Zod schemas exist but could be centralized
-5. **Document API response formats** - OpenAPI spec would help
-6. **Add health checks** - For Piston and DB connectivity
-7. **Consider async LLM validation** - Current sync call adds latency
+1. **Add integration tests for critical paths** - Code submission flow especially
+2. **Implement proper error boundaries** - Currently errors may crash components
+3. **Add request validation middleware** - Zod schemas exist but could be centralized
+4. **Document API response formats** - OpenAPI spec would help
+5. **Add health checks** - For Piston and DB connectivity
+6. **Consider async LLM validation** - Current sync call adds latency
+7. **Connect spaced review in Daily Session** - Block A still uses hardcoded content
 
 ---
 
@@ -206,7 +204,7 @@ This section lists discrepancies between UI, documentation, and actual implement
 
 | Category | Count | Severity |
 |----------|-------|----------|
-| UI features without backend | 7 | High |
+| UI features without backend | 4 | Medium |
 | Undocumented code paths | 5 | Medium |
 | Ambiguous logic | 5 | Medium |
 | Missing TODOs | 2 | Low |

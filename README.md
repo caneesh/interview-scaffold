@@ -120,17 +120,15 @@ The app runs at `http://localhost:3000`.
 
 1. **Daily Session Block A**: The spaced review block uses a hardcoded question. Block B (practice) is fully connected to the backend MEP engine.
 
-2. **Interview Mode**: The `/interview` page is a standalone form; it does not fetch real problems or submit to the backend.
+2. **Analytics**: `EventSink` implementation logs to console only; no persistent analytics pipeline.
 
-3. **Analytics**: `EventSink` implementation logs to console only; no persistent analytics pipeline.
+3. **Seed Problems Only**: Only BACKTRACKING and INTERVAL_MERGING patterns have seed problems (6 problems each across 3 rungs).
 
-4. **Seed Problems Only**: Only BACKTRACKING and INTERVAL_MERGING patterns have seed problems (6 problems each across 3 rungs).
+4. **Code Execution**: Requires external Piston API; no fallback if unavailable.
 
-5. **Code Execution**: Requires external Piston API; no fallback if unavailable.
+5. **No Authentication**: Auth adapter provides demo context; no real user authentication implemented.
 
-6. **No Authentication**: Auth adapter provides demo context; no real user authentication implemented.
-
-7. **No Spaced Repetition**: Skill decay and spaced review logic is defined in docs but not implemented in code.
+6. **No Spaced Repetition**: Skill decay and spaced review logic is defined in docs but not implemented in code.
 
 ## API Routes
 

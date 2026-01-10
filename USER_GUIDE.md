@@ -198,23 +198,24 @@ This block works exactly like Practice Mode but embedded in the daily session.
 
 ---
 
-## Interview Mode (UI Demo Only)
+## Interview Mode
 
-**Note**: This mode has a complete UI but is NOT connected to the backend.
+Simulates real interview conditions with a 6-step structured flow. Connected to the backend for problem fetching, code execution, and scoring.
 
 ### Step 1: Start Interview
 
 1. Navigate to `/interview`
 2. See interview conditions:
    - Timer always running
-   - Hints hidden by default
-   - Forced explanations
+   - Hints toggle available
+   - Forced explanations before coding
 3. Click **"Start Interview"**
+4. A problem is fetched from the MEP engine and displayed
 
 ### Step 2: Pattern Selection (Locked After Submit)
 
 1. **Timer starts**
-2. **Read the problem** (hardcoded)
+2. **Read the problem** displayed at the top
 3. **Write** which pattern you think applies and why
 4. Click **"Lock & Continue"** (answer cannot be changed)
 
@@ -237,15 +238,23 @@ This block works exactly like Practice Mode but embedded in the daily session.
 ### Step 6: Code Implementation
 
 1. **Write your solution** in the code editor
-2. Click **"Submit Solution"**
+2. **Toggle hints** if needed (shows problem hints from the database)
+3. Click **"Submit Solution"**
+4. Code is submitted to the backend:
+   - Attempt is created
+   - Thinking gate is submitted (pattern + invariant + complexity)
+   - Code is executed against test cases
 
 ### Step 7: Results
 
-1. **See all your answers** displayed
-2. **Total time** shown
-3. Click **"Back to Home"**
+1. **See all your answers** displayed (pattern, approach, invariant, complexity, code)
+2. **Test results**: Pass/fail for each test case
+3. **Score breakdown**: Overall, pattern recognition, implementation, edge cases
+4. **LLM feedback**: AI analysis if Anthropic API is configured
+5. **Total time** shown
+6. Click **"Back to Home"**
 
-**Code-defined behavior**: No validation, no grading, no persistence.
+**Backend Integration**: Problem is fetched at start, code is executed via Piston API, results are graded and persisted.
 
 ---
 

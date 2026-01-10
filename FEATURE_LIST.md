@@ -402,22 +402,33 @@ Features derived from implemented code. Status reflects actual implementation st
 
 ## 20. Interview Mode
 
-**Description**: Simulates real interview conditions with visible timer, hidden hints, forced explanations (pattern, approach, invariant, complexity).
+**Description**: Simulates real interview conditions with visible timer, optional hints, forced explanations (pattern, approach, invariant, complexity). Preserves 6-step interview flow while connecting to backend for problem fetching, code execution, and scoring.
 
 **Trigger**: User clicks "Start Interview" on `/interview`
 
 **Data Involved**:
-- Step-by-step form data
-- Timer
+- 6-step interview flow: pattern-selection → approach → invariant → complexity → code → results
+- Problem fetched from MEP engine
+- Timer (informational)
 - Locked previous answers
+- Test results and score on completion
 
-**Status**: Partially Implemented (UI only)
+**Status**: Implemented
 
-**Code-defined behavior**: The `/interview` page renders a complete interview simulation UI, but uses **no backend**. It does NOT:
-- Fetch a real problem
-- Submit code for execution
-- Persist results
-- Use the gating/validation system
+**Backend Integration**:
+- Fetches recommended problem via `GET /api/problems/next` when interview starts
+- Displays problem statement throughout all steps
+- On "Submit Solution": creates attempt, submits thinking gate, submits code
+- Shows test results and score in results step
+- LLM feedback displayed if available
+
+**Interview Flow**:
+1. **Pattern Selection**: User identifies which pattern applies (locked after submit)
+2. **Approach**: User explains their approach
+3. **Invariant**: User states the loop/recursion invariant
+4. **Complexity**: User analyzes time and space complexity
+5. **Code**: User writes solution, clicks "Submit Solution"
+6. **Results**: Shows all answers, test results, score breakdown
 
 **Entry Points**:
 - `apps/web/src/app/interview/page.tsx`
@@ -513,7 +524,7 @@ Features derived from implemented code. Status reflects actual implementation st
 |------------|----------|----------------|
 | Daily session MEP selection | `/daily` Block B | **Connected** |
 | Daily session persistence | `/daily` | Session not persisted (attempts are) |
-| Interview mode submission | `/interview` | Not connected |
+| Interview mode | `/interview` | **Connected** |
 | Spaced review drills | `/daily` Block A | Hardcoded placeholder |
 | Pattern discovery (Socratic) | Docs only | Not implemented |
 | Micro drills | Docs only | Not implemented |
