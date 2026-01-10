@@ -241,6 +241,7 @@ registerHeuristic({
 
 /**
  * Detects missing backtrack in DFS
+ * Note: Does not apply to tree traversal (trees naturally backtrack via recursion return)
  */
 registerHeuristic({
   id: 'dfs_missing_backtrack',
@@ -250,6 +251,19 @@ registerHeuristic({
     // Look for DFS function
     const hasDFS = /\bdfs\b/i.test(code);
     if (!hasDFS) {
+      return { passed: true };
+    }
+
+    // Check if this is tree traversal (trees naturally backtrack via recursion)
+    const treePatterns = [
+      /\.left\b/,           // node.left
+      /\.right\b/,          // node.right
+      /TreeNode/i,          // TreeNode class/function
+      /\broot\b/,           // root parameter/variable
+      /\.val\b/,            // node.val
+    ];
+    const isTreeTraversal = treePatterns.some((p) => p.test(code));
+    if (isTreeTraversal) {
       return { passed: true };
     }
 
@@ -352,12 +366,27 @@ registerHeuristic({
 
 /**
  * Detects using BFS (queue) when DFS (stack/recursion) is expected
+ * Note: Does not apply when queue is used for tree building (constructing tree from array)
  */
 registerHeuristic({
   id: 'dfs_using_bfs',
   name: 'Using BFS Instead of DFS',
   pattern: 'DFS',
   check: (code: string, _language: string): HeuristicResult => {
+    // Check if this is tree traversal - queue may be used for building tree from array
+    const treePatterns = [
+      /\.left\b/,           // node.left
+      /\.right\b/,          // node.right
+      /TreeNode/i,          // TreeNode class/function
+      /\broot\b/,           // root parameter/variable
+      /\.val\b/,            // node.val
+    ];
+    const isTreeTraversal = treePatterns.some((p) => p.test(code));
+    if (isTreeTraversal) {
+      // Queue is often used for level-order tree construction, this is fine
+      return { passed: true };
+    }
+
     // Check for queue usage patterns
     const queuePatterns = [
       /\bqueue\b/i,
