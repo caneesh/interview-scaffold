@@ -118,7 +118,7 @@ The app runs at `http://localhost:3000`.
 
 ## Known Limitations (Visible in Code)
 
-1. **Daily Session**: The `/daily` page uses hardcoded mock problems; it is not connected to the backend MEP engine or problem selection logic.
+1. **Daily Session Block A**: The spaced review block uses a hardcoded question. Block B (practice) is fully connected to the backend MEP engine.
 
 2. **Interview Mode**: The `/interview` page is a standalone form; it does not fetch real problems or submit to the backend.
 

@@ -8,9 +8,9 @@ This section lists discrepancies between UI, documentation, and actual implement
 
 | UI Element | Location | Current State | Risk |
 |------------|----------|---------------|------|
-| Daily Session MEP selection | `/daily` Block B | Hardcoded problem | Users see a problem but it's not personalized |
+| Daily Session MEP selection | `/daily` Block B | **Connected** | Full practice flow with MEP problem selection |
 | Daily Session spaced review | `/daily` Block A | Hardcoded question | No spaced repetition logic; same question always |
-| Daily Session persistence | `/daily` complete | Not saved | User effort is lost on page refresh |
+| Daily Session persistence | `/daily` complete | Session not persisted | Attempts are saved, but session-level data is not |
 | Interview Mode problem | `/interview` | No problem displayed | Users write code for an undefined problem |
 | Interview Mode submission | `/interview` | Not executed | Code is never validated; no feedback |
 | Interview Mode results | `/interview` | Not graded | No scoring or skill updates |

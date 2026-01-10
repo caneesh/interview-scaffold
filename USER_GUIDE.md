@@ -140,9 +140,9 @@ When you successfully pass all tests:
 
 ---
 
-## Daily Session Mode (UI Demo Only)
+## Daily Session Mode
 
-**Note**: This mode has a complete UI but is NOT connected to the backend. It uses hardcoded mock data.
+Block B (MEP Practice) is fully connected to the backend. Block A (Spaced Review) uses placeholder content.
 
 ### Step 1: Start Daily Session
 
@@ -153,36 +153,48 @@ When you successfully pass all tests:
    - Block C (2 min): Reflection
 3. Click **"Start Session"**
 
-### Step 2: Block A - Spaced Review
+### Step 2: Block A - Spaced Review (Placeholder)
 
 1. **Timer starts** counting down from 2:00
-2. **Multiple-choice question** appears about a pattern (e.g., "What is the time complexity of sliding window?")
+2. **Multiple-choice question** appears about Sliding Window complexity
 3. **Select an answer**
 4. Click **"Continue to Practice"**
 
-**Code-defined behavior**: The question is hardcoded. No backend validation occurs.
+**Note**: The question is a placeholder. A "Coming soon: personalized review" indicator is shown.
 
-### Step 3: Block B - MEP Practice
+### Step 3: Block B - MEP Practice (Backend Connected)
 
-1. **Timer shows** 6 minutes remaining
-2. **Problem displayed**: Hardcoded "Two Sum II - Input Array Is Sorted"
-3. **Text area** for writing your approach/solution
-4. Click **"Continue to Reflection"**
+1. **Problem loads** from the MEP engine (personalized based on your skill level)
+2. **Thinking Gate**: Identify the pattern and state an invariant
+3. **Code Editor**: Write your solution
+4. **Submit**: Code is executed against test cases
+5. **Hints**: Request progressive hints if needed
+6. **Test Results**: See pass/fail per test case
+7. **LLM Feedback**: AI feedback if enabled
+8. **Reflection** (if tests fail): Answer why you think it failed, then retry
+9. **Completion**: See score breakdown when all tests pass
+10. Click **"Continue to Session Reflection"** (or **"Skip to Reflection"** if not completed)
 
-**Code-defined behavior**: No code execution. No test validation. Text is not persisted.
+This block works exactly like Practice Mode but embedded in the daily session.
 
 ### Step 4: Block C - Reflection
 
-1. **Confidence rating**: Select 1-5
-2. **Notes field**: Write what you learned or struggled with
-3. Click **"Complete Session"**
+1. If you completed the problem, **see your score breakdown** (Overall, Pattern, Code, Edge Cases)
+2. **Confidence rating**: Select 1-5
+3. **Notes field**: Write what you learned or struggled with
+4. Click **"Complete Session"**
 
 ### Step 5: Session Complete
 
-1. See summary with total time and confidence rating
+1. See summary with:
+   - Total time
+   - Review checkmark
+   - Practice score (or "Skipped" if not completed)
+   - Confidence rating
+   - Problem practiced (title and pattern)
 2. Click **"Back to Home"**
 
-**Code-defined behavior**: Results are NOT persisted. No skill updates occur.
+**Note**: The attempt is persisted and affects your skill state. Session-level data (confidence, notes) is not persisted.
 
 ---
 

@@ -375,17 +375,25 @@ Features derived from implemented code. Status reflects actual implementation st
 **Trigger**: User clicks "Start Daily Session" on `/daily`
 
 **Data Involved**:
-- Block durations
-- Review drill questions
-- Confidence rating (1-5)
+- Block durations (2 min / 6 min / 2 min)
+- Block A: Spaced review question (placeholder)
+- Block B: MEP-selected problem, full practice flow (thinking gate, code editor, test execution, hints)
+- Block C: Confidence rating (1-5), reflection notes
 
-**Status**: Partially Implemented (UI only)
+**Status**: Partially Implemented
 
-**Code-defined behavior**: The `/daily` page renders a complete UI with timer, blocks, and transitions, but uses **hardcoded mock data**. It does NOT:
-- Fetch problems from the backend
-- Call MEP engine for problem selection
-- Persist session results
-- Track spaced review history
+**Block A (Spaced Review)**: Placeholder with static content. Shows a hardcoded multiple-choice question with "Coming soon: personalized review" indicator.
+
+**Block B (MEP Practice)**: Fully connected to backend:
+- Fetches recommended problem via `GET /api/problems/next`
+- Starts attempt via `POST /api/attempts/start`
+- Full practice flow: ThinkingGate → CodeEditor → TestResults → HintPanel → LLMFeedback
+- Submits code via `POST /api/attempts/[id]/submit`
+- Requests hints via `POST /api/attempts/[id]/hint`
+- Handles reflection after failed tests via `POST /api/attempts/[id]/step`
+- Displays attempt score on completion
+
+**Block C (Session Reflection)**: UI-only confidence rating and notes. If attempt was completed, displays the score breakdown.
 
 **Entry Points**:
 - `apps/web/src/app/daily/page.tsx`
@@ -503,9 +511,10 @@ Features derived from implemented code. Status reflects actual implementation st
 
 | UI Element | Location | Backend Status |
 |------------|----------|----------------|
-| Daily session MEP selection | `/daily` | Not connected |
+| Daily session MEP selection | `/daily` Block B | **Connected** |
+| Daily session persistence | `/daily` | Session not persisted (attempts are) |
 | Interview mode submission | `/interview` | Not connected |
-| Spaced review drills | `/daily` Block A | Hardcoded mock |
+| Spaced review drills | `/daily` Block A | Hardcoded placeholder |
 | Pattern discovery (Socratic) | Docs only | Not implemented |
 | Micro drills | Docs only | Not implemented |
 | Skill decay / spaced repetition | Docs only | Not implemented |
