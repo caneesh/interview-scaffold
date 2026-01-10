@@ -8,6 +8,7 @@ import {
   real,
   uuid,
   index,
+  unique,
 } from 'drizzle-orm/pg-core';
 
 // ============ Tenants ============

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitStep } from '@scaffold/core/use-cases';
 import { SubmitThinkingGateRequestSchema, SubmitReflectionRequestSchema } from '@scaffold/contracts';
-import { attemptRepo, eventSink, clock, idGenerator } from '@/lib/deps';
+import { attemptRepo, contentRepo, eventSink, clock, idGenerator } from '@/lib/deps';
 import type { StepData } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
@@ -75,13 +75,15 @@ export async function POST(
         stepType: stepType as 'THINKING_GATE' | 'REFLECTION',
         data: stepData,
       },
-      { attemptRepo, eventSink, clock, idGenerator }
+      { attemptRepo, contentRepo, eventSink, clock, idGenerator }
     );
 
+    // Include validation result for THINKING_GATE steps
     return NextResponse.json({
       attempt: result.attempt,
       step: result.step,
       passed: result.passed,
+      ...(result.validation && { validation: result.validation }),
     });
   } catch (error) {
     if (error instanceof Error && 'code' in error) {

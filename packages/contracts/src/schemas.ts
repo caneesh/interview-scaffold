@@ -217,3 +217,38 @@ export const ErrorResponseSchema = z.object({
     message: z.string(),
   }),
 });
+
+// ============ Thinking Gate Validation ============
+
+export const ThinkingGateErrorSchema = z.object({
+  field: z.enum(['pattern', 'invariant', 'complexity']),
+  code: z.string(),
+  message: z.string(),
+  hint: z.string().optional(),
+});
+
+export const ThinkingGateWarningSchema = z.object({
+  field: z.enum(['pattern', 'invariant', 'complexity']),
+  code: z.string(),
+  message: z.string(),
+});
+
+export const ThinkingGateValidationResultSchema = z.object({
+  passed: z.boolean(),
+  errors: z.array(ThinkingGateErrorSchema),
+  warnings: z.array(ThinkingGateWarningSchema),
+  llmAugmented: z.boolean(),
+});
+
+// Extended Step Response for Thinking Gate
+export const SubmitThinkingGateExtendedResponseSchema = z.object({
+  attempt: AttemptSchema,
+  step: z.object({
+    id: z.string(),
+    type: z.literal('THINKING_GATE'),
+    result: z.enum(['PASS', 'FAIL']),
+    data: z.any(),
+  }),
+  passed: z.boolean(),
+  validation: ThinkingGateValidationResultSchema.optional(),
+});

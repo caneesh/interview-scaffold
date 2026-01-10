@@ -1,11 +1,23 @@
 import type { TenantId } from '../entities/tenant.js';
 import type { AttemptId, Attempt, AttemptState } from '../entities/attempt.js';
 import type { Step, StepType, StepResult, StepData } from '../entities/step.js';
+import type { Problem } from '../entities/problem.js';
+import type { PatternId, PATTERNS } from '../entities/pattern.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
+import type { ContentRepo } from '../ports/content-repo.js';
 import type { EventSink } from '../ports/event-sink.js';
 import type { Clock } from '../ports/clock.js';
 import type { IdGenerator } from '../ports/id-generator.js';
 import { hasPassedThinkingGate } from '../entities/attempt.js';
+import {
+  validateThinkingGate,
+  type ThinkingGateValidationResult,
+  type ThinkingGateInput,
+  type ThinkingGateContext,
+  type ThinkingGateLLMPort,
+  createNullThinkingGateLLM,
+  validateThinkingGateWithLLM,
+} from '../validation/thinking-gate.js';
 
 export interface SubmitStepInput {
   readonly tenantId: TenantId;
@@ -19,13 +31,16 @@ export interface SubmitStepOutput {
   readonly attempt: Attempt;
   readonly step: Step;
   readonly passed: boolean;
+  readonly validation?: ThinkingGateValidationResult;
 }
 
 export interface SubmitStepDeps {
   readonly attemptRepo: AttemptRepo;
+  readonly contentRepo: ContentRepo;
   readonly eventSink: EventSink;
   readonly clock: Clock;
   readonly idGenerator: IdGenerator;
+  readonly thinkingGateLLM?: ThinkingGateLLMPort;
 }
 
 export class StepError extends Error {
@@ -43,7 +58,8 @@ export async function submitStep(
   deps: SubmitStepDeps
 ): Promise<SubmitStepOutput> {
   const { tenantId, userId, attemptId, stepType, data } = input;
-  const { attemptRepo, eventSink, clock, idGenerator } = deps;
+  const { attemptRepo, contentRepo, eventSink, clock, idGenerator } = deps;
+  const thinkingGateLLM = deps.thinkingGateLLM ?? createNullThinkingGateLLM();
 
   const attempt = await attemptRepo.findById(tenantId, attemptId);
   if (!attempt) {
@@ -60,8 +76,68 @@ export async function submitStep(
   const now = clock.now();
   const stepId = idGenerator.generate();
 
-  // Evaluate step result
-  const result = evaluateStep(stepType, data);
+  // For THINKING_GATE, run semantic validation
+  let validation: ThinkingGateValidationResult | undefined;
+  let result: StepResult;
+
+  if (stepType === 'THINKING_GATE') {
+    const d = data as Extract<StepData, { type: 'THINKING_GATE' }>;
+
+    // Validate required fields are present
+    if (!d.selectedPattern || !d.statedInvariant) {
+      // Early fail if required fields are missing
+      validation = {
+        passed: false,
+        errors: [
+          ...(!d.selectedPattern ? [{
+            field: 'pattern' as const,
+            code: 'PATTERN_REQUIRED',
+            message: 'Please select a pattern.',
+            hint: 'Choose the algorithmic pattern that best fits this problem.',
+          }] : []),
+          ...(!d.statedInvariant ? [{
+            field: 'invariant' as const,
+            code: 'INVARIANT_REQUIRED',
+            message: 'Please state an invariant.',
+            hint: 'Describe what property your solution will maintain throughout execution.',
+          }] : []),
+        ],
+        warnings: [],
+        llmAugmented: false,
+      };
+      result = 'FAIL';
+    } else {
+      // Fetch the problem for context
+      const problem = await contentRepo.findById(tenantId, attempt.problemId);
+      if (!problem) {
+        throw new StepError('Problem not found', 'PROBLEM_NOT_FOUND');
+      }
+
+      // Build validation context
+      const validationInput: ThinkingGateInput = {
+        selectedPattern: d.selectedPattern,
+        statedInvariant: d.statedInvariant,
+        statedComplexity: d.statedComplexity ?? null,
+      };
+
+      const validationContext: ThinkingGateContext = {
+        problem,
+        allowedPatterns: getAllowedPatternsForProblem(problem),
+      };
+
+      // Run semantic validation with optional LLM augmentation
+      validation = await validateThinkingGateWithLLM(
+        validationInput,
+        validationContext,
+        thinkingGateLLM
+      );
+
+      result = validation.passed ? 'PASS' : 'FAIL';
+    }
+  } else {
+    // Evaluate non-thinking-gate steps
+    result = evaluateStep(stepType, data);
+  }
 
   const step: Step = {
     id: stepId,
@@ -104,7 +180,17 @@ export async function submitStep(
     attempt: updatedAttempt,
     step,
     passed: result === 'PASS',
+    validation,
   };
+}
+
+/**
+ * Get allowed patterns for a problem
+ * For now, returns only the problem's pattern (strict matching)
+ * Future: could allow related patterns at different rung levels
+ */
+function getAllowedPatternsForProblem(problem: Problem): PatternId[] {
+  return [problem.pattern];
 }
 
 function validateStateTransition(attempt: Attempt, stepType: StepType): void {
@@ -155,15 +241,17 @@ function validateStateTransition(attempt: Attempt, stepType: StepType): void {
   }
 }
 
+/**
+ * Evaluates non-thinking-gate steps
+ * THINKING_GATE is handled separately with semantic validation
+ */
 function evaluateStep(stepType: StepType, data: StepData): StepResult {
   switch (stepType) {
     case 'THINKING_GATE': {
+      // This should not be called for THINKING_GATE (handled separately)
+      // Fallback to presence check for backwards compatibility
       const d = data as Extract<StepData, { type: 'THINKING_GATE' }>;
-      // Pass if pattern and invariant are provided
-      if (d.selectedPattern && d.statedInvariant) {
-        return 'PASS';
-      }
-      return 'FAIL';
+      return d.selectedPattern && d.statedInvariant ? 'PASS' : 'FAIL';
     }
 
     case 'CODING': {

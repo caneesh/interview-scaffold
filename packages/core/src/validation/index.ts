@@ -50,3 +50,23 @@ export {
   LLM_VALIDATION_RESPONSE_SCHEMA,
   DEFAULT_ORCHESTRATOR_CONFIG,
 } from './llm-port.js';
+
+// Thinking Gate Validation
+export {
+  validateThinkingGate,
+  validateThinkingGateDeterministic,
+  validateThinkingGateFull,
+  createNullThinkingGateLLM,
+  MIN_INVARIANT_LENGTH,
+  RELATED_PATTERNS,
+  PATTERN_INVARIANT_KEYWORDS,
+} from './thinking-gate.js';
+
+export type {
+  ThinkingGateInput,
+  ThinkingGateValidationResult,
+  ThinkingGateError,
+  ThinkingGateWarning,
+  ThinkingGateContext,
+  ThinkingGateLLMPort,
+} from './thinking-gate.js';

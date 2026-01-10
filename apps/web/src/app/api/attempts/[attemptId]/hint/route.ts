@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitStep } from '@scaffold/core/use-cases';
-import { attemptRepo, eventSink, clock, idGenerator } from '@/lib/deps';
+import { attemptRepo, contentRepo, eventSink, clock, idGenerator } from '@/lib/deps';
 import type { HintLevel } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
@@ -78,7 +78,7 @@ export async function POST(
           text: hintText,
         },
       },
-      { attemptRepo, eventSink, clock, idGenerator }
+      { attemptRepo, contentRepo, eventSink, clock, idGenerator }
     );
 
     return NextResponse.json({
