@@ -1,468 +1,315 @@
 # User Guide
 
-A complete guide to using the Scaffolded Learning Platform for coding interview preparation.
-
-## Table of Contents
-
-1. [Getting Started](#getting-started)
-2. [Home Page](#home-page)
-3. [Daily Session](#daily-session)
-4. [Interview Mode](#interview-mode)
-5. [Practice Mode](#practice-mode)
-6. [Understanding Patterns](#understanding-patterns)
-7. [Progress and Statistics](#progress-and-statistics)
-8. [Tips for Success](#tips-for-success)
-9. [Troubleshooting](#troubleshooting)
+Step-by-step guide for using the Scaffolded Learning Platform. This guide covers the happy path for each implemented mode.
 
 ---
 
-## Getting Started
+## First-Time User Flow
 
-### Creating an Account
+### 1. Navigate to the Application
 
-1. Navigate to the application URL
-2. Click "Sign Up" if you're a new user
-3. Enter your email and create a password
-4. Verify your email if required
-5. Complete your profile setup
+Open `http://localhost:3000` in your browser after starting the development server.
 
-### First Login
+### 2. Home Page
 
-After logging in, you'll see the home page with three main learning modes:
-- **Daily Session** - Structured 10-minute practice
-- **Interview Mode** - Realistic interview simulation
-- **Practice Problems** - Free-form practice
+You will see the home page with:
 
-We recommend starting with Daily Sessions to build consistent habits.
+- **Title**: "Master Coding Patterns"
+- **Description**: Pattern-first interview preparation
+- **Two buttons**:
+  - "Start Practice" - Main learning mode
+  - "Explore Patterns" - Browse available content
 
----
+### 3. How It Works Section
 
-## Home Page
-
-The home page serves as your learning hub with quick access to all features.
-
-### Main Navigation
-
-| Button | Description |
-|--------|-------------|
-| Start Daily Session | Begin a 10-minute structured learning session |
-| Interview Mode | Practice under real interview conditions |
-| Practice Problems | Free-form problem practice |
-
-### Quick Stats
-
-The home page displays your current statistics:
-- Problems completed
-- Current streak
-- Patterns mastered
+The home page displays a 3-step process:
+1. **Approach** - Identify the pattern before writing code
+2. **Implement** - Write your solution with the pattern in mind
+3. **Reflect** - Learn from mistakes through guided reflection
 
 ---
 
-## Daily Session
+## Practice Mode (Primary Learning Path)
 
-The Daily Session is a 10-minute structured learning experience designed for consistent daily practice.
+This is the main learning interface with full backend integration.
 
-### Session Structure
+### Step 1: Start Practice
 
-#### Block A: Spaced Review (2 minutes)
+1. Click **"Start Practice"** on the home page
+2. You are taken to `/practice`
+3. The system recommends a problem based on your skill level
 
-**Purpose:** Reinforce previously learned patterns through quick recall.
+### Step 2: Start an Attempt
 
-**How it works:**
-1. You'll see a multiple-choice question about a pattern you've studied
-2. Read the question carefully
-3. Select the answer you believe is correct
-4. Submit your answer
-5. Review the explanation (whether correct or incorrect)
-6. Click "Continue to Practice" when ready
+1. Select a problem from the list (if available)
+2. Click to start an attempt
+3. The system checks if the rung is unlocked for you:
+   - **Rung 1**: Always unlocked
+   - **Rungs 2-5**: Require 70+ score on previous rung
 
-**Tips:**
-- Don't spend too long on any single question
-- If unsure, make your best guess - the explanation will help you learn
-- Pay attention to the explanation even if you got it right
+### Step 3: Thinking Gate (Required)
 
-#### Block B: MEP Practice (6 minutes)
+Before you can write code, you must pass the thinking gate:
 
-**Purpose:** Work on a problem specifically selected for your current skill level.
+1. **Identify the Pattern**: Select which algorithmic pattern applies (e.g., BACKTRACKING, SLIDING_WINDOW)
+2. **State the Invariant**: Describe what property your solution will maintain
 
-**How it works:**
-1. The MEP engine selects an optimal problem based on your progress
-2. Read the problem description carefully
-3. Work through the scaffolded steps:
-   - Pattern identification
-   - Approach planning
-   - Code implementation
-4. Use hints if needed (but try without first)
-5. Click "Continue to Reflection" when done or time runs out
+The system evaluates your response:
+- **Pass**: You may proceed to coding
+- **Fail**: A micro-lesson modal appears with educational content
 
-**The scaffolded approach:**
-- **Step 1:** Identify the pattern (e.g., Two Pointers, Sliding Window)
-- **Step 2:** Plan your approach before coding
-- **Step 3:** Implement step-by-step with guidance
-- **Step 4:** Review and test your solution
+**What you see**:
+- Problem statement at the top (collapsible)
+- Stepper showing: Approach > Code > Test > (Reflection) > Complete
+- Form fields for pattern selection and invariant
 
-#### Block C: Reflection (2 minutes)
+### Step 4: Write Code
 
-**Purpose:** Self-assess your understanding and identify areas for improvement.
+After passing the thinking gate:
 
-**How it works:**
-1. Rate your confidence on a scale of 1-5:
-   - **1** - Not confident at all, need more practice
-   - **2** - Somewhat uncertain, had significant struggles
-   - **3** - Neutral, could do it but with difficulty
-   - **4** - Fairly confident, minor struggles
-   - **5** - Very confident, could explain to others
-2. Add reflection notes (optional but recommended)
-3. Click "Complete Session"
+1. **Write your solution** in the code editor
+   - Syntax highlighting enabled
+   - Language selection available (Python, JavaScript, etc.)
 
-**Reflection prompts to consider:**
-- What pattern did I practice today?
-- What was the hardest part?
-- What would I do differently next time?
-- What concept do I need to review?
+2. **Request hints** (optional)
+   - Click "Get Hint" to receive progressive hints
+   - 5 hint levels available: Directional -> Heuristic -> Concept -> Example -> Code
+   - Each hint usage is tracked and may affect your score
 
-### After the Session
+3. **Submit your code**
+   - Click "Submit" to run your code against test cases
 
-You'll see a session summary with:
-- Time spent in each block
-- Your confidence rating
-- MEP recommendations for next session
-- Progress updates
+### Step 5: View Test Results
 
----
+After submission, you see:
 
-## Interview Mode
+1. **Test Results Panel**:
+   - Each test case showing: Input, Expected Output, Actual Output
+   - Pass/Fail indicator per test
+   - Error messages if execution failed
 
-Interview Mode simulates real coding interview conditions to prepare you for the real thing.
+2. **Validation Feedback** (if LLM enabled):
+   - Grade: PASS, PARTIAL, or FAIL
+   - Confidence level
+   - Specific feedback on your code
+   - Suggested micro-lesson (if applicable)
 
-### Interview Conditions
+### Step 6: Gating Decision
 
-- **Timer visible** - See exactly how much time remains
-- **Hints hidden** - No hints available (like a real interview)
-- **Forced explanations** - Must explain your approach before coding
-- **Locked answers** - Cannot change answers after submitting
+The system decides your next step based on your submission:
 
-### Interview Phases
+| Outcome | What Happens |
+|---------|--------------|
+| All tests pass + no critical errors | Proceed to completion |
+| Pattern-specific error detected | Micro-lesson modal appears |
+| Repeated same error | Reflection form required |
+| Tests fail | Reflection form required |
 
-#### Phase 1: Pattern Selection
+### Step 7: Reflection (If Required)
 
-**What you do:**
-1. Read the problem statement carefully
-2. Analyze the problem characteristics
-3. Identify which algorithmic pattern applies
-4. Select your answer from the options
-5. **Note:** Your answer locks after submission
+If you failed tests or made critical errors:
 
-**Tips:**
-- Look for keywords that suggest patterns (e.g., "sorted array" → Binary Search)
-- Consider time/space complexity requirements
-- Think about what data structures would help
+1. **Multiple-choice question** appears asking about your mistake
+2. **Select an answer** from the options
+3. **Submit** to proceed
+4. After reflection, you return to the coding step to retry
 
-#### Phase 2: Approach Explanation
+**Example reflection questions**:
+- "I missed handling an edge case (empty input, single element, etc.)"
+- "I had an off-by-one error in my loop bounds"
+- "I used the wrong algorithmic approach for this problem"
 
-**What you do:**
-1. Describe your solution strategy in words
-2. Explain why you chose this approach
-3. Outline the steps you'll take
-4. Submit your explanation
+### Step 8: Completion
 
-**Tips:**
-- Be specific about your approach
-- Mention any edge cases you're aware of
-- Explain your thought process, not just the steps
+When you successfully pass all tests:
 
-#### Phase 3: Loop Invariants
+1. **Completion Summary** appears showing:
+   - Overall score (0-100)
+   - Score breakdown: Pattern Recognition, Implementation, Edge Cases, Efficiency
+   - Hints used count
+   - Code submissions count
 
-**What you do:**
-1. Define what conditions your solution maintains
-2. Explain the invariant(s) your algorithm preserves
-3. Describe what's true at each iteration
+2. **Skill is updated**:
+   - Your score is recorded for this pattern-rung combination
+   - Exponential moving average applied
+   - If score >= 70, next rung may be unlocked
 
-**Example:**
-For a two-pointer problem: "At any point, all elements before the left pointer have been processed, and all elements after the right pointer will be processed next."
-
-#### Phase 4: Complexity Analysis
-
-**What you do:**
-1. Analyze time complexity (e.g., O(n), O(n log n))
-2. Analyze space complexity (e.g., O(1), O(n))
-3. Explain your reasoning
-
-**Tips:**
-- Count nested loops
-- Consider recursive call stacks
-- Don't forget auxiliary space usage
-
-#### Phase 5: Code Solution
-
-**What you do:**
-1. Write your solution in the code editor
-2. Choose your preferred language
-3. Implement the approach you described
-4. Test with example inputs mentally
-
-**Code Editor Features:**
-- Syntax highlighting
-- Auto-completion
-- Language templates available
-
-#### Phase 6: Results Review
-
-**What you see:**
-- All your answers displayed
-- Correct answers revealed
-- Feedback on each phase
-- Overall performance assessment
+3. **Next action**:
+   - Return to practice to try another problem
+   - System recommends next problem via MEP engine
 
 ---
 
-## Practice Mode
+## Daily Session Mode (UI Demo Only)
 
-Practice Mode offers unstructured, pressure-free problem solving.
+**Note**: This mode has a complete UI but is NOT connected to the backend. It uses hardcoded mock data.
 
-### How to Use Practice Mode
+### Step 1: Start Daily Session
 
-1. Browse available problems
-2. Filter by:
-   - Difficulty (Easy, Medium, Hard)
-   - Pattern (Two Pointers, DP, etc.)
-   - Status (Completed, In Progress, New)
-3. Select a problem to work on
-4. Work through scaffolded steps at your own pace
-5. Use hints when needed
-6. No time pressure
+1. Navigate to `/daily`
+2. See the 10-minute session overview:
+   - Block A (2 min): Spaced Review
+   - Block B (6 min): MEP Practice
+   - Block C (2 min): Reflection
+3. Click **"Start Session"**
 
-### Scaffolded Problem Structure
+### Step 2: Block A - Spaced Review
 
-Each problem is broken into manageable steps:
+1. **Timer starts** counting down from 2:00
+2. **Multiple-choice question** appears about a pattern (e.g., "What is the time complexity of sliding window?")
+3. **Select an answer**
+4. Click **"Continue to Practice"**
 
-1. **Pattern Selection** - Identify the pattern
-2. **Strategy Planning** - Plan your approach
-3. **Implementation Steps** - Code incrementally
-4. **Review** - Check and test your solution
+**Code-defined behavior**: The question is hardcoded. No backend validation occurs.
 
-### Using Hints
+### Step 3: Block B - MEP Practice
 
-Hints are available at each step:
-- Click "Show Hint" to reveal
-- Hints progress from general to specific
-- Each hint usage is tracked
-- Try to solve without hints first
+1. **Timer shows** 6 minutes remaining
+2. **Problem displayed**: Hardcoded "Two Sum II - Input Array Is Sorted"
+3. **Text area** for writing your approach/solution
+4. Click **"Continue to Reflection"**
 
----
+**Code-defined behavior**: No code execution. No test validation. Text is not persisted.
 
-## Understanding Patterns
+### Step 4: Block C - Reflection
 
-Patterns are algorithmic templates that apply to multiple problems.
+1. **Confidence rating**: Select 1-5
+2. **Notes field**: Write what you learned or struggled with
+3. Click **"Complete Session"**
 
-### Common Patterns
+### Step 5: Session Complete
 
-#### Two Pointers
-- **When to use:** Sorted arrays, finding pairs, comparing elements
-- **Key indicator:** "Find two elements that sum to X"
-- **Complexity:** Usually O(n) time, O(1) space
+1. See summary with total time and confidence rating
+2. Click **"Back to Home"**
 
-#### Sliding Window
-- **When to use:** Contiguous subarrays/substrings
-- **Key indicator:** "Maximum/minimum in subarray of size k"
-- **Complexity:** Usually O(n) time, O(1) space
-
-#### Binary Search
-- **When to use:** Sorted arrays, finding boundaries
-- **Key indicator:** "Find position in sorted array"
-- **Complexity:** O(log n) time, O(1) space
-
-#### Dynamic Programming
-- **When to use:** Optimization, counting, overlapping subproblems
-- **Key indicator:** "Find minimum/maximum/count of ways"
-- **Complexity:** Varies, often O(n²) or O(n*m)
-
-#### DFS (Depth-First Search)
-- **When to use:** Trees, graphs, path finding
-- **Key indicator:** "Find all paths", "explore all possibilities"
-- **Complexity:** O(V + E) for graphs
-
-#### BFS (Breadth-First Search)
-- **When to use:** Shortest path in unweighted graphs, level-order
-- **Key indicator:** "Minimum steps", "level by level"
-- **Complexity:** O(V + E) for graphs
-
-### Pattern Mastery
-
-Progress through patterns by:
-1. Recognizing the pattern
-2. Applying the template
-3. Handling variations
-4. Transferring to new problems
+**Code-defined behavior**: Results are NOT persisted. No skill updates occur.
 
 ---
 
-## Progress and Statistics
+## Interview Mode (UI Demo Only)
 
-### Viewing Your Progress
+**Note**: This mode has a complete UI but is NOT connected to the backend.
 
-Access your progress dashboard to see:
-- **Problems Completed** - Total problems solved
-- **Patterns Mastered** - Patterns at mastery level
-- **Current Streak** - Consecutive days of practice
-- **Time Invested** - Total learning time
+### Step 1: Start Interview
 
-### Understanding Metrics
+1. Navigate to `/interview`
+2. See interview conditions:
+   - Timer always running
+   - Hints hidden by default
+   - Forced explanations
+3. Click **"Start Interview"**
 
-#### Mastery Score (0-100)
-- Below 50: Learning phase
-- 50-74: Developing proficiency
-- 75-89: Near mastery
-- 90+: Mastered
+### Step 2: Pattern Selection (Locked After Submit)
 
-#### Rung Level
-Your current difficulty level for each pattern:
-- Rung 1: Easy problems
-- Rung 2: Medium problems
-- Rung 3: Hard problems
+1. **Timer starts**
+2. **Read the problem** (hardcoded)
+3. **Write** which pattern you think applies and why
+4. Click **"Lock & Continue"** (answer cannot be changed)
 
-#### Streak
-Days of consecutive practice:
-- Builds with daily sessions
-- Resets if you miss a day
-- Higher streaks = better retention
+### Step 3: Approach
 
----
+1. **Explain your approach** in the text area
+2. Previous answer shown as locked reference
+3. Click **"Continue"**
 
-## Tips for Success
+### Step 4: Loop Invariant
 
-### Daily Practice
+1. **Define the invariant** your solution maintains
+2. Click **"Continue"**
 
-1. **Be consistent** - 10 minutes daily beats 2 hours weekly
-2. **Complete all three blocks** - Each serves a purpose
-3. **Be honest in reflection** - Accurate confidence ratings improve recommendations
-4. **Review explanations** - Learn from both correct and incorrect answers
+### Step 5: Complexity Analysis
 
-### During Problem Solving
+1. **Analyze time and space complexity**
+2. Click **"Continue"**
 
-1. **Read carefully** - Understand the problem fully before coding
-2. **Identify the pattern first** - Don't jump to code immediately
-3. **Plan before implementing** - Write pseudocode or outline steps
-4. **Test with examples** - Verify your solution mentally
-5. **Consider edge cases** - Empty input, single element, duplicates
+### Step 6: Code Implementation
 
-### Pattern Recognition
+1. **Write your solution** in the code editor
+2. Click **"Submit Solution"**
 
-1. **Look for keywords** - "Sorted" → Binary Search, "Subarray" → Sliding Window
-2. **Consider constraints** - Array size hints at expected complexity
-3. **Draw examples** - Visualize the problem
-4. **Connect to known problems** - "This is like Two Sum but..."
+### Step 7: Results
 
-### Interview Preparation
+1. **See all your answers** displayed
+2. **Total time** shown
+3. Click **"Back to Home"**
 
-1. **Practice under time pressure** - Use Interview Mode regularly
-2. **Explain out loud** - Practice verbalizing your thought process
-3. **Review mistakes** - Learn from errors, don't just move on
-4. **Build pattern intuition** - The more patterns you master, the easier new problems become
+**Code-defined behavior**: No validation, no grading, no persistence.
 
 ---
 
-## Troubleshooting
+## Error Messages You May See
 
-### Common Issues
+### During Attempt Start
 
-#### "I can't identify the pattern"
+| Error | Meaning |
+|-------|---------|
+| "User already has an active attempt" | Complete or abandon your current attempt first |
+| "Problem not found" | The requested problem doesn't exist |
+| "Rung X for PATTERN is not unlocked" | Score 70+ on the previous rung first |
 
-1. Re-read the problem slowly
-2. Look for keywords (sorted, subarray, path, etc.)
-3. Consider what data structures might help
-4. Think about the expected time complexity
-5. Start with brute force, then optimize
+### During Code Submission
 
-#### "I know the pattern but can't implement it"
+| Error | Meaning |
+|-------|---------|
+| "Must pass thinking gate before submitting code" | Complete the approach step first |
+| "Must pass reflection gate before resubmitting" | Answer the reflection question first |
+| "Cannot submit code in current state" | Attempt state doesn't allow code submission |
 
-1. Review the pattern template
-2. Break the problem into smaller steps
-3. Write pseudocode first
-4. Use hints if truly stuck
-5. After solving, study the solution carefully
+### During Hint Request
 
-#### "I keep making the same mistakes"
-
-1. Track your error patterns
-2. Do targeted micro-drills
-3. Review the related micro-lesson
-4. Practice similar problems
-5. The guardrails will automatically help by routing you to lessons
-
-#### "I'm not making progress"
-
-1. Ensure daily consistency
-2. Focus on one pattern at a time
-3. Don't skip the reflection phase
-4. Be honest about confidence levels
-5. Review your analytics for insights
-
-### Technical Issues
-
-#### Code editor not loading
-- Refresh the page
-- Clear browser cache
-- Try a different browser
-- Check internet connection
-
-#### Session not saving
-- Check internet connection
-- Don't close the tab during saving
-- Contact support if persists
-
-#### Timer issues
-- Refresh the page
-- Check system clock
-- Report the bug if consistent
+| Error | Meaning |
+|-------|---------|
+| "NO_MORE_HINTS" | All 5 hint levels have been used |
 
 ---
 
-## Keyboard Shortcuts
+## Validation Errors You May Trigger
 
-### Code Editor
+These appear as micro-lessons or require reflection:
+
+### Sliding Window Pattern
+
+- **Nested loops detected**: "Sliding window should use O(n) time with a single pass. Remove the inner loop."
+- **Wrong shrink mechanism**: "Use a while-loop to shrink the window, not an if-statement."
+
+### DFS Pattern
+
+- **Missing visited check**: "DFS on a grid requires tracking visited cells to avoid infinite loops."
+- **Missing backtrack**: "When using DFS for path-finding, remember to undo modifications after recursive calls."
+- **Missing base case**: "Grid DFS requires boundary checks: if row < 0 or row >= rows..."
+- **Using BFS for DFS**: "This problem expects DFS. Use recursion or stack instead of queue."
+
+### Binary Search Pattern
+
+- **Infinite loop risk**: "`left = mid` without `+1` can cause infinite loop."
+
+### Two Pointers Pattern
+
+- **No pointer movement**: "Move pointers inward: left += 1 or right -= 1."
+
+---
+
+## What "Completion" Means
+
+An attempt is considered **completed** when:
+
+1. All test cases pass
+2. No blocking gating decision (BLOCK_SUBMISSION)
+3. State transitions to `COMPLETED`
+
+After completion:
+- Final score is computed
+- Skill state is updated with exponential moving average
+- If new score >= 70, next rung may be unlocked
+- User can start a new attempt
+
+---
+
+## Keyboard Shortcuts (Code Editor)
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl/Cmd + S` | Save code |
 | `Ctrl/Cmd + Z` | Undo |
 | `Ctrl/Cmd + Shift + Z` | Redo |
-| `Ctrl/Cmd + /` | Toggle comment |
-| `Ctrl/Cmd + D` | Select next occurrence |
 | `Tab` | Indent |
 | `Shift + Tab` | Outdent |
-
-### Navigation
-
-| Shortcut | Action |
-|----------|--------|
-| `Enter` | Submit/Continue |
-| `Escape` | Cancel/Close |
-
----
-
-## Getting Help
-
-### In-App Help
-- Look for hint buttons on each step
-- Explanations are provided after each answer
-
-### Support
-- Report issues on GitHub
-- Check the FAQ section
-- Contact support for account issues
-
----
-
-## Best Practices Summary
-
-1. **Practice daily** - Consistency is key
-2. **Follow the scaffolding** - Trust the learning process
-3. **Reflect honestly** - Better data = better recommendations
-4. **Master patterns** - They're the foundation of interview success
-5. **Simulate interviews** - Regular Interview Mode practice
-6. **Learn from mistakes** - Every error is a learning opportunity
-7. **Track progress** - Celebrate improvements, identify gaps
-8. **Stay patient** - Mastery takes time
-
-Happy learning! 🎯
