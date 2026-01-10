@@ -182,6 +182,27 @@ def dfs(grid, r, c):
         const visitedResult = results.find(r => r.errorType === 'MISSING_VISITED_CHECK');
         expect(visitedResult).toBeUndefined();
       });
+
+      it('should NOT require visited for tree traversal (trees have no cycles)', () => {
+        // Tree traversal with dfs function - should NOT trigger visited check
+        const code = `
+function hasPathSum(arr, targetSum) {
+  function TreeNode(val) { this.val = val; this.left = null; this.right = null; }
+  const root = new TreeNode(arr[0]);
+  function dfs(node, remaining) {
+    if (!node) return false;
+    remaining -= node.val;
+    if (!node.left && !node.right) return remaining === 0;
+    return dfs(node.left, remaining) || dfs(node.right, remaining);
+  }
+  return dfs(root, targetSum);
+}
+`;
+        const results = runHeuristics('DFS', code, 'javascript');
+        const visitedResult = results.find(r => r.errorType === 'MISSING_VISITED_CHECK');
+        // Tree traversal should NOT trigger MISSING_VISITED_CHECK
+        expect(visitedResult).toBeUndefined();
+      });
     });
 
     describe('dfs_missing_backtrack', () => {

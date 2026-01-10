@@ -182,6 +182,7 @@ registerHeuristic({
 
 /**
  * Detects missing visited check in DFS
+ * Note: Only applies to grid/graph DFS, not tree DFS (trees don't have cycles)
  */
 registerHeuristic({
   id: 'dfs_missing_visited',
@@ -196,7 +197,22 @@ registerHeuristic({
       return { passed: true };
     }
 
-    // Check for visited tracking
+    // Check if this is tree traversal (trees don't have cycles, no visited needed)
+    const treePatterns = [
+      /\.left\b/,           // node.left
+      /\.right\b/,          // node.right
+      /TreeNode/i,          // TreeNode class/function
+      /\broot\b/,           // root parameter/variable
+      /\.val\b/,            // node.val (common tree node property)
+    ];
+    const isTreeTraversal = treePatterns.some((p) => p.test(code));
+
+    if (isTreeTraversal) {
+      // Trees don't have cycles, so visited tracking is not required
+      return { passed: true };
+    }
+
+    // Check for visited tracking (required for grid/graph DFS)
     const visitedPatterns = [
       /visited/i,
       /seen/i,
