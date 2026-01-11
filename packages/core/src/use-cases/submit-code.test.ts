@@ -297,10 +297,46 @@ function maxSum(arr, k) {
   });
 
   describe('Gating Decisions', () => {
-    it('returns PROCEED when all tests pass and no errors', async () => {
-      const deps = createMockDeps();
+    it('returns PROCEED_WITH_REFLECTION on first successful attempt', async () => {
+      const deps = createMockDeps(); // codeSubmissions=0 means attemptCount=1
 
       // Use single loop to avoid false positive heuristic errors
+      const result = await submitCode(
+        {
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          attemptId: 'attempt-1',
+          code: `
+function maxSum(arr, k) {
+  let windowSum = arr.slice(0, k).reduce((a, b) => a + b, 0);
+  let maxSum = windowSum;
+  let i = k;
+  while (i < arr.length) {
+    windowSum += arr[i] - arr[i - k];
+    maxSum = Math.max(maxSum, windowSum);
+    i++;
+  }
+  return maxSum;
+}`,
+          language: 'javascript',
+        },
+        deps
+      );
+
+      expect(result.gatingDecision.action).toBe('PROCEED_WITH_REFLECTION');
+      expect(result.gatingDecision.successReflectionPrompt).toBeDefined();
+      expect(result.passed).toBe(true);
+    });
+
+    it('returns PROCEED on second successful attempt (no reflection needed)', async () => {
+      const mockAttempt = createMockAttempt({ codeSubmissions: 1 }); // attemptCount=2
+      const deps = createMockDeps({
+        attemptRepo: {
+          findById: vi.fn().mockResolvedValue(mockAttempt),
+          update: vi.fn().mockImplementation((a) => Promise.resolve(a)),
+        } as unknown as AttemptRepo,
+      });
+
       const result = await submitCode(
         {
           tenantId: 'tenant-1',
@@ -422,10 +458,46 @@ function maxSum(arr, k) {
   });
 
   describe('State Transitions', () => {
-    it('transitions to COMPLETED when PROCEED and all tests pass', async () => {
-      const deps = createMockDeps();
+    it('transitions to SUCCESS_REFLECTION on first successful attempt', async () => {
+      const deps = createMockDeps(); // codeSubmissions=0 means attemptCount=1
 
       // Use single loop to avoid false positive heuristic errors
+      const result = await submitCode(
+        {
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          attemptId: 'attempt-1',
+          code: `
+function maxSum(arr, k) {
+  let windowSum = arr.slice(0, k).reduce((a, b) => a + b, 0);
+  let maxSum = windowSum;
+  let i = k;
+  while (i < arr.length) {
+    windowSum += arr[i] - arr[i - k];
+    maxSum = Math.max(maxSum, windowSum);
+    i++;
+  }
+  return maxSum;
+}`,
+          language: 'javascript',
+        },
+        deps
+      );
+
+      expect(result.attempt.state).toBe('SUCCESS_REFLECTION');
+      // Score is computed even for SUCCESS_REFLECTION since tests passed
+      expect(result.score).toBeDefined();
+    });
+
+    it('transitions to COMPLETED on second successful attempt (no reflection)', async () => {
+      const mockAttempt = createMockAttempt({ codeSubmissions: 1 }); // attemptCount=2
+      const deps = createMockDeps({
+        attemptRepo: {
+          findById: vi.fn().mockResolvedValue(mockAttempt),
+          update: vi.fn().mockImplementation((a) => Promise.resolve(a)),
+        } as unknown as AttemptRepo,
+      });
+
       const result = await submitCode(
         {
           tenantId: 'tenant-1',

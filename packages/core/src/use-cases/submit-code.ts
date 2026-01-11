@@ -256,6 +256,7 @@ export async function submitCode(
     microLessonId: llmResult?.suggestedMicroLesson ?? gatingDecision.microLessonId,
     llmFeedback: llmResult?.feedback,
     llmConfidence: llmResult?.confidence,
+    successReflectionPrompt: gatingDecision.successReflectionPrompt,
   };
 
   // ============ Determine next state based on gating ============
@@ -266,6 +267,9 @@ export async function submitCode(
   if (gatingDecision.action === 'BLOCK_SUBMISSION') {
     // Blocked - stay in coding state, don't count as submission
     nextState = 'CODING';
+  } else if (gatingDecision.action === 'PROCEED_WITH_REFLECTION' && allTestsPassed) {
+    // Success with optional reflection - go to SUCCESS_REFLECTION state
+    nextState = 'SUCCESS_REFLECTION';
   } else if (gatingDecision.action === 'PROCEED' && allTestsPassed) {
     nextState = 'COMPLETED';
   } else if (gatingDecision.action === 'SHOW_MICRO_LESSON') {
@@ -309,9 +313,11 @@ export async function submitCode(
   await attemptRepo.update(updatedAttempt);
 
   // ============ Persist Skill Score on Completion ============
+  // Score is computed when attempt transitions to COMPLETED or SUCCESS_REFLECTION
+  // (both indicate all tests have passed)
   let attemptScore: AttemptScore | undefined;
 
-  if (nextState === 'COMPLETED') {
+  if (nextState === 'COMPLETED' || nextState === 'SUCCESS_REFLECTION') {
     // Compute attempt score
     const scoreResult = computeAttemptScore({ attempt: updatedAttempt });
     attemptScore = scoreResult.score;
@@ -382,10 +388,17 @@ export async function submitCode(
     timestamp: now,
   });
 
+  // passed is true when all tests pass and gating allows progress
+  // Both PROCEED and PROCEED_WITH_REFLECTION indicate success
+  const passed = allTestsPassed && (
+    gatingDecision.action === 'PROCEED' ||
+    gatingDecision.action === 'PROCEED_WITH_REFLECTION'
+  );
+
   return {
     attempt: updatedAttempt,
     testResults,
-    passed: allTestsPassed && gatingDecision.action === 'PROCEED',
+    passed,
     validation,
     gatingDecision,
     score: attemptScore,

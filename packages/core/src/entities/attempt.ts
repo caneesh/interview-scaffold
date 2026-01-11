@@ -11,6 +11,7 @@ export const ATTEMPT_STATES = [
   'THINKING_GATE',
   'CODING',
   'REFLECTION',
+  'SUCCESS_REFLECTION', // Optional reflection after passing all tests
   'HINT',
   'COMPLETED',
   'ABANDONED',

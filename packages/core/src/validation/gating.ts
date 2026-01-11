@@ -23,6 +23,7 @@ export interface GatingRule {
   readonly reason: string;
   readonly microLessonId?: string;
   readonly reflectionType?: string;
+  readonly successReflectionPrompt?: string; // For PROCEED_WITH_REFLECTION
 }
 
 export interface GatingContext {
@@ -129,7 +130,37 @@ const GATING_RULES: GatingRule[] = [
     // microLessonId will be set dynamically based on pattern
   },
 
-  // Proceed on PASS
+  // Suggest reflection on first successful completion (learning reinforcement)
+  {
+    id: 'success_reflection_first',
+    priority: 95,
+    condition: (ctx) => ctx.rubric.grade === 'PASS' && ctx.attemptCount === 1,
+    action: 'PROCEED_WITH_REFLECTION',
+    reason: 'Great work! Take a moment to reflect on your approach.',
+    successReflectionPrompt: 'What key insight helped you solve this problem?',
+  },
+
+  // Suggest reflection on higher rungs (more complex problems)
+  {
+    id: 'success_reflection_high_rung',
+    priority: 96,
+    condition: (ctx) => ctx.rubric.grade === 'PASS' && ctx.rung >= 3,
+    action: 'PROCEED_WITH_REFLECTION',
+    reason: 'Excellent! This was a challenging problem. Reflect on your solution.',
+    successReflectionPrompt: 'How did you apply the pattern to this advanced problem?',
+  },
+
+  // Suggest reflection after multiple attempts but eventual success
+  {
+    id: 'success_reflection_persistence',
+    priority: 97,
+    condition: (ctx) => ctx.rubric.grade === 'PASS' && ctx.attemptCount >= 3,
+    action: 'PROCEED_WITH_REFLECTION',
+    reason: 'You persevered and succeeded! Reflect on what you learned.',
+    successReflectionPrompt: 'What did you learn from the earlier failed attempts?',
+  },
+
+  // Proceed on PASS (fallback without reflection for simple cases)
   {
     id: 'proceed_pass',
     priority: 100,
@@ -178,6 +209,7 @@ export function makeGatingDecision(context: GatingContext): GatingDecision {
         reason: rule.reason,
         microLessonId,
         requiredReflectionType: rule.reflectionType,
+        successReflectionPrompt: rule.successReflectionPrompt,
       };
     }
   }

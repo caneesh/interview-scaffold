@@ -166,9 +166,22 @@ describe('Gating Rules', () => {
     });
 
     describe('PROCEED', () => {
-      it('should proceed on PASS grade', () => {
+      it('should suggest success reflection on first successful attempt', () => {
         const context = createContext({
           rubric: { grade: 'PASS', score: 0.9, criteria: [] },
+          attemptCount: 1,
+        });
+
+        const decision = makeGatingDecision(context);
+        expect(decision.action).toBe('PROCEED_WITH_REFLECTION');
+        expect(decision.successReflectionPrompt).toBeDefined();
+      });
+
+      it('should proceed without reflection on second successful attempt', () => {
+        const context = createContext({
+          rubric: { grade: 'PASS', score: 0.9, criteria: [] },
+          attemptCount: 2, // Not first attempt, not 3+
+          rung: 1, // Not high rung
         });
 
         const decision = makeGatingDecision(context);

@@ -102,6 +102,7 @@ export interface ValidationResult {
 
 export const GATING_ACTIONS = [
   'PROCEED',
+  'PROCEED_WITH_REFLECTION', // Proceed but suggest optional post-success reflection
   'SHOW_MICRO_LESSON',
   'REQUIRE_REFLECTION',
   'BLOCK_SUBMISSION',
@@ -114,6 +115,8 @@ export interface GatingDecision {
   readonly reason: string;
   readonly microLessonId?: string;
   readonly requiredReflectionType?: string;
+  /** For PROCEED_WITH_REFLECTION: prompt text for success reflection */
+  readonly successReflectionPrompt?: string;
 }
 
 // ============ Heuristic Types ============

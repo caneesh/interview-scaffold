@@ -156,6 +156,8 @@ export async function submitStep(
     ...attempt,
     state: nextState,
     steps: [...attempt.steps, step],
+    // Set completedAt when transitioning to COMPLETED from SUCCESS_REFLECTION
+    completedAt: nextState === 'COMPLETED' ? now : attempt.completedAt,
   };
 
   await attemptRepo.update(updatedAttempt);
@@ -267,6 +269,15 @@ function validateStateTransition(attempt: Attempt, stepType: StepType): void {
       }
       break;
 
+    case 'SUCCESS_REFLECTION':
+      if (state !== 'SUCCESS_REFLECTION') {
+        throw new StepError(
+          `Cannot submit success reflection: attempt is in ${state} state. Success reflection is only available after passing all tests.`,
+          'INVALID_STATE_FOR_SUCCESS_REFLECTION'
+        );
+      }
+      break;
+
     case 'HINT':
       // Hints are allowed during CODING or HINT state
       if (state !== 'HINT' && state !== 'CODING') {
@@ -310,6 +321,11 @@ function evaluateStep(stepType: StepType, data: StepData): StepResult {
       return d.correct ? 'PASS' : 'FAIL';
     }
 
+    case 'SUCCESS_REFLECTION': {
+      // Success reflection always passes - it's optional and any response is valid
+      return 'PASS';
+    }
+
     case 'HINT':
       return 'PASS'; // Hints always "pass"
   }
@@ -330,6 +346,10 @@ function computeNextState(
 
     case 'REFLECTION':
       return result === 'PASS' ? 'CODING' : 'REFLECTION';
+
+    case 'SUCCESS_REFLECTION':
+      // Success reflection always transitions to COMPLETED
+      return 'COMPLETED';
 
     case 'HINT':
       return 'CODING';

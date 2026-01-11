@@ -5,6 +5,7 @@ export const STEP_TYPES = [
   'THINKING_GATE',
   'CODING',
   'REFLECTION',
+  'SUCCESS_REFLECTION', // Optional post-success reflection
   'HINT',
 ] as const;
 
@@ -28,6 +29,7 @@ export type StepData =
   | ThinkingGateData
   | CodingData
   | ReflectionData
+  | SuccessReflectionData
   | HintData;
 
 export interface ThinkingGateData {
@@ -50,11 +52,13 @@ export interface CodingValidationData {
   readonly rubricScore: number;
   readonly heuristicErrors: readonly string[];
   readonly forbiddenConcepts: readonly string[];
-  readonly gatingAction: 'PROCEED' | 'SHOW_MICRO_LESSON' | 'REQUIRE_REFLECTION' | 'BLOCK_SUBMISSION';
+  readonly gatingAction: 'PROCEED' | 'PROCEED_WITH_REFLECTION' | 'SHOW_MICRO_LESSON' | 'REQUIRE_REFLECTION' | 'BLOCK_SUBMISSION';
   readonly gatingReason: string;
   readonly microLessonId?: string;
   readonly llmFeedback?: string;
   readonly llmConfidence?: number;
+  /** Prompt text for success reflection (only set for PROCEED_WITH_REFLECTION) */
+  readonly successReflectionPrompt?: string;
 }
 
 export interface TestResultData {
@@ -69,6 +73,22 @@ export interface ReflectionData {
   readonly type: 'REFLECTION';
   readonly selectedOptionId: string;
   readonly correct: boolean;
+}
+
+/**
+ * Success reflection - optional post-success reflection to reinforce learning
+ * Captured after passing all tests but before marking attempt complete
+ */
+export interface SuccessReflectionData {
+  readonly type: 'SUCCESS_REFLECTION';
+  /** User's confidence in their solution (1-5 scale) */
+  readonly confidenceRating: 1 | 2 | 3 | 4 | 5;
+  /** Key insight the user learned from this problem */
+  readonly learnedInsight: string;
+  /** Optional: What would they do differently? */
+  readonly improvementNote?: string;
+  /** Whether the user chose to skip reflection */
+  readonly skipped: boolean;
 }
 
 export interface HintData {

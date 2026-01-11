@@ -248,16 +248,22 @@ This document describes the real architecture as implemented in code, not aspira
    │Decision│       │
    └───┬───┘        │
        │            │
-  ┌────┼────┐       │
-  ▼    ▼    ▼       │
-┌───┐┌────┐┌────────┴┐
-│COM││REFL││ MICRO   │
-│PLE││ECTI││ LESSON  │
-│TED││ON  ││ (modal) │
-└───┘└──┬─┘└─────────┘
-        │
+  ┌────┼────┼───┐   │
+  ▼    ▼    ▼   ▼   │
+┌───┐┌────┐┌───┐┌───┴─────┐
+│COM││REFL││SUC││ MICRO   │
+│PLE││ECTI││RFL││ LESSON  │
+│TED││ON  ││   ││ (modal) │
+└───┘└──┬─┘└─┬─┘└─────────┘
+        │    │
+        │    └─► COMPLETED
         └──────────────► (back to CODING)
 ```
+
+**SUCCESS_REFLECTION (SUC RFL)**: Optional post-success reflection triggered for:
+- First successful attempt (learning reinforcement)
+- High rung problems (≥3)
+- Success after multiple attempts (≥3)
 
 ### Skill State Scoring
 

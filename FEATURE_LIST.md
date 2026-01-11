@@ -12,7 +12,7 @@ Features derived from implemented code. Status reflects actual implementation st
 
 **Data Involved**:
 - `Attempt` entity with `state`, `steps`, `hintsUsed`, `codeSubmissions`
-- State values: `THINKING_GATE`, `CODING`, `REFLECTION`, `HINT`, `COMPLETED`, `ABANDONED`
+- State values: `THINKING_GATE`, `CODING`, `REFLECTION`, `SUCCESS_REFLECTION`, `HINT`, `COMPLETED`, `ABANDONED`
 
 **Valid State Transitions**:
 
@@ -20,12 +20,15 @@ Features derived from implemented code. Status reflects actual implementation st
 |------------|----------|---------|
 | THINKING_GATE | CODING | Thinking gate passes (pattern + invariant validated) |
 | CODING | HINT | User requests hint |
-| CODING | REFLECTION | Gating decision requires reflection |
-| CODING | COMPLETED | All tests pass + gating allows proceed |
+| CODING | REFLECTION | Gating decision requires reflection (failed) |
+| CODING | SUCCESS_REFLECTION | All tests pass + gating suggests reflection |
+| CODING | COMPLETED | All tests pass + gating allows proceed (no reflection) |
 | HINT | CODING | User continues after viewing hint |
 | HINT | REFLECTION | Gating decision requires reflection |
+| HINT | SUCCESS_REFLECTION | All tests pass + gating suggests reflection |
 | HINT | COMPLETED | All tests pass + gating allows proceed |
 | REFLECTION | CODING | User submits reflection |
+| SUCCESS_REFLECTION | COMPLETED | User submits or skips success reflection |
 
 **Transition Enforcement**:
 - `submitStep()` validates current state before processing step type
@@ -204,7 +207,7 @@ Features derived from implemented code. Status reflects actual implementation st
 
 ---
 
-## 8. Reflection Gate
+## 8. Reflection Gate (Failure Reflection)
 
 **Description**: After a failed code submission, users must reflect on their mistake before retrying. Presented as multiple-choice questions.
 
@@ -220,6 +223,44 @@ Features derived from implemented code. Status reflects actual implementation st
 **Entry Points**:
 - `apps/web/src/components/ReflectionForm.tsx`
 - `packages/core/src/use-cases/submit-step.ts`
+
+---
+
+## 8b. Success Reflection (Optional Post-Success Reflection)
+
+**Description**: After passing all tests, users may be prompted for optional reflection to reinforce learning. This captures confidence ratings and key insights.
+
+**Trigger**: `PROCEED_WITH_REFLECTION` gating decision
+
+**Data Involved**:
+- `SuccessReflectionData`: `{ confidenceRating, learnedInsight, improvementNote, skipped }`
+- `Step` entity with `type: 'SUCCESS_REFLECTION'`
+- State: `SUCCESS_REFLECTION` (between CODING and COMPLETED)
+
+**When Triggered**:
+
+| Condition | Prompt |
+|-----------|--------|
+| First successful attempt | "What key insight helped you solve this problem?" |
+| High rung (≥3) | "How did you apply the pattern to this advanced problem?" |
+| Multiple attempts before success (≥3) | "What did you learn from the earlier failed attempts?" |
+
+**Flow**:
+1. User passes all tests
+2. Gating returns `PROCEED_WITH_REFLECTION`
+3. State transitions to `SUCCESS_REFLECTION`
+4. User provides reflection or skips
+5. State transitions to `COMPLETED`
+
+**Note**: Skill scoring happens when entering `SUCCESS_REFLECTION` (not on exit), since tests have already passed.
+
+**Status**: Implemented
+
+**Entry Points**:
+- `packages/core/src/validation/gating.ts` (rules for triggering)
+- `packages/core/src/use-cases/submit-code.ts` (state transition)
+- `packages/core/src/use-cases/submit-step.ts` (SUCCESS_REFLECTION handling)
+- `packages/core/src/entities/step.ts` (SuccessReflectionData type)
 
 ---
 
