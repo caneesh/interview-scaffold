@@ -26,25 +26,36 @@ export function ReflectionForm({ question, options, onSubmit, loading }: Reflect
 
   return (
     <div className="card">
-      <h3 style={{ marginBottom: '0.5rem', color: 'var(--warning)' }}>Reflection Required</h3>
+      <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+        Let's Reflect
+      </h3>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-        Your code didn't pass all tests. Let's reflect on what might have gone wrong.
+        Some tests need attention. Taking a moment to reflect helps build stronger problem-solving skills.
       </p>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label className="label">{question}</label>
-        <div className="reflection-options">
+      <fieldset style={{ marginBottom: '1.5rem', border: 'none', padding: 0 }}>
+        <legend className="label">{question}</legend>
+        <div className="reflection-options" role="radiogroup" aria-label={question}>
           {options.map((option) => (
             <button
               key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={selectedId === option.id}
               className={`reflection-option ${selectedId === option.id ? 'selected' : ''}`}
               onClick={() => setSelectedId(option.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedId(option.id);
+                }
+              }}
             >
               {option.text}
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       <button
         className="btn btn-primary"

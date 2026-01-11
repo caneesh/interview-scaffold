@@ -10,7 +10,7 @@ import { TestResults } from '@/components/TestResults';
 import { ReflectionForm } from '@/components/ReflectionForm';
 import { SuccessReflectionForm } from '@/components/SuccessReflectionForm';
 import { MicroLessonModal } from '@/components/MicroLessonModal';
-import { CompletionSummary } from '@/components/CompletionSummary';
+import { ReviewSummary } from '@/components/ReviewSummary';
 import { LLMFeedback } from '@/components/LLMFeedback';
 import { CoachDrawer, CoachButton } from '@/components/CoachDrawer';
 import { CommittedPlanBadge } from '@/components/CommittedPlanBadge';
@@ -442,15 +442,18 @@ export default function AttemptPage() {
     );
   }
 
-  // Completed state
+  // Completed state - show Review Summary
   if (attempt.state === 'COMPLETED' && attempt.score) {
     return (
-      <CompletionSummary
-        score={attempt.score}
+      <ReviewSummary
+        problemTitle={problem.title}
         pattern={attempt.pattern}
         rung={attempt.rung}
-        hintsUsed={attempt.hintsUsed.length}
+        score={attempt.score}
         codeSubmissions={attempt.codeSubmissions}
+        hintsUsed={attempt.hintsUsed.length}
+        statedInvariant={committedPlan?.invariant}
+        allTestsPassed={true}
       />
     );
   }

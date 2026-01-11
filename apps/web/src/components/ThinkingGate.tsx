@@ -57,12 +57,21 @@ export function ThinkingGate({ onSubmit, loading }: ThinkingGateProps) {
       <form onSubmit={handleSubmit} className="thinking-gate-form">
         <div style={{ marginBottom: '1.5rem' }}>
           <label className="label">1. Which pattern applies to this problem?</label>
-          <div className="pattern-grid">
+          <div className="pattern-grid" role="listbox" aria-label="Pattern selection">
             {PATTERNS.map((pattern) => (
               <div
                 key={pattern.id}
+                role="option"
+                aria-selected={selectedPattern === pattern.id}
+                tabIndex={0}
                 className={`pattern-card ${selectedPattern === pattern.id ? 'selected' : ''}`}
                 onClick={() => setSelectedPattern(pattern.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedPattern(pattern.id);
+                  }
+                }}
               >
                 <div className="pattern-name">{pattern.name}</div>
                 <div className="pattern-desc">{pattern.desc}</div>

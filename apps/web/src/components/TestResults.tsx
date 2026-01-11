@@ -65,8 +65,8 @@ export function TestResults({ results, showHidden = false }: TestResultsProps) {
               </div>
             )}
             {result.error && (
-              <div style={{ color: 'var(--error)', marginTop: '0.5rem' }}>
-                Error: {result.error}
+              <div style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.8125rem' }}>
+                <span style={{ color: 'var(--warning)' }}>Issue:</span> {result.error}
               </div>
             )}
           </div>
