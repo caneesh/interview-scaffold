@@ -6,4 +6,4 @@ export { HintPanel } from './HintPanel';
 export { ReflectionForm } from './ReflectionForm';
 export { MicroLessonModal } from './MicroLessonModal';
 export { ProblemStatement } from './ProblemStatement';
-export { CompletionSummary } from './CompletionSummary';
+export { ReviewSummary } from './ReviewSummary';
