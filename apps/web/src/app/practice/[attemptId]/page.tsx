@@ -7,12 +7,13 @@ import { ProblemStatement } from '@/components/ProblemStatement';
 import { ThinkingGate } from '@/components/ThinkingGate';
 import { CodeEditor } from '@/components/CodeEditor';
 import { TestResults } from '@/components/TestResults';
-import { HintPanel } from '@/components/HintPanel';
 import { ReflectionForm } from '@/components/ReflectionForm';
 import { SuccessReflectionForm } from '@/components/SuccessReflectionForm';
 import { MicroLessonModal } from '@/components/MicroLessonModal';
 import { CompletionSummary } from '@/components/CompletionSummary';
 import { LLMFeedback } from '@/components/LLMFeedback';
+import { CoachDrawer, CoachButton } from '@/components/CoachDrawer';
+import { CommittedPlanBadge } from '@/components/CommittedPlanBadge';
 
 interface Problem {
   id: string;
@@ -120,6 +121,15 @@ export default function AttemptPage() {
 
   // Problem statement collapse
   const [problemCollapsed, setProblemCollapsed] = useState(false);
+
+  // Coach drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Committed plan (from thinking gate)
+  const [committedPlan, setCommittedPlan] = useState<{
+    pattern: string;
+    invariant: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchAttempt();
@@ -230,6 +240,15 @@ export default function AttemptPage() {
         setError(result.error.message);
       } else {
         setAttempt(result.attempt);
+
+        // Save the committed plan for display during coding
+        setCommittedPlan({
+          pattern: data.selectedPattern,
+          invariant: data.statedInvariant,
+        });
+
+        // Collapse problem statement when entering coding phase
+        setProblemCollapsed(true);
 
         // Show micro-lesson if pattern doesn't match
         if (!result.passed && problem) {
@@ -436,76 +455,121 @@ export default function AttemptPage() {
     );
   }
 
+  // Determine if we're in coding phase (editor should be primary)
+  const isCodingPhase = attempt.state === 'CODING' || attempt.state === 'HINT';
+  const isThinkingPhase = attempt.state === 'THINKING_GATE';
+  const isReflectionPhase = attempt.state === 'REFLECTION' || attempt.state === 'SUCCESS_REFLECTION';
+
   return (
-    <div>
+    <div className={`solve-layout ${isCodingPhase ? 'solve-layout--coding' : ''}`}>
+      {/* Stepper - always visible */}
       <Stepper steps={getStepConfig()} />
 
-      <ProblemStatement
-        problem={problem}
-        collapsed={problemCollapsed}
-        onToggle={() => setProblemCollapsed(!problemCollapsed)}
-      />
-
-      {/* Thinking Gate Step */}
-      {attempt.state === 'THINKING_GATE' && (
-        <ThinkingGate
-          onSubmit={handleThinkingGateSubmit}
-          loading={stepLoading}
-        />
-      )}
-
-      {/* Coding Step */}
-      {(attempt.state === 'CODING' || attempt.state === 'HINT') && (
-        <>
-          <CodeEditor
-            onSubmit={handleCodeSubmit}
-            onRequestHint={handleRequestHint}
-            loading={stepLoading}
-            hintLoading={hintLoading}
-            hintsRemaining={5 - attempt.hintsUsed.length}
+      {/* ============ THINKING GATE PHASE ============ */}
+      {isThinkingPhase && (
+        <div className="solve-thinking-phase">
+          <ProblemStatement
+            problem={problem}
+            collapsed={problemCollapsed}
+            onToggle={() => setProblemCollapsed(!problemCollapsed)}
           />
 
-          <HintPanel hints={hints} />
+          <ThinkingGate
+            onSubmit={handleThinkingGateSubmit}
+            loading={stepLoading}
+          />
+        </div>
+      )}
 
-          {testResults.length > 0 && (
-            <div style={{ marginTop: '1.5rem' }}>
-              <TestResults results={testResults} />
+      {/* ============ CODING PHASE ============ */}
+      {isCodingPhase && (
+        <div className="solve-coding-phase">
+          {/* Top bar with problem title and coach button */}
+          <div className="solve-coding-topbar">
+            <div className="solve-coding-topbar-left">
+              <h2 className="solve-coding-title">{problem.title}</h2>
+              {committedPlan && (
+                <CommittedPlanBadge
+                  pattern={committedPlan.pattern}
+                  invariant={committedPlan.invariant}
+                  compact
+                />
+              )}
             </div>
-          )}
+            <CoachButton onClick={() => setDrawerOpen(true)} hintsCount={hints.length} />
+          </div>
 
-          {validation?.llmFeedback && validation.llmConfidence !== undefined && (
-            <LLMFeedback
-              feedback={validation.llmFeedback}
-              confidence={validation.llmConfidence}
-              grade={validation.rubricGrade}
-              microLessonId={validation.microLessonId}
+          {/* Problem statement - collapsed by default */}
+          <ProblemStatement
+            problem={problem}
+            collapsed={problemCollapsed}
+            onToggle={() => setProblemCollapsed(!problemCollapsed)}
+          />
+
+          {/* Main coding area */}
+          <div className="solve-coding-main">
+            <CodeEditor
+              onSubmit={handleCodeSubmit}
+              loading={stepLoading}
+            />
+
+            {/* Inline feedback area */}
+            <div className="solve-feedback-area">
+              {testResults.length > 0 && (
+                <TestResults results={testResults} />
+              )}
+
+              {validation?.llmFeedback && validation.llmConfidence !== undefined && (
+                <LLMFeedback
+                  feedback={validation.llmFeedback}
+                  confidence={validation.llmConfidence}
+                  grade={validation.rubricGrade}
+                  microLessonId={validation.microLessonId}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ REFLECTION PHASE ============ */}
+      {isReflectionPhase && (
+        <div className="solve-reflection-phase">
+          {/* Failure Reflection */}
+          {attempt.state === 'REFLECTION' && (
+            <ReflectionForm
+              question="What do you think caused the test failures?"
+              options={DEMO_REFLECTION_OPTIONS}
+              onSubmit={handleReflectionSubmit}
+              loading={stepLoading}
             />
           )}
-        </>
+
+          {/* Success Reflection */}
+          {attempt.state === 'SUCCESS_REFLECTION' && attempt.score && (
+            <SuccessReflectionForm
+              prompt={validation?.successReflectionPrompt || 'What key insight helped you solve this problem?'}
+              score={attempt.score}
+              onSubmit={handleSuccessReflectionSubmit}
+              onSkip={handleSuccessReflectionSkip}
+              loading={stepLoading}
+            />
+          )}
+        </div>
       )}
 
-      {/* Reflection Step (Failure) */}
-      {attempt.state === 'REFLECTION' && (
-        <ReflectionForm
-          question="What do you think caused the test failures?"
-          options={DEMO_REFLECTION_OPTIONS}
-          onSubmit={handleReflectionSubmit}
-          loading={stepLoading}
-        />
-      )}
+      {/* ============ COACH DRAWER ============ */}
+      <CoachDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        hints={hints}
+        onRequestHint={handleRequestHint}
+        hintLoading={hintLoading}
+        hintsRemaining={5 - attempt.hintsUsed.length}
+        submissionCount={attempt.codeSubmissions}
+      />
 
-      {/* Success Reflection Step */}
-      {attempt.state === 'SUCCESS_REFLECTION' && attempt.score && (
-        <SuccessReflectionForm
-          prompt={validation?.successReflectionPrompt || 'What key insight helped you solve this problem?'}
-          score={attempt.score}
-          onSubmit={handleSuccessReflectionSubmit}
-          onSkip={handleSuccessReflectionSkip}
-          loading={stepLoading}
-        />
-      )}
-
-      {/* Micro-lesson Modal */}
+      {/* ============ MICRO-LESSON MODAL ============ */}
       <MicroLessonModal
         isOpen={microLesson !== null}
         title={microLesson?.title || ''}

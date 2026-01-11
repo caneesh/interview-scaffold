@@ -654,11 +654,20 @@ export default function DailySessionPage() {
                   <>
                     <CodeEditor
                       onSubmit={handleCodeSubmit}
-                      onRequestHint={handleRequestHint}
                       loading={state.stepLoading}
-                      hintLoading={state.hintLoading}
-                      hintsRemaining={5 - state.attempt.hintsUsed.length}
                     />
+
+                    {/* Hint Request Button */}
+                    <div style={{ marginTop: '1rem' }}>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={handleRequestHint}
+                        disabled={state.hintLoading || 5 - state.attempt.hintsUsed.length === 0}
+                        style={{ width: '100%' }}
+                      >
+                        {state.hintLoading ? 'Loading hint...' : `Get Hint (${5 - state.attempt.hintsUsed.length} left)`}
+                      </button>
+                    </div>
 
                     <HintPanel hints={state.hints} />
 

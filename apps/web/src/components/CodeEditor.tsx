@@ -6,10 +6,7 @@ interface CodeEditorProps {
   initialCode?: string;
   language?: string;
   onSubmit: (data: { code: string; language: string }) => Promise<void>;
-  onRequestHint: () => Promise<void>;
   loading?: boolean;
-  hintLoading?: boolean;
-  hintsRemaining?: number;
 }
 
 const LANGUAGE_OPTIONS = [
@@ -58,10 +55,7 @@ export function CodeEditor({
   initialCode,
   language: initialLanguage = 'javascript',
   onSubmit,
-  onRequestHint,
   loading,
-  hintLoading,
-  hintsRemaining = 5,
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode || STARTER_CODE[initialLanguage] || '');
   const [language, setLanguage] = useState(initialLanguage);
@@ -78,7 +72,7 @@ export function CodeEditor({
   };
 
   return (
-    <div className="card">
+    <div className="code-editor-wrapper">
       <div className="code-editor">
         <div className="code-editor-header">
           <select
@@ -93,14 +87,6 @@ export function CodeEditor({
               </option>
             ))}
           </select>
-          <button
-            className="btn btn-ghost"
-            onClick={onRequestHint}
-            disabled={hintLoading || hintsRemaining === 0}
-            title={hintsRemaining === 0 ? 'No more hints available' : 'Get a hint'}
-          >
-            {hintLoading ? 'Loading...' : `Hint (${hintsRemaining} left)`}
-          </button>
         </div>
         <textarea
           className="code-textarea"
@@ -111,14 +97,25 @@ export function CodeEditor({
         />
       </div>
 
-      <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
+      <div className="code-editor-actions">
         <button
-          className="btn btn-primary"
-          style={{ flex: 1, padding: '0.75rem' }}
+          className="btn btn-primary code-submit-btn"
           onClick={handleSubmit}
           disabled={loading || !code.trim()}
         >
-          {loading ? 'Running Tests...' : 'Submit Code'}
+          {loading ? (
+            <>
+              <span className="spinner" style={{ width: '1rem', height: '1rem', marginRight: '0.5rem' }} />
+              Running Tests...
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: '0.5rem' }}>
+                <path d="M4 2a1 1 0 011 1v10a1 1 0 11-2 0V3a1 1 0 011-1zm7.293.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L13.586 6H7a1 1 0 110-2h6.586l-2.293-2.293a1 1 0 010-1.414z"/>
+              </svg>
+              Run Tests
+            </>
+          )}
         </button>
       </div>
     </div>
