@@ -121,7 +121,8 @@ This document describes the real architecture as implemented in code, not aspira
 | `entities/` | Immutable domain models (Attempt, Problem, SkillState, etc.) |
 | `ports/` | Interface definitions for external dependencies |
 | `use-cases/` | Application logic; orchestrates entities and ports |
-| `validation/` | Heuristics, forbidden concepts, gating rules, rubric grading |
+| `validation/` | Heuristics, forbidden concepts, gating rules, rubric grading, thinking-gate semantic validation |
+| `hints/` | Pattern-specific hint generation with budget enforcement |
 | `data/` | Seed problems and pattern packs |
 
 ### Adapters (`packages/adapter-*/`)
@@ -336,10 +337,12 @@ skills
 ├── attempts_count (integer)
 ├── last_attempt_at (timestamp, nullable)
 ├── unlocked_at (timestamp, nullable)
+├── last_applied_attempt_id (uuid, nullable) -- for idempotency
 └── updated_at (timestamp)
 │
 ├── INDEX: (tenant_id, user_id)
-└── INDEX: (tenant_id, user_id, pattern, rung)
+├── INDEX: (tenant_id, user_id, pattern, rung)
+└── UNIQUE: (tenant_id, user_id, pattern, rung) -- prevents duplicate skill records
 ```
 
 ### Repository Pattern
@@ -360,7 +363,7 @@ All database access goes through repository ports:
 3. **Provide Feedback**: Generate constructive feedback for students
 4. **Suggest Micro-Lessons**: Recommend educational content based on errors
 5. **Generate Hints**: Create Socratic-style hints (not implemented in practice mode)
-6. **Evaluate Thinking Gate**: Check pattern selection and invariant quality (not connected)
+6. **Evaluate Thinking Gate**: Optional augmentation of deterministic semantic validation
 
 ### What LLM Cannot Do
 
@@ -386,12 +389,20 @@ If LLM is unavailable (no API key, API error):
 2. **Optimistic Updates**: Frontend updates UI before API response in some cases
 3. **No Transactions**: Database operations are individual queries (no explicit transaction wrapping)
 4. **Idempotent Reads**: Content (problems) is read-only after seeding
+5. **Idempotent Skill Updates**: Skill updates track `lastAppliedAttemptId` to prevent duplicate scoring
+
+### Idempotency Implementation
+
+Skill updates use conditional writes to prevent duplicate scoring:
+- `updateIfNotApplied(skill, attemptId)` checks if attempt was already applied
+- Uses database constraint `(tenantId, userId, pattern, rung)` for uniqueness
+- Returns `{ skill, wasApplied }` to indicate whether update occurred
 
 ### Potential Issues
 
 1. **Race Condition**: If user submits code rapidly, multiple submissions could interleave
 2. **Stale State**: Frontend may show stale attempt state if not refetched
-3. **No Locking**: No row-level locking on attempt updates
+3. **No Locking**: No row-level locking on attempt updates (mitigated by idempotent skill updates)
 
 ---
 

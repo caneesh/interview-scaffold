@@ -16,6 +16,8 @@ export interface SkillState {
   readonly lastAttemptAt: Date | null;
   readonly unlockedAt: Date | null;
   readonly updatedAt: Date;
+  // Idempotency: Track which attempt was last applied to prevent double-counting
+  readonly lastAppliedAttemptId: string | null;
 }
 
 export type SkillStateId = string;

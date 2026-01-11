@@ -134,6 +134,8 @@ export const skills = pgTable(
     lastAttemptAt: timestamp('last_attempt_at'),
     unlockedAt: timestamp('unlocked_at'),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    // Idempotency: Track which attempt IDs have been applied to prevent double-counting
+    lastAppliedAttemptId: uuid('last_applied_attempt_id'),
   },
   (table) => ({
     tenantUserIdx: index('skills_tenant_user_idx').on(
@@ -141,6 +143,13 @@ export const skills = pgTable(
       table.userId
     ),
     tenantUserPatternRungIdx: index('skills_tenant_user_pattern_rung_idx').on(
+      table.tenantId,
+      table.userId,
+      table.pattern,
+      table.rung
+    ),
+    // Unique constraint to prevent duplicate skill entries
+    uniqueSkill: unique('skills_unique_skill').on(
       table.tenantId,
       table.userId,
       table.pattern,

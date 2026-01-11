@@ -1,35 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitStep } from '@scaffold/core/use-cases';
+import { generateHint, getHintBudgetState, isHintBudgetExhausted } from '@scaffold/core/hints';
 import { attemptRepo, contentRepo, eventSink, clock, idGenerator } from '@/lib/deps';
 import type { HintLevel } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
- * Hint levels in order of increasing helpfulness
- */
-const HINT_LEVEL_ORDER: readonly HintLevel[] = [
-  'DIRECTIONAL_QUESTION',
-  'HEURISTIC_HINT',
-  'CONCEPT_INJECTION',
-  'MICRO_EXAMPLE',
-  'PATCH_SNIPPET',
-];
-
-/**
- * Demo hints for demonstration purposes
- */
-const DEMO_HINTS: Record<HintLevel, string> = {
-  DIRECTIONAL_QUESTION: 'Have you considered what data structure would help track elements efficiently as you iterate?',
-  HEURISTIC_HINT: 'Think about using a hash map to store elements you\'ve seen, allowing O(1) lookup.',
-  CONCEPT_INJECTION: 'The sliding window pattern maintains a window of elements and adjusts boundaries based on conditions.',
-  MICRO_EXAMPLE: 'Example: For [2,1,3] with target 4, window [2,1] sums to 3, expand right to include 3...',
-  PATCH_SNIPPET: '// Initialize window\nlet left = 0, sum = 0;\nfor (let right = 0; right < nums.length; right++) {\n  sum += nums[right];\n  while (sum > target) sum -= nums[left++];\n}',
-};
-
-/**
  * POST /api/attempts/[attemptId]/hint
  *
  * Requests the next hint for an attempt
+ * Uses the hint generation pipeline with budget enforcement
  */
 export async function POST(
   request: NextRequest,
@@ -39,7 +19,7 @@ export async function POST(
     const tenantId = request.headers.get('x-tenant-id') ?? DEMO_TENANT_ID;
     const userId = request.headers.get('x-user-id') ?? DEMO_USER_ID;
 
-    // Get current attempt to determine next hint level
+    // Get current attempt
     const attempt = await attemptRepo.findById(tenantId, params.attemptId);
     if (!attempt) {
       return NextResponse.json(
@@ -48,24 +28,44 @@ export async function POST(
       );
     }
 
-    // Determine next hint level
-    const hintsUsedCount = attempt.hintsUsed.length;
-    if (hintsUsedCount >= HINT_LEVEL_ORDER.length) {
+    // Check if hint budget is exhausted
+    if (isHintBudgetExhausted(attempt.hintsUsed)) {
+      const budget = getHintBudgetState(attempt.hintsUsed);
       return NextResponse.json(
-        { error: { code: 'NO_MORE_HINTS', message: 'All hints have been used' } },
+        {
+          error: {
+            code: 'HINT_BUDGET_EXHAUSTED',
+            message: 'Hint budget exhausted. No more hints available.',
+          },
+          budget,
+        },
         { status: 400 }
       );
     }
 
-    const nextLevel = HINT_LEVEL_ORDER[hintsUsedCount];
-    if (!nextLevel) {
+    // Get the problem for context-aware hint generation
+    const problem = await contentRepo.findById(tenantId, attempt.problemId);
+    if (!problem) {
       return NextResponse.json(
-        { error: { code: 'NO_MORE_HINTS', message: 'All hints have been used' } },
+        { error: { code: 'PROBLEM_NOT_FOUND', message: 'Problem not found' } },
+        { status: 404 }
+      );
+    }
+
+    // Generate the hint using the pipeline
+    const hintResult = generateHint({
+      problem,
+      hintsUsed: attempt.hintsUsed,
+    });
+
+    if (!hintResult) {
+      return NextResponse.json(
+        { error: { code: 'NO_MORE_HINTS', message: 'No more hints available' } },
         { status: 400 }
       );
     }
-    const hintText = DEMO_HINTS[nextLevel];
 
+    // Record the hint as a step
     const result = await submitStep(
       {
         tenantId,
@@ -74,19 +74,25 @@ export async function POST(
         stepType: 'HINT',
         data: {
           type: 'HINT',
-          level: nextLevel,
-          text: hintText,
+          level: hintResult.level,
+          text: hintResult.text,
         },
       },
       { attemptRepo, contentRepo, eventSink, clock, idGenerator }
     );
 
+    // Get updated budget state
+    const budget = getHintBudgetState(result.attempt.hintsUsed);
+
     return NextResponse.json({
       attempt: result.attempt,
       hint: {
-        level: nextLevel,
-        text: hintText,
+        level: hintResult.level,
+        text: hintResult.text,
+        cost: hintResult.cost,
       },
+      budget,
+      isLastHint: hintResult.isLastHint,
     });
   } catch (error) {
     if (error instanceof Error && 'code' in error) {

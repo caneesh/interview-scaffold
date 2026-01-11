@@ -1,5 +1,5 @@
-import { eq, and } from 'drizzle-orm';
-import type { SkillRepo } from '@scaffold/core/ports';
+import { eq, and, ne, or, isNull } from 'drizzle-orm';
+import type { SkillRepo, IdempotentUpdateResult } from '@scaffold/core/ports';
 import type { SkillState, SkillMatrix } from '@scaffold/core/entities';
 import type { TenantId } from '@scaffold/core/entities';
 import type { PatternId } from '@scaffold/core/entities';
@@ -61,6 +61,7 @@ export function createSkillRepo(db: DbClient): SkillRepo {
         lastAttemptAt: skill.lastAttemptAt,
         unlockedAt: skill.unlockedAt,
         updatedAt: skill.updatedAt,
+        lastAppliedAttemptId: skill.lastAppliedAttemptId,
       });
 
       return skill;
@@ -74,6 +75,7 @@ export function createSkillRepo(db: DbClient): SkillRepo {
           attemptsCount: skill.attemptsCount,
           lastAttemptAt: skill.lastAttemptAt,
           updatedAt: skill.updatedAt,
+          lastAppliedAttemptId: skill.lastAppliedAttemptId,
         })
         .where(eq(skills.id, skill.id));
 
@@ -94,6 +96,71 @@ export function createSkillRepo(db: DbClient): SkillRepo {
 
       return this.save(skill);
     },
+
+    async updateIfNotApplied(
+      skill: SkillState,
+      attemptId: string
+    ): Promise<IdempotentUpdateResult> {
+      // Check if this attempt has already been applied
+      const existing = await this.findByUserAndPattern(
+        skill.tenantId,
+        skill.userId,
+        skill.pattern,
+        skill.rung
+      );
+
+      // If the attempt was already applied, return no-op
+      if (existing?.lastAppliedAttemptId === attemptId) {
+        return { skill: existing, wasApplied: false };
+      }
+
+      // Prepare skill with the new attempt ID
+      const updatedSkill: SkillState = {
+        ...skill,
+        lastAppliedAttemptId: attemptId,
+      };
+
+      if (existing) {
+        // Update with idempotency check using conditional update
+        const result = await db
+          .update(skills)
+          .set({
+            score: updatedSkill.score,
+            attemptsCount: updatedSkill.attemptsCount,
+            lastAttemptAt: updatedSkill.lastAttemptAt,
+            updatedAt: updatedSkill.updatedAt,
+            lastAppliedAttemptId: attemptId,
+          })
+          .where(
+            and(
+              eq(skills.id, existing.id),
+              // Only update if lastAppliedAttemptId is different or null
+              or(
+                isNull(skills.lastAppliedAttemptId),
+                ne(skills.lastAppliedAttemptId, attemptId)
+              )
+            )
+          )
+          .returning();
+
+        if (result.length === 0) {
+          // Race condition: another request already applied this attempt
+          const current = await this.findByUserAndPattern(
+            skill.tenantId,
+            skill.userId,
+            skill.pattern,
+            skill.rung
+          );
+          return { skill: current ?? existing, wasApplied: false };
+        }
+
+        return { skill: mapToSkillState(result[0]!), wasApplied: true };
+      }
+
+      // Insert new skill with attempt ID
+      await this.save({ ...updatedSkill, id: skill.id });
+      return { skill: updatedSkill, wasApplied: true };
+    },
   };
 }
 
@@ -109,5 +176,6 @@ function mapToSkillState(row: typeof skills.$inferSelect): SkillState {
     lastAttemptAt: row.lastAttemptAt,
     unlockedAt: row.unlockedAt,
     updatedAt: row.updatedAt,
+    lastAppliedAttemptId: row.lastAppliedAttemptId,
   };
 }

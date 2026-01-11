@@ -6,13 +6,31 @@ Features derived from implemented code. Status reflects actual implementation st
 
 ## 1. Attempt State Machine
 
-**Description**: Each user attempt follows a strict state machine: `THINKING_GATE` -> `CODING` -> `REFLECTION` -> `COMPLETED`. State transitions are enforced in use-cases.
+**Description**: Each user attempt follows a strict state machine with hardened transitions. Invalid transitions are rejected with explicit error messages.
 
 **Trigger**: User starts an attempt via `POST /api/attempts/start`
 
 **Data Involved**:
 - `Attempt` entity with `state`, `steps`, `hintsUsed`, `codeSubmissions`
 - State values: `THINKING_GATE`, `CODING`, `REFLECTION`, `HINT`, `COMPLETED`, `ABANDONED`
+
+**Valid State Transitions**:
+
+| From State | To State | Trigger |
+|------------|----------|---------|
+| THINKING_GATE | CODING | Thinking gate passes (pattern + invariant validated) |
+| CODING | HINT | User requests hint |
+| CODING | REFLECTION | Gating decision requires reflection |
+| CODING | COMPLETED | All tests pass + gating allows proceed |
+| HINT | CODING | User continues after viewing hint |
+| HINT | REFLECTION | Gating decision requires reflection |
+| HINT | COMPLETED | All tests pass + gating allows proceed |
+| REFLECTION | CODING | User submits reflection |
+
+**Transition Enforcement**:
+- `submitStep()` validates current state before processing step type
+- Invalid transitions return explicit error: "Invalid state transition: cannot submit {stepType} in state {currentState}"
+- Each step type has documented valid source states
 
 **Status**: Implemented
 
@@ -26,7 +44,7 @@ Features derived from implemented code. Status reflects actual implementation st
 
 ## 2. Thinking Gate Enforcement
 
-**Description**: Users must identify the pattern and state a loop invariant before writing code. The thinking gate must pass before code submission is allowed.
+**Description**: Users must identify the pattern and state a loop invariant before writing code. The thinking gate uses semantic validation to check both pattern correctness and invariant quality.
 
 **Trigger**: User submits thinking gate via `POST /api/attempts/[id]/step` with `stepType: 'THINKING_GATE'`
 
@@ -35,11 +53,36 @@ Features derived from implemented code. Status reflects actual implementation st
 - `statedInvariant`: User's invariant description
 - `Step` entity with `type: 'THINKING_GATE'` and `result: 'PASS' | 'FAIL'`
 
+**Semantic Validation**:
+
+| Check | Description |
+|-------|-------------|
+| Pattern Correctness | Selected pattern must match problem's expected pattern |
+| Invariant Quality | Invariant must contain relevant keywords for the pattern |
+| Minimum Length | Invariant must be at least 10 characters |
+
+**Pattern-Specific Invariant Keywords**:
+
+| Pattern | Expected Keywords |
+|---------|-------------------|
+| SLIDING_WINDOW | window, left, right, shrink, expand, valid |
+| TWO_POINTERS | pointer, left, right, converge, meet, swap |
+| BINARY_SEARCH | mid, left, right, half, sorted, target |
+| DFS | visited, explore, backtrack, recurse, path |
+| BFS | queue, level, visited, neighbor, layer |
+| BACKTRACKING | choose, explore, unchoose, valid, constraint |
+
+**Validation Results**:
+- `errors`: Hard failures (wrong pattern)
+- `warnings`: Soft issues (weak invariant) - allow proceeding
+
 **Status**: Implemented
 
 **Entry Points**:
+- `packages/core/src/validation/thinking-gate.ts`
 - `packages/core/src/use-cases/submit-step.ts`
 - `apps/web/src/components/ThinkingGate.tsx`
+- `apps/web/src/components/ThinkingGateValidation.tsx`
 
 ---
 
@@ -218,19 +261,31 @@ Features derived from implemented code. Status reflects actual implementation st
 
 ## 11. Skill State Tracking
 
-**Description**: User's mastery for each pattern-rung combination is tracked using exponential moving average scoring.
+**Description**: User's mastery for each pattern-rung combination is tracked using exponential moving average scoring. Updates are idempotent to prevent duplicate scoring.
 
 **Trigger**: On attempt completion
 
 **Data Involved**:
-- `SkillState`: `{ userId, pattern, rung, score, attemptsCount, lastAttemptAt, unlockedAt }`
+- `SkillState`: `{ userId, pattern, rung, score, attemptsCount, lastAttemptAt, unlockedAt, lastAppliedAttemptId }`
 - Score formula: `newScore = oldScore * (1 - alpha) + attemptScore * alpha` where `alpha = min(0.3, 1/(attempts+1))`
+
+**Idempotency**:
+
+Skill updates use `lastAppliedAttemptId` to ensure each attempt is only applied once:
+- `updateIfNotApplied()` checks if attempt was already applied
+- Returns `{ skill, wasApplied: boolean }` to indicate whether update occurred
+- Prevents duplicate scoring from retries or race conditions
+
+**Database Constraint**:
+- Unique index on `(tenantId, userId, pattern, rung)` prevents duplicate skill records
 
 **Status**: Implemented
 
 **Entry Points**:
 - `packages/core/src/entities/skill-state.ts`
+- `packages/core/src/ports/skill-repo.ts` (IdempotentUpdateResult type)
 - `packages/core/src/use-cases/submit-code.ts:311-361`
+- `packages/adapter-db/src/repositories/skill-repo.ts`
 - `packages/adapter-db/src/schema.ts:119-149`
 
 ---
@@ -295,18 +350,43 @@ Features derived from implemented code. Status reflects actual implementation st
 
 ## 15. Hint System
 
-**Description**: Users can request progressive hints (5 levels). Each hint usage is tracked and affects scoring.
+**Description**: Users can request progressive hints with budget enforcement. Each hint level has a cost, and users have a limited budget per attempt.
 
 **Trigger**: User clicks "Get Hint" via `POST /api/attempts/[id]/hint`
 
 **Data Involved**:
-- `HintLevel`: `DIRECTIONAL`, `HEURISTIC`, `CONCEPT`, `EXAMPLE`, `CODE`
+- `HintLevel`: `DIRECTIONAL_QUESTION`, `HEURISTIC_HINT`, `CONCEPT_INJECTION`, `MICRO_EXAMPLE`, `PATCH_SNIPPET`
 - `hintsUsed` array on Attempt entity
 - Problem `hints` array (5 strings)
+- Budget tracking via `HintBudgetState`
+
+**Budget System**:
+
+| Hint Level | Cost | Description |
+|------------|------|-------------|
+| DIRECTIONAL_QUESTION | 1 | Socratic question to guide thinking |
+| HEURISTIC_HINT | 2 | Pattern-specific heuristic |
+| CONCEPT_INJECTION | 2 | Key concept explanation |
+| MICRO_EXAMPLE | 3 | Small worked example |
+| PATCH_SNIPPET | 4 | Code snippet showing technique |
+
+**Budget**: 10 points total per attempt
+- `getHintBudgetState()`: Returns `{ totalBudget, spent, remaining, canAfford }`
+- `isHintBudgetExhausted()`: Returns true when no hints affordable
+- `getNextHintLevel()`: Returns next available level user can afford
+
+**Pattern-Specific Hints**:
+
+Hints are generated based on the problem's pattern using `generateHint()`:
+- Each pattern has a bank of 5 progressive hints
+- Hints progress from conceptual (directional) to concrete (patch)
+- Returns `null` when budget exhausted
 
 **Status**: Implemented
 
 **Entry Points**:
+- `packages/core/src/hints/generator.ts`
+- `packages/core/src/hints/index.ts`
 - `apps/web/src/components/HintPanel.tsx`
 - `apps/web/src/app/api/attempts/[attemptId]/hint/route.ts`
 

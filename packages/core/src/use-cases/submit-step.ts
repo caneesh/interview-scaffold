@@ -193,29 +193,66 @@ function getAllowedPatternsForProblem(problem: Problem): PatternId[] {
   return [problem.pattern];
 }
 
+/**
+ * Valid state transitions in the attempt state machine:
+ *
+ * THINKING_GATE -> (submit thinking gate) -> CODING (if pass) or THINKING_GATE (if fail)
+ * CODING        -> (submit code)          -> COMPLETED (if pass) or REFLECTION (if fail)
+ * CODING        -> (request hint)         -> CODING (hints don't change state beyond tracking)
+ * REFLECTION    -> (submit reflection)    -> CODING (retry after reflection)
+ * COMPLETED     -> (terminal state)       -> No further transitions allowed
+ * ABANDONED     -> (terminal state)       -> No further transitions allowed
+ */
 function validateStateTransition(attempt: Attempt, stepType: StepType): void {
   const { state } = attempt;
+
+  // Reject any action on terminal states
+  if (state === 'COMPLETED') {
+    throw new StepError(
+      'Attempt is already completed. No further submissions allowed.',
+      'ATTEMPT_COMPLETED'
+    );
+  }
+
+  if (state === 'ABANDONED') {
+    throw new StepError(
+      'Attempt was abandoned. Start a new attempt.',
+      'ATTEMPT_ABANDONED'
+    );
+  }
 
   switch (stepType) {
     case 'THINKING_GATE':
       if (state !== 'THINKING_GATE') {
         throw new StepError(
-          'Cannot submit thinking gate in current state',
-          'INVALID_STATE'
+          `Cannot submit thinking gate: attempt is in ${state} state. Expected: THINKING_GATE`,
+          'INVALID_STATE_FOR_THINKING_GATE'
+        );
+      }
+      // Prevent re-submission if already passed
+      if (hasPassedThinkingGate(attempt)) {
+        throw new StepError(
+          'Thinking gate already passed. Proceed to coding.',
+          'THINKING_GATE_ALREADY_PASSED'
         );
       }
       break;
 
     case 'CODING':
       if (state !== 'CODING') {
+        const hint = state === 'THINKING_GATE'
+          ? 'Complete the thinking gate first.'
+          : state === 'REFLECTION'
+            ? 'Complete the reflection step first.'
+            : 'Invalid state for code submission.';
         throw new StepError(
-          'Cannot submit code in current state',
-          'INVALID_STATE'
+          `Cannot submit code: attempt is in ${state} state. ${hint}`,
+          'INVALID_STATE_FOR_CODING'
         );
       }
       if (!hasPassedThinkingGate(attempt)) {
         throw new StepError(
-          'Must pass thinking gate before coding',
+          'Must pass thinking gate before submitting code. This is a system error.',
           'THINKING_GATE_REQUIRED'
         );
       }
@@ -224,17 +261,24 @@ function validateStateTransition(attempt: Attempt, stepType: StepType): void {
     case 'REFLECTION':
       if (state !== 'REFLECTION') {
         throw new StepError(
-          'Cannot submit reflection in current state',
-          'INVALID_STATE'
+          `Cannot submit reflection: attempt is in ${state} state. Reflection is only available after failed code submission.`,
+          'INVALID_STATE_FOR_REFLECTION'
         );
       }
       break;
 
     case 'HINT':
+      // Hints are allowed during CODING or HINT state
       if (state !== 'HINT' && state !== 'CODING') {
         throw new StepError(
-          'Cannot request hint in current state',
-          'INVALID_STATE'
+          `Cannot request hint: attempt is in ${state} state. Hints are only available during coding.`,
+          'INVALID_STATE_FOR_HINT'
+        );
+      }
+      if (!hasPassedThinkingGate(attempt)) {
+        throw new StepError(
+          'Must pass thinking gate before requesting hints.',
+          'THINKING_GATE_REQUIRED'
         );
       }
       break;

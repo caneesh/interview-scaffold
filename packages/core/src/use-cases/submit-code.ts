@@ -316,7 +316,7 @@ export async function submitCode(
     const scoreResult = computeAttemptScore({ attempt: updatedAttempt });
     attemptScore = scoreResult.score;
 
-    // Update or create skill state
+    // Update or create skill state using idempotent update
     const existingSkill = await skillRepo.findByUserAndPattern(
       tenantId,
       userId,
@@ -326,26 +326,30 @@ export async function submitCode(
 
     if (existingSkill) {
       // Update with new score using exponential moving average
+      // Use idempotent update to prevent double-counting
       const newScore = computeNewScore(
         existingSkill.score,
         existingSkill.attemptsCount,
         attemptScore.overall
       );
 
-      await skillRepo.update({
-        ...existingSkill,
-        score: newScore,
-        attemptsCount: existingSkill.attemptsCount + 1,
-        lastAttemptAt: now,
-        updatedAt: now,
-        // Set unlockedAt if crossing threshold for first time
-        unlockedAt:
-          newScore >= RUNG_UNLOCK_THRESHOLD && !existingSkill.unlockedAt
-            ? now
-            : existingSkill.unlockedAt,
-      });
+      await skillRepo.updateIfNotApplied(
+        {
+          ...existingSkill,
+          score: newScore,
+          attemptsCount: existingSkill.attemptsCount + 1,
+          lastAttemptAt: now,
+          updatedAt: now,
+          // Set unlockedAt if crossing threshold for first time
+          unlockedAt:
+            newScore >= RUNG_UNLOCK_THRESHOLD && !existingSkill.unlockedAt
+              ? now
+              : existingSkill.unlockedAt,
+        },
+        attemptId // Use attempt ID as idempotency key
+      );
     } else {
-      // Create new skill state
+      // Create new skill state with attempt ID for idempotency
       await skillRepo.save({
         id: idGenerator.generate(),
         tenantId,
@@ -357,6 +361,7 @@ export async function submitCode(
         lastAttemptAt: now,
         unlockedAt: attemptScore.overall >= RUNG_UNLOCK_THRESHOLD ? now : null,
         updatedAt: now,
+        lastAppliedAttemptId: attemptId, // Track which attempt was applied
       });
     }
   }

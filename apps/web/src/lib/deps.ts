@@ -1,6 +1,15 @@
 /**
  * Dependency injection - wires adapters to core ports
  * This is the only place where adapters are instantiated
+ *
+ * Environment-Driven Behavior:
+ * - DATABASE_URL: Required for persistence
+ * - ANTHROPIC_API_KEY: Optional - enables LLM validation when set
+ * - PISTON_API_URL: Optional - defaults to local Piston instance
+ *
+ * When optional services are unavailable:
+ * - LLM validation disabled: Deterministic validation still works
+ * - Piston unavailable: Code submission returns a clean error with retry advice
  */
 
 import { randomUUID } from 'crypto';
@@ -43,6 +52,11 @@ export function getAuthProvider(tenantId: string, userId: string) {
 const llmClient = process.env.ANTHROPIC_API_KEY
   ? createLLMClient(process.env.ANTHROPIC_API_KEY)
   : null;
+
+/**
+ * Check if LLM validation is enabled (API key is set)
+ */
+export const isLLMEnabled = (): boolean => llmClient !== null;
 
 /**
  * Creates an LLM validation port for a specific problem.
