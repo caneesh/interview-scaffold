@@ -30,6 +30,7 @@ export const AttemptStateSchema = z.enum([
   'THINKING_GATE',
   'CODING',
   'REFLECTION',
+  'SUCCESS_REFLECTION',
   'HINT',
   'COMPLETED',
   'ABANDONED',
@@ -39,6 +40,7 @@ export const StepTypeSchema = z.enum([
   'THINKING_GATE',
   'CODING',
   'REFLECTION',
+  'SUCCESS_REFLECTION',
   'HINT',
 ]);
 
@@ -163,6 +165,28 @@ export const SubmitReflectionRequestSchema = z.object({
 });
 
 export const SubmitReflectionResponseSchema = z.object({
+  attempt: AttemptSchema,
+  passed: z.boolean(),
+});
+
+// Submit Success Reflection
+export const ConfidenceRatingSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+]);
+
+export const SubmitSuccessReflectionRequestSchema = z.object({
+  attemptId: z.string(),
+  confidenceRating: ConfidenceRatingSchema,
+  learnedInsight: z.string(),
+  improvementNote: z.string().optional(),
+  skipped: z.boolean(),
+});
+
+export const SubmitSuccessReflectionResponseSchema = z.object({
   attempt: AttemptSchema,
   passed: z.boolean(),
 });

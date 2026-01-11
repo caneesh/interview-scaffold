@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitStep } from '@scaffold/core/use-cases';
-import { SubmitThinkingGateRequestSchema, SubmitReflectionRequestSchema } from '@scaffold/contracts';
+import {
+  SubmitThinkingGateRequestSchema,
+  SubmitReflectionRequestSchema,
+  SubmitSuccessReflectionRequestSchema,
+} from '@scaffold/contracts';
 import { attemptRepo, contentRepo, eventSink, clock, idGenerator } from '@/lib/deps';
 import type { StepData } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
@@ -60,6 +64,26 @@ export async function POST(
         selectedOptionId: parsed.data.selectedOptionId,
         correct: body.correct ?? false, // In production, server would determine correctness
       };
+    } else if (stepType === 'SUCCESS_REFLECTION') {
+      const parsed = SubmitSuccessReflectionRequestSchema.safeParse({
+        ...body,
+        attemptId: params.attemptId,
+      });
+
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: { code: 'VALIDATION_ERROR', message: parsed.error.message } },
+          { status: 400 }
+        );
+      }
+
+      stepData = {
+        type: 'SUCCESS_REFLECTION',
+        confidenceRating: parsed.data.confidenceRating,
+        learnedInsight: parsed.data.learnedInsight,
+        improvementNote: parsed.data.improvementNote,
+        skipped: parsed.data.skipped,
+      };
     } else {
       return NextResponse.json(
         { error: { code: 'INVALID_STEP_TYPE', message: `Unknown step type: ${stepType}` } },
@@ -72,7 +96,7 @@ export async function POST(
         tenantId,
         userId,
         attemptId: params.attemptId,
-        stepType: stepType as 'THINKING_GATE' | 'REFLECTION',
+        stepType: stepType as 'THINKING_GATE' | 'REFLECTION' | 'SUCCESS_REFLECTION',
         data: stepData,
       },
       { attemptRepo, contentRepo, eventSink, clock, idGenerator }

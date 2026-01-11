@@ -9,6 +9,7 @@ import { CodeEditor } from '@/components/CodeEditor';
 import { TestResults } from '@/components/TestResults';
 import { HintPanel } from '@/components/HintPanel';
 import { ReflectionForm } from '@/components/ReflectionForm';
+import { SuccessReflectionForm } from '@/components/SuccessReflectionForm';
 import { MicroLessonModal } from '@/components/MicroLessonModal';
 import { CompletionSummary } from '@/components/CompletionSummary';
 import { LLMFeedback } from '@/components/LLMFeedback';
@@ -41,6 +42,7 @@ interface ValidationData {
   llmFeedback?: string;
   llmConfidence?: number;
   microLessonId?: string;
+  successReflectionPrompt?: string;
 }
 
 interface Attempt {
@@ -151,7 +153,8 @@ export default function AttemptPage() {
     if (!attempt) return [];
 
     const state = attempt.state;
-    const hasReflection = state === 'REFLECTION' || testResults.some(r => !r.passed);
+    const hasFailureReflection = state === 'REFLECTION' || testResults.some(r => !r.passed);
+    const hasSuccessReflection = state === 'SUCCESS_REFLECTION';
 
     const steps: StepConfig[] = [
       {
@@ -175,7 +178,8 @@ export default function AttemptPage() {
       },
     ];
 
-    if (hasReflection || state === 'REFLECTION') {
+    // Failure reflection (after failed tests)
+    if (hasFailureReflection) {
       steps.push({
         id: 'reflection',
         label: 'Reflection',
@@ -184,11 +188,20 @@ export default function AttemptPage() {
       });
     }
 
-    if (state === 'COMPLETED') {
+    // Success reflection (optional, after passing tests)
+    if (hasSuccessReflection) {
+      steps.push({
+        id: 'success-reflection',
+        label: 'Reflect',
+        status: 'active'
+      });
+    }
+
+    if (state === 'COMPLETED' || state === 'SUCCESS_REFLECTION') {
       steps.push({
         id: 'complete',
         label: 'Complete',
-        status: 'completed'
+        status: state === 'COMPLETED' ? 'completed' : 'pending'
       });
     }
 
@@ -315,6 +328,65 @@ export default function AttemptPage() {
     }
   }
 
+  async function handleSuccessReflectionSubmit(data: {
+    confidenceRating: 1 | 2 | 3 | 4 | 5;
+    learnedInsight: string;
+    improvementNote?: string;
+    skipped: boolean;
+  }) {
+    setStepLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/step`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stepType: 'SUCCESS_REFLECTION',
+          ...data
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setAttempt(result.attempt);
+      }
+    } catch (err) {
+      setError('Failed to submit reflection');
+    } finally {
+      setStepLoading(false);
+    }
+  }
+
+  async function handleSuccessReflectionSkip() {
+    setStepLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/step`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stepType: 'SUCCESS_REFLECTION',
+          confidenceRating: 3, // Default middle value
+          learnedInsight: '',
+          skipped: true
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setAttempt(result.attempt);
+      }
+    } catch (err) {
+      setError('Failed to skip reflection');
+    } finally {
+      setStepLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="loading-state">
@@ -412,12 +484,23 @@ export default function AttemptPage() {
         </>
       )}
 
-      {/* Reflection Step */}
+      {/* Reflection Step (Failure) */}
       {attempt.state === 'REFLECTION' && (
         <ReflectionForm
           question="What do you think caused the test failures?"
           options={DEMO_REFLECTION_OPTIONS}
           onSubmit={handleReflectionSubmit}
+          loading={stepLoading}
+        />
+      )}
+
+      {/* Success Reflection Step */}
+      {attempt.state === 'SUCCESS_REFLECTION' && attempt.score && (
+        <SuccessReflectionForm
+          prompt={validation?.successReflectionPrompt || 'What key insight helped you solve this problem?'}
+          score={attempt.score}
+          onSubmit={handleSuccessReflectionSubmit}
+          onSkip={handleSuccessReflectionSkip}
           loading={stepLoading}
         />
       )}
