@@ -27,6 +27,10 @@
     "./hints": {
       "types": "./dist/hints/index.d.ts",
       "import": "./dist/hints/index.js"
+    },
+    "./adversary": {
+      "types": "./dist/adversary/index.d.ts",
+      "import": "./dist/adversary/index.js"
     }
   },
   "scripts": {

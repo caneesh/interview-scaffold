@@ -7,3 +7,4 @@ export * from './use-cases/index.js';
 export * from './data/index.js';
 export * from './validation/index.js';
 export * from './hints/index.js';
+export * from './adversary/index.js';

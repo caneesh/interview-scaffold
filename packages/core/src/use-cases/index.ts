@@ -7,3 +7,5 @@ export * from './decide-next-action.js';
 export * from './decide-progression-action.js';
 export * from './select-sibling.js';
 export * from './get-skill-matrix.js';
+export * from './pattern-discovery.js';
+export * from './pattern-challenge.js';

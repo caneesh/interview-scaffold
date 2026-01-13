@@ -7,6 +7,8 @@ interface CodeEditorProps {
   language?: string;
   onSubmit: (data: { code: string; language: string }) => Promise<void>;
   loading?: boolean;
+  /** Callback when code or language changes - for trace mode */
+  onCodeChange?: (code: string, language: string) => void;
 }
 
 const LANGUAGE_OPTIONS = [
@@ -56,15 +58,25 @@ export function CodeEditor({
   language: initialLanguage = 'javascript',
   onSubmit,
   loading,
+  onCodeChange,
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode || STARTER_CODE[initialLanguage] || '');
   const [language, setLanguage] = useState(initialLanguage);
 
+  const handleCodeChange = (newCode: string) => {
+    setCode(newCode);
+    onCodeChange?.(newCode, language);
+  };
+
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
-    if (!code || code === STARTER_CODE[language]) {
-      setCode(STARTER_CODE[newLang] || '');
+    const newCode = (!code || code === STARTER_CODE[language])
+      ? (STARTER_CODE[newLang] || '')
+      : code;
+    if (newCode !== code) {
+      setCode(newCode);
     }
+    onCodeChange?.(newCode, newLang);
   };
 
   const handleSubmit = async () => {
@@ -91,7 +103,7 @@ export function CodeEditor({
         <textarea
           className="code-textarea"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => handleCodeChange(e.target.value)}
           spellCheck={false}
           placeholder="Write your solution here..."
         />

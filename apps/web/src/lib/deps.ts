@@ -18,7 +18,7 @@ import { createAttemptRepo, createSkillRepo, createContentRepo } from '@scaffold
 import { createDemoAuthProvider } from '@scaffold/adapter-auth';
 import { createConsoleEventSink } from '@scaffold/adapter-analytics';
 import { createLLMClient, createLLMValidationAdapter, createNullLLMValidation } from '@scaffold/adapter-llm';
-import { createPistonExecutor } from '@scaffold/adapter-piston';
+import { createPistonExecutor, createPistonClient, type PistonClient } from '@scaffold/adapter-piston';
 import { SystemClock } from '@scaffold/core/ports';
 import type { AttemptRepo, SkillRepo, ContentRepo, EventSink, Clock, IdGenerator } from '@scaffold/core/ports';
 import type { LLMValidationPort } from '@scaffold/core/validation';
@@ -68,6 +68,11 @@ export function getLLMValidation(problemStatement: string): LLMValidationPort {
   }
   return createLLMValidationAdapter(llmClient, problemStatement);
 }
+
+// Piston client for direct API access (used for trace execution)
+export const pistonClient: PistonClient = createPistonClient({
+  baseUrl: process.env.PISTON_API_URL,
+});
 
 // Code executor - uses Piston API for sandboxed execution
 export const codeExecutor: CodeExecutor = createPistonExecutor({

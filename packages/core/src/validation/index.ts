@@ -70,3 +70,34 @@ export type {
   ThinkingGateContext,
   ThinkingGateLLMPort,
 } from './thinking-gate.js';
+
+// Pattern Discovery (Socratic)
+export {
+  generateHeuristicQuestion,
+  runPatternDiscovery,
+  getInitialDiscoveryQuestion,
+  createNullPatternDiscoveryLLM,
+} from './pattern-discovery.js';
+
+export type {
+  PatternDiscoveryContext,
+  PatternDiscoveryQuestion,
+  PatternDiscoveryResult,
+  PatternDiscoveryLLMPort,
+} from './pattern-discovery.js';
+
+// Pattern Challenge (Advocate's Trap)
+export {
+  detectPatternMismatch,
+  validateCounterexample,
+  createNullPatternChallengeLLM,
+  CHALLENGE_CONFIDENCE_THRESHOLD,
+} from './pattern-challenge.js';
+
+export type {
+  PatternChallengeResult,
+  PatternChallengeInput,
+  PatternDisqualifier,
+  PatternChallengeLLMPort,
+  ProblemCharacteristics,
+} from './pattern-challenge.js';

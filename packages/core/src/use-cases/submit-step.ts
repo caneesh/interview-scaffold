@@ -293,6 +293,26 @@ function validateStateTransition(attempt: Attempt, stepType: StepType): void {
         );
       }
       break;
+
+    case 'PATTERN_DISCOVERY':
+      // Pattern discovery is a sub-flow within THINKING_GATE state
+      if (state !== 'THINKING_GATE') {
+        throw new StepError(
+          `Cannot start pattern discovery: attempt is in ${state} state. Pattern discovery is only available during thinking gate.`,
+          'INVALID_STATE_FOR_PATTERN_DISCOVERY'
+        );
+      }
+      break;
+
+    case 'PATTERN_CHALLENGE':
+      // Pattern challenge (Advocate's Trap) is a sub-flow within THINKING_GATE state
+      if (state !== 'THINKING_GATE') {
+        throw new StepError(
+          `Cannot respond to pattern challenge: attempt is in ${state} state. Pattern challenge is only available during thinking gate.`,
+          'INVALID_STATE_FOR_PATTERN_CHALLENGE'
+        );
+      }
+      break;
   }
 }
 
@@ -328,6 +348,24 @@ function evaluateStep(stepType: StepType, data: StepData): StepResult {
 
     case 'HINT':
       return 'PASS'; // Hints always "pass"
+
+    case 'PATTERN_DISCOVERY': {
+      const d = data as Extract<StepData, { type: 'PATTERN_DISCOVERY' }>;
+      // Pass if discovery completed (pattern found), skip if abandoned
+      return d.completed ? 'PASS' : 'SKIP';
+    }
+
+    case 'PATTERN_CHALLENGE': {
+      const d = data as Extract<StepData, { type: 'PATTERN_CHALLENGE' }>;
+      // Pass if user responded to challenge, skip if abandoned
+      return d.decision !== null ? 'PASS' : 'SKIP';
+    }
+
+    case 'ADVERSARY_CHALLENGE': {
+      const d = data as Extract<StepData, { type: 'ADVERSARY_CHALLENGE' }>;
+      // Pass if user responded or skipped (it's optional)
+      return d.userResponse !== null || d.skipped ? 'PASS' : 'SKIP';
+    }
   }
 }
 
@@ -353,6 +391,18 @@ function computeNextState(
 
     case 'HINT':
       return 'CODING';
+
+    case 'PATTERN_DISCOVERY':
+      // Pattern discovery is a sub-flow within thinking gate - state doesn't change
+      return 'THINKING_GATE';
+
+    case 'PATTERN_CHALLENGE':
+      // Pattern challenge is a sub-flow within thinking gate - state doesn't change
+      return 'THINKING_GATE';
+
+    case 'ADVERSARY_CHALLENGE':
+      // Adversary challenge is post-completion - state remains COMPLETED
+      return 'COMPLETED';
 
     default:
       return attempt.state;

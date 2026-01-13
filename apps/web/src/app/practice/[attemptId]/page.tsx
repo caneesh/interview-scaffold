@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { Stepper, type StepConfig } from '@/components/Stepper';
 import { ProblemStatement } from '@/components/ProblemStatement';
 import { ThinkingGate } from '@/components/ThinkingGate';
+import { PatternDiscovery } from '@/components/PatternDiscovery';
+import { PatternChallenge } from '@/components/PatternChallenge';
 import { CodeEditor } from '@/components/CodeEditor';
 import { TestResults } from '@/components/TestResults';
 import { ReflectionForm } from '@/components/ReflectionForm';
@@ -14,6 +16,7 @@ import { ReviewSummary } from '@/components/ReviewSummary';
 import { LLMFeedback } from '@/components/LLMFeedback';
 import { CoachDrawer, CoachButton } from '@/components/CoachDrawer';
 import { CommittedPlanBadge } from '@/components/CommittedPlanBadge';
+import { TraceVisualization } from '@/components/TraceVisualization';
 
 interface Problem {
   id: string;
@@ -131,6 +134,55 @@ export default function AttemptPage() {
     invariant: string;
   } | null>(null);
 
+  // Pattern discovery state
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [discoveryStep, setDiscoveryStep] = useState<{
+    stepId: string;
+    mode: 'HEURISTIC' | 'SOCRATIC';
+    question: string;
+    questionId: string;
+  } | null>(null);
+  const [discoveredPattern, setDiscoveredPattern] = useState<string | null>(null);
+
+  // Pattern challenge (Advocate's Trap) state
+  const [isChallenging, setIsChallenging] = useState(false);
+  const [challengeData, setChallengeData] = useState<{
+    stepId: string;
+    mode: 'COUNTEREXAMPLE' | 'SOCRATIC';
+    prompt: string;
+    counterexample?: string;
+    confidenceScore: number;
+    reasons: string[];
+    suggestedAlternatives: string[];
+    pendingPattern: string;
+    pendingInvariant: string;
+    pendingComplexity?: string;
+  } | null>(null);
+
+  // Trace visualization state
+  const [traceEnabled, setTraceEnabled] = useState(false);
+  const [traceData, setTraceData] = useState<{
+    success: boolean;
+    frames: Array<{ iter: number; vars: Record<string, unknown>; label?: string }>;
+    error?: string;
+    array?: unknown[];
+    arrayName?: string;
+    pointerVars?: string[];
+  } | null>(null);
+  const [traceLoading, setTraceLoading] = useState(false);
+  const [traceHint, setTraceHint] = useState<string | undefined>();
+  const [currentCode, setCurrentCode] = useState<string>('');
+
+  // Adversary challenge state (Level Up Challenge)
+  const [adversaryChallenge, setAdversaryChallenge] = useState<{
+    stepId: string;
+    prompt: { id: string; type: string; prompt: string; hint?: string };
+    userResponse: string | null;
+    skipped: boolean;
+    completed: boolean;
+  } | null>(null);
+  const [adversaryLoading, setAdversaryLoading] = useState(false);
+
   useEffect(() => {
     fetchAttempt();
   }, [attemptId]);
@@ -224,6 +276,54 @@ export default function AttemptPage() {
     statedComplexity?: string;
   }) {
     setStepLoading(true);
+    try {
+      // First, check if pattern challenge should trigger (Advocate's Trap)
+      const checkRes = await fetch(`/api/attempts/${attemptId}/pattern-challenge/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selectedPattern: data.selectedPattern,
+          statedInvariant: data.statedInvariant,
+        }),
+      });
+
+      const checkResult = await checkRes.json();
+
+      if (checkResult.error) {
+        // If check fails, proceed with normal submission
+        console.warn('Challenge check failed:', checkResult.error);
+      } else if (checkResult.shouldChallenge && checkResult.challenge) {
+        // Challenge triggered - show the challenge UI instead of submitting
+        setChallengeData({
+          stepId: checkResult.challenge.stepId,
+          mode: checkResult.challenge.mode,
+          prompt: checkResult.challenge.prompt,
+          counterexample: checkResult.challenge.counterexample,
+          confidenceScore: checkResult.challenge.confidenceScore,
+          reasons: checkResult.challenge.reasons,
+          suggestedAlternatives: checkResult.challenge.suggestedAlternatives,
+          pendingPattern: data.selectedPattern,
+          pendingInvariant: data.statedInvariant,
+          pendingComplexity: data.statedComplexity,
+        });
+        setIsChallenging(true);
+        setStepLoading(false);
+        return; // Don't proceed with thinking gate submission yet
+      }
+
+      // No challenge - proceed with normal thinking gate submission
+      await submitThinkingGate(data);
+    } catch (err) {
+      setError('Failed to submit thinking gate');
+      setStepLoading(false);
+    }
+  }
+
+  async function submitThinkingGate(data: {
+    selectedPattern: string;
+    statedInvariant: string;
+    statedComplexity?: string;
+  }) {
     try {
       const res = await fetch(`/api/attempts/${attemptId}/step`, {
         method: 'POST',
@@ -406,6 +506,278 @@ export default function AttemptPage() {
     }
   }
 
+  // ============ Pattern Discovery Handlers ============
+
+  async function handleStartDiscovery() {
+    setStepLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/pattern-discovery/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setDiscoveryStep({
+          stepId: result.stepId,
+          mode: result.mode,
+          question: result.question,
+          questionId: result.questionId,
+        });
+        setIsDiscovering(true);
+      }
+    } catch (err) {
+      setError('Failed to start pattern discovery');
+    } finally {
+      setStepLoading(false);
+    }
+  }
+
+  async function handleDiscoveryAnswer(data: { stepId: string; questionId: string; answer: string }) {
+    const res = await fetch(`/api/attempts/${attemptId}/pattern-discovery/answer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json();
+
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+
+    return result;
+  }
+
+  function handlePatternDiscovered(pattern: string) {
+    setDiscoveredPattern(pattern);
+    setIsDiscovering(false);
+    setDiscoveryStep(null);
+  }
+
+  async function handleAbandonDiscovery(stepId: string) {
+    try {
+      await fetch(`/api/attempts/${attemptId}/pattern-discovery/abandon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stepId }),
+      });
+    } catch (err) {
+      // Ignore errors on abandon
+    }
+    setIsDiscovering(false);
+    setDiscoveryStep(null);
+  }
+
+  // ============ Pattern Challenge Handlers (Advocate's Trap) ============
+
+  async function handleChallengeRespond(data: {
+    stepId: string;
+    response: string;
+    decision: 'KEEP_PATTERN' | 'CHANGE_PATTERN';
+    newPattern?: string;
+  }) {
+    setStepLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/pattern-challenge/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        setError(result.error.message);
+        setStepLoading(false);
+        return;
+      }
+
+      // Challenge resolved - now submit the thinking gate with final pattern
+      const finalPattern = result.finalPattern;
+      setIsChallenging(false);
+      setChallengeData(null);
+
+      // If pattern was changed, update the discovered pattern
+      if (data.decision === 'CHANGE_PATTERN' && data.newPattern) {
+        setDiscoveredPattern(data.newPattern);
+      }
+
+      // Submit thinking gate with the final pattern
+      await submitThinkingGate({
+        selectedPattern: finalPattern,
+        statedInvariant: challengeData?.pendingInvariant ?? '',
+        statedComplexity: challengeData?.pendingComplexity,
+      });
+    } catch (err) {
+      setError('Failed to respond to challenge');
+      setStepLoading(false);
+    }
+  }
+
+  async function handleChallengeSkip(stepId: string) {
+    setStepLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/pattern-challenge/skip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stepId }),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        setError(result.error.message);
+        setStepLoading(false);
+        return;
+      }
+
+      // Challenge skipped - proceed with original pattern
+      setIsChallenging(false);
+      setChallengeData(null);
+
+      // Submit thinking gate with original pattern
+      await submitThinkingGate({
+        selectedPattern: result.finalPattern,
+        statedInvariant: challengeData?.pendingInvariant ?? '',
+        statedComplexity: challengeData?.pendingComplexity,
+      });
+    } catch (err) {
+      setError('Failed to skip challenge');
+      setStepLoading(false);
+    }
+  }
+
+  // ============ Trace Visualization Handlers ============
+
+  const [currentLanguage, setCurrentLanguage] = useState<string>('javascript');
+
+  function handleCodeChange(code: string, language: string) {
+    setCurrentCode(code);
+    setCurrentLanguage(language);
+  }
+
+  async function handleTraceExecution() {
+    if (!currentCode.trim()) return;
+
+    setTraceLoading(true);
+    setTraceHint(undefined);
+
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/trace`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: currentCode,
+          language: currentLanguage,
+          testInput: '[]', // Default test input - could be expanded
+          autoInsert: true,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        setTraceData({
+          success: false,
+          frames: [],
+          error: result.error.message,
+        });
+        setTraceHint(result.hint);
+      } else {
+        setTraceData(result.trace);
+        setTraceHint(result.hint);
+      }
+    } catch (err) {
+      setTraceData({
+        success: false,
+        frames: [],
+        error: 'Failed to execute trace',
+      });
+    } finally {
+      setTraceLoading(false);
+    }
+  }
+
+  // ============ Adversary Challenge Handlers (Level Up Challenge) ============
+
+  async function handleStartAdversaryChallenge() {
+    setAdversaryLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/adversary`);
+      const result = await res.json();
+
+      if (result.error) {
+        console.error('Failed to get adversary challenge:', result.error);
+        return;
+      }
+
+      if (result.challenge) {
+        setAdversaryChallenge(result.challenge);
+      }
+    } catch (err) {
+      console.error('Failed to start adversary challenge:', err);
+    } finally {
+      setAdversaryLoading(false);
+    }
+  }
+
+  async function handleSubmitAdversaryResponse(data: { stepId: string; response: string }) {
+    setAdversaryLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/adversary`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        console.error('Failed to submit adversary response:', result.error);
+        return;
+      }
+
+      if (result.challenge) {
+        setAdversaryChallenge(result.challenge);
+      }
+    } catch (err) {
+      console.error('Failed to submit adversary response:', err);
+    } finally {
+      setAdversaryLoading(false);
+    }
+  }
+
+  async function handleSkipAdversaryChallenge(stepId: string) {
+    setAdversaryLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/adversary`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stepId, skip: true }),
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        console.error('Failed to skip adversary challenge:', result.error);
+        return;
+      }
+
+      if (result.challenge) {
+        setAdversaryChallenge(result.challenge);
+      }
+    } catch (err) {
+      console.error('Failed to skip adversary challenge:', err);
+    } finally {
+      setAdversaryLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="loading-state">
@@ -454,6 +826,11 @@ export default function AttemptPage() {
         hintsUsed={attempt.hintsUsed.length}
         statedInvariant={committedPlan?.invariant}
         allTestsPassed={true}
+        adversaryChallenge={adversaryChallenge}
+        onStartAdversaryChallenge={handleStartAdversaryChallenge}
+        onSubmitAdversaryResponse={handleSubmitAdversaryResponse}
+        onSkipAdversaryChallenge={handleSkipAdversaryChallenge}
+        adversaryLoading={adversaryLoading}
       />
     );
   }
@@ -477,10 +854,41 @@ export default function AttemptPage() {
             onToggle={() => setProblemCollapsed(!problemCollapsed)}
           />
 
-          <ThinkingGate
-            onSubmit={handleThinkingGateSubmit}
-            loading={stepLoading}
-          />
+          {/* Pattern Challenge Flow (Advocate's Trap) */}
+          {isChallenging && challengeData ? (
+            <PatternChallenge
+              stepId={challengeData.stepId}
+              challengedPattern={challengeData.pendingPattern}
+              mode={challengeData.mode}
+              prompt={challengeData.prompt}
+              counterexample={challengeData.counterexample}
+              confidenceScore={challengeData.confidenceScore}
+              reasons={challengeData.reasons}
+              suggestedAlternatives={challengeData.suggestedAlternatives}
+              onRespond={handleChallengeRespond}
+              onSkip={handleChallengeSkip}
+              loading={stepLoading}
+            />
+          ) : isDiscovering && discoveryStep ? (
+            /* Pattern Discovery Flow */
+            <PatternDiscovery
+              initialQuestion={discoveryStep.question}
+              initialQuestionId={discoveryStep.questionId}
+              stepId={discoveryStep.stepId}
+              mode={discoveryStep.mode}
+              onSubmitAnswer={handleDiscoveryAnswer}
+              onPatternDiscovered={handlePatternDiscovered}
+              onAbandon={handleAbandonDiscovery}
+              loading={stepLoading}
+            />
+          ) : (
+            <ThinkingGate
+              onSubmit={handleThinkingGateSubmit}
+              onStartDiscovery={handleStartDiscovery}
+              discoveredPattern={discoveredPattern}
+              loading={stepLoading}
+            />
+          )}
         </div>
       )}
 
@@ -499,7 +907,46 @@ export default function AttemptPage() {
                 />
               )}
             </div>
-            <CoachButton onClick={() => setDrawerOpen(true)} hintsCount={hints.length} />
+            <div className="solve-coding-topbar-right">
+              {/* Trace Mode Toggle */}
+              <label className="trace-toggle">
+                <input
+                  type="checkbox"
+                  checked={traceEnabled}
+                  onChange={(e) => {
+                    setTraceEnabled(e.target.checked);
+                    if (!e.target.checked) {
+                      setTraceData(null);
+                      setTraceHint(undefined);
+                    }
+                  }}
+                />
+                <span className="trace-toggle-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M2 12h2m16 0h2M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" />
+                  </svg>
+                  Trace Mode
+                </span>
+              </label>
+              {traceEnabled && (
+                <button
+                  className="btn btn-sm btn-ghost trace-run-btn"
+                  onClick={handleTraceExecution}
+                  disabled={traceLoading || !currentCode.trim()}
+                  title="Run code with trace visualization"
+                >
+                  {traceLoading ? (
+                    <span className="spinner" style={{ width: '14px', height: '14px' }} />
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                  )}
+                  Run Trace
+                </button>
+              )}
+              <CoachButton onClick={() => setDrawerOpen(true)} hintsCount={hints.length} />
+            </div>
           </div>
 
           {/* Problem statement - collapsed by default */}
@@ -514,6 +961,7 @@ export default function AttemptPage() {
             <CodeEditor
               onSubmit={handleCodeSubmit}
               loading={stepLoading}
+              onCodeChange={handleCodeChange}
             />
 
             {/* Inline feedback area */}
@@ -528,6 +976,15 @@ export default function AttemptPage() {
                   confidence={validation.llmConfidence}
                   grade={validation.rubricGrade}
                   microLessonId={validation.microLessonId}
+                />
+              )}
+
+              {/* Trace Visualization Panel */}
+              {traceEnabled && (
+                <TraceVisualization
+                  trace={traceData}
+                  loading={traceLoading}
+                  insertionHint={traceHint}
                 />
               )}
             </div>

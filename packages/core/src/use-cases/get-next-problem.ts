@@ -105,8 +105,8 @@ export async function getNextProblem(
   }
 
   // Default: start with first pattern, first rung
-  // Use deterministic selection for consistency
-  const allProblems = await contentRepo.findAll(tenantId, { limit: 10 });
+  // Only return rung 1 problems for new users (higher rungs are locked)
+  const allProblems = await contentRepo.findAll(tenantId, { rung: 1, limit: 10 });
   const seed = createSelectionSeed(userId, 'default', 1);
   const selection = selectSibling({
     candidates: allProblems,

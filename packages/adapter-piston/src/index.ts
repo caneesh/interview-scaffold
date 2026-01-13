@@ -1,5 +1,5 @@
 export { createPistonExecutor, createPistonExecutorWithFallback } from './piston-executor.js';
-export { createPistonClient, PistonApiError } from './piston-client.js';
+export { createPistonClient, PistonApiError, type PistonClient } from './piston-client.js';
 export { normalizeLanguage, isSupportedLanguage, LANGUAGE_CONFIGS } from './language-configs.js';
 export type {
   PistonExecutorConfig,
@@ -9,3 +9,14 @@ export type {
   SupportedLanguage,
   CodeWrapper,
 } from './types.js';
+
+// Trace visualization
+export {
+  createTraceExecutor,
+  parseTraceOutput,
+  instrumentCode,
+  hasTraceCall,
+  type TraceExecutor,
+  type TraceExecutionResult,
+  type InstrumentationResult,
+} from './trace/index.js';

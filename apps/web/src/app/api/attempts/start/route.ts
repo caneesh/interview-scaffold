@@ -20,6 +20,17 @@ export async function POST(request: NextRequest) {
     const tenantId = request.headers.get('x-tenant-id') ?? DEMO_TENANT_ID;
     const userId = request.headers.get('x-user-id') ?? DEMO_USER_ID;
 
+    // Check for existing active attempt - return it instead of erroring
+    const activeAttempt = await attemptRepo.findActive(tenantId, userId);
+    if (activeAttempt) {
+      const problem = await contentRepo.findById(tenantId, activeAttempt.problemId);
+      return NextResponse.json({
+        attempt: activeAttempt,
+        problem,
+        resumed: true,
+      });
+    }
+
     // Parse and validate request body
     const body = await request.json();
     const parsed = StartAttemptRequestSchema.safeParse(body);

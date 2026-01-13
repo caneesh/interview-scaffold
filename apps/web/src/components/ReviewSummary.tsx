@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 
 const PATTERN_LABELS: Record<string, string> = {
@@ -26,6 +27,21 @@ interface Score {
   efficiency: number;
 }
 
+interface AdversaryPrompt {
+  id: string;
+  type: string;
+  prompt: string;
+  hint?: string;
+}
+
+interface AdversaryChallengeState {
+  stepId: string;
+  prompt: AdversaryPrompt;
+  userResponse: string | null;
+  skipped: boolean;
+  completed: boolean;
+}
+
 interface ReviewSummaryProps {
   /** Problem title */
   problemTitle: string;
@@ -45,6 +61,16 @@ interface ReviewSummaryProps {
   reflectionInsight?: string;
   /** Whether tests all passed */
   allTestsPassed: boolean;
+  /** Adversary challenge state (if available) */
+  adversaryChallenge?: AdversaryChallengeState | null;
+  /** Callback to start adversary challenge */
+  onStartAdversaryChallenge?: () => void;
+  /** Callback to submit adversary response */
+  onSubmitAdversaryResponse?: (data: { stepId: string; response: string }) => Promise<void>;
+  /** Callback to skip adversary challenge */
+  onSkipAdversaryChallenge?: (stepId: string) => Promise<void>;
+  /** Loading state for adversary actions */
+  adversaryLoading?: boolean;
 }
 
 /**
@@ -67,6 +93,11 @@ export function ReviewSummary({
   statedInvariant,
   reflectionInsight,
   allTestsPassed,
+  adversaryChallenge,
+  onStartAdversaryChallenge,
+  onSubmitAdversaryResponse,
+  onSkipAdversaryChallenge,
+  adversaryLoading,
 }: ReviewSummaryProps) {
   const overallPercent = Math.round(score.overall * 100);
   const patternLabel = PATTERN_LABELS[pattern] || pattern.replace(/_/g, ' ');
@@ -169,11 +200,161 @@ export function ReviewSummary({
         </div>
       )}
 
+      {/* Level Up Challenge */}
+      {adversaryChallenge ? (
+        <LevelUpChallenge
+          challenge={adversaryChallenge}
+          onSubmit={onSubmitAdversaryResponse}
+          onSkip={onSkipAdversaryChallenge}
+          loading={adversaryLoading}
+        />
+      ) : onStartAdversaryChallenge ? (
+        <div className="review-level-up-cta">
+          <button
+            type="button"
+            className="btn btn-ghost review-level-up-button"
+            onClick={onStartAdversaryChallenge}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            Try a Level Up Challenge
+          </button>
+        </div>
+      ) : null}
+
       {/* CTA */}
       <div className="review-cta">
         <Link href="/practice" className="btn btn-primary review-cta-button">
           Back to Dashboard
         </Link>
+      </div>
+    </div>
+  );
+}
+
+function LevelUpChallenge({
+  challenge,
+  onSubmit,
+  onSkip,
+  loading,
+}: {
+  challenge: AdversaryChallengeState;
+  onSubmit?: (data: { stepId: string; response: string }) => Promise<void>;
+  onSkip?: (stepId: string) => Promise<void>;
+  loading?: boolean;
+}) {
+  const [response, setResponse] = useState('');
+  const [showHint, setShowHint] = useState(false);
+  const minResponseLength = 50;
+  const canSubmit = response.trim().length >= minResponseLength;
+
+  // Already completed - show review mode
+  if (challenge.completed) {
+    return (
+      <div className="review-level-up review-level-up--completed">
+        <div className="review-level-up-header">
+          <div className="review-level-up-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+          <h2 className="review-section-title">Level Up Challenge</h2>
+          {challenge.skipped ? (
+            <span className="review-level-up-badge review-level-up-badge--skipped">Skipped</span>
+          ) : (
+            <span className="review-level-up-badge review-level-up-badge--done">Done</span>
+          )}
+        </div>
+        <div className="review-level-up-prompt">
+          <p>{challenge.prompt.prompt}</p>
+        </div>
+        {challenge.userResponse && (
+          <div className="review-level-up-response">
+            <h4>Your Response</h4>
+            <blockquote>{challenge.userResponse}</blockquote>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Active challenge
+  return (
+    <div className="review-level-up">
+      <div className="review-level-up-header">
+        <div className="review-level-up-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="review-section-title">Level Up Challenge</h2>
+          <p className="review-level-up-subtitle">Optional: Push your understanding further</p>
+        </div>
+      </div>
+
+      <div className="review-level-up-prompt">
+        <p>{challenge.prompt.prompt}</p>
+      </div>
+
+      {challenge.prompt.hint && (
+        <div className="review-level-up-hint-toggle">
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            onClick={() => setShowHint(!showHint)}
+          >
+            {showHint ? 'Hide hint' : 'Need a hint?'}
+          </button>
+          {showHint && (
+            <div className="review-level-up-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <p>{challenge.prompt.hint}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="review-level-up-input">
+        <label htmlFor="level-up-response">How would you adapt your solution?</label>
+        <textarea
+          id="level-up-response"
+          value={response}
+          onChange={(e) => setResponse(e.target.value)}
+          placeholder="Describe your approach... (minimum 50 characters)"
+          rows={4}
+          disabled={loading}
+        />
+        <div className="review-level-up-char-count">
+          <span className={response.length >= minResponseLength ? 'valid' : ''}>
+            {response.length}
+          </span>
+          {' / '}{minResponseLength} min
+        </div>
+      </div>
+
+      <div className="review-level-up-actions">
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => onSkip?.(challenge.stepId)}
+          disabled={loading}
+        >
+          Skip
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => onSubmit?.({ stepId: challenge.stepId, response: response.trim() })}
+          disabled={!canSubmit || loading}
+        >
+          {loading ? 'Submitting...' : 'Submit'}
+        </button>
       </div>
     </div>
   );
