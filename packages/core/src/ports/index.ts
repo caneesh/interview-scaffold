@@ -5,3 +5,4 @@ export * from './event-sink.js';
 export * from './auth-context.js';
 export * from './clock.js';
 export * from './id-generator.js';
+export * from './bug-hunt-repo.js';

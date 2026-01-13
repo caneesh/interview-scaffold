@@ -434,3 +434,92 @@ export const TraceExecutionResponseSchema = z.object({
   /** Code with trace calls inserted (if autoInsert was successful) */
   instrumentedCode: z.string().optional(),
 });
+
+// ============ Bug Hunt Mode ============
+
+export const BugHuntDifficultySchema = z.enum(['EASY', 'MEDIUM', 'HARD']);
+
+export const BugHuntLanguageSchema = z.enum(['python', 'javascript', 'typescript']);
+
+export const BugHuntResultSchema = z.enum(['CORRECT', 'PARTIAL', 'INCORRECT']);
+
+export const BugHuntItemSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  pattern: PatternIdSchema,
+  difficulty: BugHuntDifficultySchema,
+  language: BugHuntLanguageSchema,
+  code: z.string(),
+  prompt: z.string(),
+  title: z.string(),
+  expectedBugLines: z.array(z.number()),
+  expectedConcepts: z.array(z.string()),
+  hint: z.string().optional(),
+  explanation: z.string(),
+  createdAt: z.coerce.date(),
+});
+
+export const BugHuntSubmissionSchema = z.object({
+  selectedLines: z.array(z.number().int().positive()),
+  explanation: z.string().min(10, 'Explanation must be at least 10 characters'),
+});
+
+export const BugHuntValidationSchema = z.object({
+  result: BugHuntResultSchema,
+  lineSelectionCorrect: z.boolean(),
+  linesFound: z.number(),
+  totalBugLines: z.number(),
+  conceptsMatched: z.boolean(),
+  matchedConcepts: z.array(z.string()),
+  totalConcepts: z.number(),
+  llmFeedback: z.string().optional(),
+  llmConfidence: z.number().optional(),
+});
+
+export const BugHuntAttemptSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  userId: z.string(),
+  itemId: z.string(),
+  submission: BugHuntSubmissionSchema.nullable(),
+  validation: BugHuntValidationSchema.nullable(),
+  startedAt: z.coerce.date(),
+  completedAt: z.coerce.date().nullable(),
+  attemptNumber: z.number(),
+});
+
+// Bug Hunt API Requests/Responses
+export const ListBugHuntItemsResponseSchema = z.object({
+  items: z.array(BugHuntItemSchema.omit({ expectedBugLines: true, expectedConcepts: true, explanation: true })),
+});
+
+export const GetBugHuntItemResponseSchema = z.object({
+  item: BugHuntItemSchema.omit({ expectedBugLines: true, expectedConcepts: true, explanation: true }),
+});
+
+export const StartBugHuntAttemptRequestSchema = z.object({
+  itemId: z.string(),
+});
+
+export const StartBugHuntAttemptResponseSchema = z.object({
+  attempt: BugHuntAttemptSchema,
+  item: BugHuntItemSchema.omit({ expectedBugLines: true, expectedConcepts: true, explanation: true }),
+});
+
+export const SubmitBugHuntAttemptRequestSchema = z.object({
+  attemptId: z.string(),
+  submission: BugHuntSubmissionSchema,
+});
+
+export const SubmitBugHuntAttemptResponseSchema = z.object({
+  attempt: BugHuntAttemptSchema,
+  validation: BugHuntValidationSchema,
+  /** Show explanation on correct/partial answer */
+  explanation: z.string().optional(),
+  /** Show hint on incorrect answer (first attempt only) */
+  hint: z.string().optional(),
+});
+
+export const ListBugHuntAttemptsResponseSchema = z.object({
+  attempts: z.array(BugHuntAttemptSchema),
+});
