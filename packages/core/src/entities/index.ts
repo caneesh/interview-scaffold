@@ -6,3 +6,5 @@ export * from './step.js';
 export * from './attempt.js';
 export * from './skill-state.js';
 export * from './content-pack.js';
+export * from './trace.js';
+export * from './invariant-template.js';

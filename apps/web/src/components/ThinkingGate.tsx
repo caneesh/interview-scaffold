@@ -1,6 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { InvariantBuilder } from './InvariantBuilder';
+import {
+  getTemplatesForPattern,
+  type InvariantTemplate,
+  type PatternId,
+} from '@scaffold/core';
+
+type InvariantMode = 'write' | 'build';
 
 const PATTERNS = [
   { id: 'SLIDING_WINDOW', name: 'Sliding Window', desc: 'Maintain a window over a contiguous sequence' },
@@ -19,24 +27,103 @@ const PATTERNS = [
 ];
 
 interface ThinkingGateProps {
-  onSubmit: (data: { selectedPattern: string; statedInvariant: string; statedComplexity?: string }) => Promise<void>;
+  onSubmit: (data: {
+    selectedPattern: string;
+    statedInvariant: string;
+    statedComplexity?: string;
+    invariantTemplate?: {
+      templateId: string;
+      choices: Record<string, number>;
+      allCorrect: boolean;
+    };
+  }) => Promise<void>;
+  /** Handler for starting pattern discovery */
+  onStartDiscovery?: () => void;
+  /** Pre-selected pattern (from discovery) */
+  discoveredPattern?: string | null;
   loading?: boolean;
 }
 
-export function ThinkingGate({ onSubmit, loading }: ThinkingGateProps) {
-  const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
+export function ThinkingGate({ onSubmit, onStartDiscovery, discoveredPattern, loading }: ThinkingGateProps) {
+  const [selectedPattern, setSelectedPattern] = useState<string | null>(discoveredPattern ?? null);
   const [invariant, setInvariant] = useState('');
   const [complexity, setComplexity] = useState('');
+  const [invariantMode, setInvariantMode] = useState<InvariantMode>('write');
+  const [builderResult, setBuilderResult] = useState<{
+    templateId: string;
+    choices: Record<string, number>;
+    renderedText: string;
+    allCorrect: boolean;
+  } | null>(null);
+
+  // Update selected pattern when discoveredPattern changes
+  if (discoveredPattern && discoveredPattern !== selectedPattern) {
+    setSelectedPattern(discoveredPattern);
+  }
+
+  // Get templates for the selected pattern
+  const templates = useMemo((): InvariantTemplate[] => {
+    if (!selectedPattern) return [];
+    try {
+      return getTemplatesForPattern(selectedPattern as PatternId);
+    } catch {
+      return [];
+    }
+  }, [selectedPattern]);
+
+  // Check if templates are available for the selected pattern
+  const hasTemplates = templates.length > 0;
+
+  // Handle builder completion
+  const handleBuilderComplete = (result: {
+    templateId: string;
+    choices: Record<string, number>;
+    renderedText: string;
+    allCorrect: boolean;
+  }) => {
+    setBuilderResult(result);
+    setInvariant(result.renderedText);
+  };
+
+  // Check if form can be submitted
+  const canSubmit = selectedPattern && (
+    (invariantMode === 'write' && invariant.trim()) ||
+    (invariantMode === 'build' && builderResult)
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPattern || !invariant.trim()) return;
+    if (!canSubmit) return;
 
     await onSubmit({
-      selectedPattern,
-      statedInvariant: invariant,
+      selectedPattern: selectedPattern!,
+      statedInvariant: invariantMode === 'build' && builderResult
+        ? builderResult.renderedText
+        : invariant,
       statedComplexity: complexity || undefined,
+      ...(invariantMode === 'build' && builderResult && {
+        invariantTemplate: {
+          templateId: builderResult.templateId,
+          choices: builderResult.choices,
+          allCorrect: builderResult.allCorrect,
+        },
+      }),
     });
+  };
+
+  // Reset builder result when changing patterns or modes
+  const handlePatternChange = (patternId: string) => {
+    setSelectedPattern(patternId);
+    setBuilderResult(null);
+    setInvariant('');
+  };
+
+  const handleModeChange = (mode: InvariantMode) => {
+    setInvariantMode(mode);
+    setBuilderResult(null);
+    if (mode === 'write') {
+      setInvariant('');
+    }
   };
 
   return (
@@ -64,34 +151,103 @@ export function ThinkingGate({ onSubmit, loading }: ThinkingGateProps) {
                 role="option"
                 aria-selected={selectedPattern === pattern.id}
                 tabIndex={0}
-                className={`pattern-card ${selectedPattern === pattern.id ? 'selected' : ''}`}
-                onClick={() => setSelectedPattern(pattern.id)}
+                className={`pattern-card ${selectedPattern === pattern.id ? 'selected' : ''} ${discoveredPattern === pattern.id ? 'discovered' : ''}`}
+                onClick={() => handlePatternChange(pattern.id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    setSelectedPattern(pattern.id);
+                    handlePatternChange(pattern.id);
                   }
                 }}
               >
                 <div className="pattern-name">{pattern.name}</div>
                 <div className="pattern-desc">{pattern.desc}</div>
+                {discoveredPattern === pattern.id && (
+                  <div className="pattern-discovered-badge">Discovered</div>
+                )}
               </div>
             ))}
           </div>
+
+          {/* Help me find the pattern button */}
+          {onStartDiscovery && !discoveredPattern && (
+            <button
+              type="button"
+              className="btn btn-ghost pattern-discovery-trigger"
+              onClick={onStartDiscovery}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Not sure? Help me find the pattern
+            </button>
+          )}
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <label className="label" htmlFor="invariant">
+          <label className="label">
             2. State the invariant that your solution will maintain
           </label>
-          <textarea
-            id="invariant"
-            className="textarea"
-            placeholder="e.g., 'The window [left, right] always contains at most k distinct characters'"
-            value={invariant}
-            onChange={(e) => setInvariant(e.target.value)}
-            rows={3}
-          />
+
+          {/* Mode toggle - only show if templates are available */}
+          {hasTemplates && (
+            <div className="invariant-mode-toggle">
+              <button
+                type="button"
+                className={`invariant-mode-btn ${invariantMode === 'write' ? 'active' : ''}`}
+                onClick={() => handleModeChange('write')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
+                Write invariant
+              </button>
+              <button
+                type="button"
+                className={`invariant-mode-btn ${invariantMode === 'build' ? 'active' : ''}`}
+                onClick={() => handleModeChange('build')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                Build invariant
+              </button>
+            </div>
+          )}
+
+          {/* Write mode - free text input */}
+          {invariantMode === 'write' && (
+            <textarea
+              id="invariant"
+              className="textarea"
+              placeholder="e.g., 'The window [left, right] always contains at most k distinct characters'"
+              value={invariant}
+              onChange={(e) => setInvariant(e.target.value)}
+              rows={3}
+            />
+          )}
+
+          {/* Build mode - fill-in-the-blanks */}
+          {invariantMode === 'build' && hasTemplates && (
+            <InvariantBuilder
+              templates={templates}
+              onComplete={handleBuilderComplete}
+              showValidation={false}
+            />
+          )}
+
+          {/* Fallback if build mode selected but no templates */}
+          {invariantMode === 'build' && !hasTemplates && (
+            <div className="invariant-builder invariant-builder--empty">
+              <p>No templates available for this pattern. Please write your invariant manually.</p>
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: '1.5rem' }}>
@@ -111,7 +267,7 @@ export function ThinkingGate({ onSubmit, loading }: ThinkingGateProps) {
         <button
           type="submit"
           className="btn btn-primary thinking-gate-submit"
-          disabled={!selectedPattern || !invariant.trim() || loading}
+          disabled={!canSubmit || loading}
         >
           {loading ? (
             <>

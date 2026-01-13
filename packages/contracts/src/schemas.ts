@@ -38,11 +38,14 @@ export const AttemptStateSchema = z.enum([
 
 export const StepTypeSchema = z.enum([
   'THINKING_GATE',
+  'PATTERN_DISCOVERY',
   'CODING',
   'REFLECTION',
   'SUCCESS_REFLECTION',
   'HINT',
 ]);
+
+export const PatternDiscoveryModeSchema = z.enum(['HEURISTIC', 'SOCRATIC']);
 
 export const StepResultSchema = z.enum(['PASS', 'FAIL', 'SKIP']);
 
@@ -133,11 +136,18 @@ export const StartAttemptResponseSchema = z.object({
 });
 
 // Submit Thinking Gate
+export const InvariantTemplateChoicesSchema = z.object({
+  templateId: z.string(),
+  choices: z.record(z.number()),
+  allCorrect: z.boolean(),
+});
+
 export const SubmitThinkingGateRequestSchema = z.object({
   attemptId: z.string(),
   selectedPattern: z.string(),
   statedInvariant: z.string(),
   statedComplexity: z.string().optional(),
+  invariantTemplate: InvariantTemplateChoicesSchema.optional(),
 });
 
 export const SubmitThinkingGateResponseSchema = z.object({
@@ -189,6 +199,54 @@ export const SubmitSuccessReflectionRequestSchema = z.object({
 export const SubmitSuccessReflectionResponseSchema = z.object({
   attempt: AttemptSchema,
   passed: z.boolean(),
+});
+
+// Pattern Discovery - Socratic guided pattern finding
+export const PatternDiscoveryQASchema = z.object({
+  questionId: z.string(),
+  question: z.string(),
+  answer: z.string(),
+  timestamp: z.coerce.date(),
+});
+
+export const StartPatternDiscoveryRequestSchema = z.object({
+  attemptId: z.string(),
+  mode: PatternDiscoveryModeSchema.optional(), // Defaults to HEURISTIC if LLM unavailable
+});
+
+export const StartPatternDiscoveryResponseSchema = z.object({
+  stepId: z.string(),
+  mode: PatternDiscoveryModeSchema,
+  question: z.string(),
+  questionId: z.string(),
+});
+
+export const SubmitPatternDiscoveryAnswerRequestSchema = z.object({
+  attemptId: z.string(),
+  stepId: z.string(),
+  questionId: z.string(),
+  answer: z.string(),
+});
+
+export const SubmitPatternDiscoveryAnswerResponseSchema = z.object({
+  /** Next question if discovery is ongoing */
+  nextQuestion: z.string().optional(),
+  nextQuestionId: z.string().optional(),
+  /** Discovered pattern if discovery completed */
+  discoveredPattern: PatternIdSchema.optional(),
+  /** Whether discovery is complete */
+  completed: z.boolean(),
+  /** Full Q/A log for display */
+  qaLog: z.array(PatternDiscoveryQASchema),
+});
+
+export const AbandonPatternDiscoveryRequestSchema = z.object({
+  attemptId: z.string(),
+  stepId: z.string(),
+});
+
+export const AbandonPatternDiscoveryResponseSchema = z.object({
+  success: z.boolean(),
 });
 
 // Request Hint
@@ -275,4 +333,104 @@ export const SubmitThinkingGateExtendedResponseSchema = z.object({
   }),
   passed: z.boolean(),
   validation: ThinkingGateValidationResultSchema.optional(),
+});
+
+// ============ Pattern Challenge (Advocate's Trap) ============
+
+export const PatternChallengeModeSchema = z.enum(['COUNTEREXAMPLE', 'SOCRATIC']);
+
+export const CheckPatternChallengeRequestSchema = z.object({
+  attemptId: z.string(),
+  selectedPattern: PatternIdSchema,
+  statedInvariant: z.string(),
+});
+
+export const CheckPatternChallengeResponseSchema = z.object({
+  shouldChallenge: z.boolean(),
+  challenge: z.object({
+    stepId: z.string(),
+    mode: PatternChallengeModeSchema,
+    prompt: z.string(),
+    counterexample: z.string().optional(),
+    confidenceScore: z.number().min(0).max(1),
+    reasons: z.array(z.string()),
+    suggestedAlternatives: z.array(PatternIdSchema),
+  }).optional(),
+});
+
+export const RespondPatternChallengeRequestSchema = z.object({
+  attemptId: z.string(),
+  stepId: z.string(),
+  response: z.string(),
+  decision: z.enum(['KEEP_PATTERN', 'CHANGE_PATTERN']),
+  newPattern: PatternIdSchema.optional(),
+});
+
+export const RespondPatternChallengeResponseSchema = z.object({
+  attempt: AttemptSchema,
+  step: z.object({
+    id: z.string(),
+    type: z.literal('PATTERN_CHALLENGE'),
+    result: z.enum(['PASS', 'SKIP']).nullable(),
+    data: z.any(),
+  }),
+  finalPattern: PatternIdSchema,
+});
+
+export const SkipPatternChallengeRequestSchema = z.object({
+  attemptId: z.string(),
+  stepId: z.string(),
+});
+
+export const SkipPatternChallengeResponseSchema = z.object({
+  attempt: AttemptSchema,
+  finalPattern: PatternIdSchema,
+});
+
+// ============ Trace Visualization ============
+
+/** Recursive schema for trace values */
+const TraceValueSchema: z.ZodType<unknown> = z.lazy(() =>
+  z.union([
+    z.number(),
+    z.string(),
+    z.boolean(),
+    z.null(),
+    z.array(TraceValueSchema),
+    z.record(TraceValueSchema),
+  ])
+);
+
+export const TraceVarsSchema = z.record(TraceValueSchema);
+
+export const TraceFrameSchema = z.object({
+  iter: z.number().int().min(0),
+  vars: TraceVarsSchema,
+  label: z.string().optional(),
+  line: z.number().int().positive().optional(),
+});
+
+export const TraceOutputSchema = z.object({
+  success: z.boolean(),
+  frames: z.array(TraceFrameSchema),
+  error: z.string().optional(),
+  array: z.array(TraceValueSchema).optional(),
+  arrayName: z.string().optional(),
+  pointerVars: z.array(z.string()).optional(),
+});
+
+export const TraceExecutionRequestSchema = z.object({
+  attemptId: z.string(),
+  code: z.string(),
+  language: z.string(),
+  testInput: z.string(),
+  autoInsert: z.boolean().optional(),
+});
+
+export const TraceExecutionResponseSchema = z.object({
+  trace: TraceOutputSchema,
+  /** Hint for user if trace couldn't be auto-captured */
+  insertionHint: z.string().optional(),
+  /** Code with trace calls inserted (if autoInsert was successful) */
+  instrumentedCode: z.string().optional(),
 });

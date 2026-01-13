@@ -45,6 +45,7 @@ export async function POST(
         selectedPattern: parsed.data.selectedPattern,
         statedInvariant: parsed.data.statedInvariant,
         statedComplexity: parsed.data.statedComplexity ?? null,
+        invariantTemplate: parsed.data.invariantTemplate ?? null,
       };
     } else if (stepType === 'REFLECTION') {
       const parsed = SubmitReflectionRequestSchema.safeParse({

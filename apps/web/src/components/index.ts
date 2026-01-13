@@ -1,5 +1,7 @@
 export { Stepper, type StepConfig, type StepStatus } from './Stepper';
 export { ThinkingGate } from './ThinkingGate';
+export { PatternDiscovery } from './PatternDiscovery';
+export { PatternChallenge } from './PatternChallenge';
 export { CodeEditor } from './CodeEditor';
 export { TestResults } from './TestResults';
 export { HintPanel } from './HintPanel';
@@ -7,3 +9,6 @@ export { ReflectionForm } from './ReflectionForm';
 export { MicroLessonModal } from './MicroLessonModal';
 export { ProblemStatement } from './ProblemStatement';
 export { ReviewSummary } from './ReviewSummary';
+export { TraceVisualization } from './TraceVisualization';
+export { AdversaryChallenge } from './AdversaryChallenge';
+export { InvariantBuilder } from './InvariantBuilder';
