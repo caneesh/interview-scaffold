@@ -10,3 +10,4 @@ export * from './hints/index.js';
 export * from './adversary/index.js';
 export * from './coaching/index.js';
 export * from './adapters/index.js';
+export * from './features/index.js';

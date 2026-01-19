@@ -101,3 +101,21 @@ export type {
   PatternChallengeLLMPort,
   ProblemCharacteristics,
 } from './pattern-challenge.js';
+
+// Socratic Repair (Validation Repair Loop)
+export {
+  generateSocraticRepairResponse,
+  classifyErrorType,
+  buildRepairContext,
+  isGibberishInput,
+  classifyValidationOutcome,
+} from './socratic-repair.js';
+
+export type {
+  ErrorType as SocraticErrorType,
+  PrincipleCategory,
+  SocraticRepairContext,
+  SocraticRepairResponse,
+  SocraticRepairEvent,
+  ValidationOutcome,
+} from './socratic-repair.js';

@@ -18,6 +18,9 @@ export default function HomePage() {
           <Link href="/explorer" className="btn btn-secondary" style={{ padding: '0.75rem 1.5rem' }}>
             Explore Patterns
           </Link>
+          <Link href="/features" className="btn btn-secondary" style={{ padding: '0.75rem 1.5rem' }}>
+            All Features
+          </Link>
         </div>
       </div>
 
