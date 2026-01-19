@@ -262,7 +262,7 @@ const PATTERN_HINTS: Partial<Record<PatternId, readonly string[]>> = {
 // ============ Helper Functions ============
 
 function randomChoice<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  return arr[Math.floor(Math.random() * arr.length)] as T;
 }
 
 function interpolate(template: string, context: Record<string, string>): string {

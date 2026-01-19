@@ -13,7 +13,7 @@ import {
   type FeatureDefinition,
   type FeatureCategory,
   type FeatureStatus,
-} from '@interview-scaffold/core';
+} from '@scaffold/core';
 
 const CATEGORY_LABELS: Record<FeatureCategory, string> = {
   PRACTICE_MODE: 'Practice Modes',
