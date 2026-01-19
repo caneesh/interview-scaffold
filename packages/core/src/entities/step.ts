@@ -132,6 +132,15 @@ export interface CodingValidationData {
   readonly llmConfidence?: number;
   /** Prompt text for success reflection (only set for PROCEED_WITH_REFLECTION) */
   readonly successReflectionPrompt?: string;
+  /** Time budget test results (if problem has largeHiddenTests) */
+  readonly timeBudgetResult?: {
+    readonly exceeded: boolean;
+    readonly budgetMs: number;
+    readonly testsRun: number;
+    readonly testsFailed: number;
+  };
+  /** Pattern-specific optimization suggestion when time budget exceeded */
+  readonly complexitySuggestion?: string;
 }
 
 export interface TestResultData {

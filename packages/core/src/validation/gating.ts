@@ -48,6 +48,30 @@ const GATING_RULES: GatingRule[] = [
     reason: 'Forbidden concept detected - solution approach is not allowed for this problem.',
   },
 
+  // Require reflection after repeated time budget failures
+  {
+    id: 'reflection_repeated_time_budget',
+    priority: 3,
+    condition: (ctx) => {
+      const budgetExceeded = ctx.errors.some((e) => e.type === 'TIME_BUDGET_EXCEEDED');
+      const previousBudgetFails = ctx.previousFailures.filter((e) => e === 'TIME_BUDGET_EXCEEDED');
+      return budgetExceeded && previousBudgetFails.length >= 1;
+    },
+    action: 'REQUIRE_REFLECTION',
+    reason: 'Your solution has exceeded the time budget multiple times. Reflect on your complexity analysis.',
+    reflectionType: 'complexity_analysis',
+  },
+
+  // Show micro-lesson when time budget is exceeded
+  {
+    id: 'microlesson_time_budget',
+    priority: 8,
+    condition: (ctx) => ctx.errors.some((e) => e.type === 'TIME_BUDGET_EXCEEDED'),
+    action: 'SHOW_MICRO_LESSON',
+    reason: 'Your solution exceeds the expected time complexity. Review efficient patterns.',
+    // microLessonId will be set dynamically based on pattern
+  },
+
   // Show micro-lesson for nested loops in sliding window
   {
     id: 'microlesson_nested_loops',
@@ -203,6 +227,10 @@ export function makeGatingDecision(context: GatingContext): GatingDecision {
       if (rule.id === 'microlesson_struggle') {
         microLessonId = `${context.pattern.toLowerCase()}_fundamentals`;
       }
+      // Handle dynamic microLessonId for time budget case
+      if (rule.id === 'microlesson_time_budget') {
+        microLessonId = `${context.pattern.toLowerCase()}_complexity`;
+      }
 
       return {
         action: rule.action,
@@ -241,6 +269,44 @@ export interface MicroLessonExample {
 }
 
 export const MICRO_LESSONS: readonly GatingMicroLesson[] = [
+  {
+    id: 'sliding_window_complexity',
+    pattern: 'SLIDING_WINDOW',
+    title: 'Achieving O(n) with Sliding Window',
+    content: `
+Your solution exceeded the time budget, indicating suboptimal complexity.
+Sliding window problems can be solved in O(n) by:
+1. Using a single pass through the array
+2. Updating the window incrementally (add/remove one element at a time)
+3. Avoiding nested loops - the inner loop should use while, not for
+
+Common pitfall: Recalculating window properties from scratch instead of updating incrementally.
+    `.trim(),
+    examples: [
+      {
+        description: 'Avoid O(n²) nested loops',
+        before: `
+# O(n²) - Nested loops
+for i in range(n):
+    for j in range(i, n):  # This creates O(n²)
+        process(arr[i:j])
+        `.trim(),
+        after: `
+# O(n) - Single pass with two pointers
+left = 0
+for right in range(n):
+    # Expand window
+    add_element(arr[right])
+    # Shrink window as needed
+    while window_invalid():
+        remove_element(arr[left])
+        left += 1
+        `.trim(),
+        explanation: 'Each element is added and removed at most once, giving O(n).',
+      },
+    ],
+    duration: 'SHORT',
+  },
   {
     id: 'sliding_window_intro',
     pattern: 'SLIDING_WINDOW',

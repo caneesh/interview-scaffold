@@ -6,3 +6,6 @@ export * from './auth-context.js';
 export * from './clock.js';
 export * from './id-generator.js';
 export * from './bug-hunt-repo.js';
+export * from './debug-lab-repo.js';
+export * from './ai-coach.js';
+export * from './diagnostic-session-repo.js';

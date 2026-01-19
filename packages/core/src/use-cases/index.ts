@@ -9,3 +9,5 @@ export * from './select-sibling.js';
 export * from './get-skill-matrix.js';
 export * from './pattern-discovery.js';
 export * from './pattern-challenge.js';
+export * from './diagnostic-coaching.js';
+export * from './postmortem-generator.js';

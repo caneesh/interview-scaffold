@@ -76,6 +76,10 @@ export const ProblemSchema = z.object({
   targetComplexity: z.string(),
   testCases: z.array(TestCaseSchema),
   hints: z.array(z.string()),
+  /** Time budget in ms for large hidden tests (e.g., 500, 1000) */
+  timeoutBudgetMs: z.number().positive().optional(),
+  /** Large hidden tests run with budget timeout to detect suboptimal complexity */
+  largeHiddenTests: z.array(TestCaseSchema).optional(),
   createdAt: z.coerce.date(),
 });
 
@@ -522,4 +526,539 @@ export const SubmitBugHuntAttemptResponseSchema = z.object({
 
 export const ListBugHuntAttemptsResponseSchema = z.object({
   attempts: z.array(BugHuntAttemptSchema),
+});
+
+// ============ Debug Lab Mode ============
+
+export const DefectCategorySchema = z.enum([
+  'Functional',
+  'Concurrency',
+  'Resource',
+  'Distributed',
+  'Heisenbug',
+  'Environment',
+  'Container',
+  'Performance',
+  'Observability',
+]);
+
+export const SeverityLevelSchema = z.enum(['Critical', 'Major', 'Minor', 'Low']);
+
+export const PriorityLevelSchema = z.enum(['High', 'Medium', 'Low']);
+
+export const DebugSignalSchema = z.enum([
+  'failing_tests',
+  'timeout',
+  'crash',
+  'inconsistent_repro',
+  'metrics_red',
+  'metrics_use',
+  'memory_growth',
+  'cpu_spike',
+  'connection_errors',
+  'data_corruption',
+  'log_errors',
+  'silent_failure',
+]);
+
+export const DebugToolSchema = z.enum([
+  'unit_tests',
+  'logging',
+  'profiling',
+  'tracing',
+  'seed_freeze',
+  'debugger',
+  'binary_search',
+  'metrics_analysis',
+  'code_review',
+  'reproduction',
+  'isolation',
+  'rollback',
+]);
+
+export const DebugLabDifficultySchema = z.enum(['EASY', 'MEDIUM', 'HARD', 'EXPERT']);
+
+export const DebugLabLanguageSchema = z.enum(['javascript', 'typescript', 'python']);
+
+export const DebugLabStatusSchema = z.enum([
+  'STARTED',
+  'TRIAGE_COMPLETED',
+  'SUBMITTED',
+  'PASSED',
+  'FAILED',
+]);
+
+export const ExecutionSignalTypeSchema = z.enum([
+  'test_failure',
+  'timeout',
+  'crash',
+  'compile_error',
+  'runtime_error',
+  'success',
+]);
+
+// Debug Lab File
+export const DebugLabFileSchema = z.object({
+  path: z.string(),
+  content: z.string(),
+  editable: z.boolean(),
+});
+
+// Observability Schemas
+export const REDMetricsSchema = z.object({
+  rate: z.number(),
+  errorRate: z.number().min(0).max(1),
+  duration: z.object({
+    p50: z.number(),
+    p95: z.number(),
+    p99: z.number(),
+  }),
+  label: z.string().optional(),
+});
+
+export const USEMetricsSchema = z.object({
+  utilization: z.number().min(0).max(1),
+  saturation: z.number(),
+  errors: z.number(),
+  resource: z.string(),
+  label: z.string().optional(),
+});
+
+export const ObservabilitySnapshotSchema = z.object({
+  red: z.array(REDMetricsSchema).optional(),
+  use: z.array(USEMetricsSchema).optional(),
+  logs: z.array(z.string()).optional(),
+  timestamp: z.string().optional(),
+});
+
+// Triage Schemas
+export const TriageRubricSchema = z.object({
+  expectedCategory: DefectCategorySchema,
+  expectedSeverity: SeverityLevelSchema,
+  expectedPriority: PriorityLevelSchema,
+  expectedFirstActions: z.array(z.string()),
+  explanation: z.string().optional(),
+});
+
+export const TriageAnswersSchema = z.object({
+  category: DefectCategorySchema,
+  severity: SeverityLevelSchema,
+  priority: PriorityLevelSchema,
+  firstActions: z.string().min(10, 'First actions must be at least 10 characters'),
+});
+
+export const TriageScoreSchema = z.object({
+  overall: z.number().min(0).max(1),
+  categoryScore: z.number().min(0).max(1),
+  severityScore: z.number().min(0).max(1),
+  priorityScore: z.number().min(0).max(1),
+  actionsScore: z.number().min(0).max(1),
+  matchedActions: z.array(z.string()),
+  llmFeedback: z.string().optional(),
+});
+
+// Execution Result Schema
+export const ExecutionResultSchema = z.object({
+  passed: z.boolean(),
+  signalType: ExecutionSignalTypeSchema,
+  testsPassed: z.number().int().min(0),
+  testsTotal: z.number().int().min(0),
+  stdout: z.string(),
+  stderr: z.string(),
+  exitCode: z.number().int(),
+  executionTimeMs: z.number().min(0),
+  hiddenTestsResult: z.object({
+    passed: z.boolean(),
+    testsPassed: z.number().int().min(0),
+    testsTotal: z.number().int().min(0),
+  }).optional(),
+});
+
+// Debug Lab Submission Schema
+export const DebugLabSubmissionSchema = z.object({
+  files: z.record(z.string()),
+  explanation: z.string().min(10, 'Explanation must be at least 10 characters'),
+  submittedAt: z.coerce.date(),
+});
+
+// Debug Lab Item Schema (full, for server)
+export const DebugLabItemSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  difficulty: DebugLabDifficultySchema,
+  language: DebugLabLanguageSchema,
+  files: z.array(DebugLabFileSchema),
+  testCommand: z.string(),
+  runnerScript: z.string().optional(),
+  hiddenTests: z.array(DebugLabFileSchema).optional(),
+  defectCategory: DefectCategorySchema,
+  severity: SeverityLevelSchema,
+  priority: PriorityLevelSchema,
+  signals: z.array(DebugSignalSchema),
+  toolsExpected: z.array(DebugToolSchema),
+  requiredTriage: z.boolean(),
+  triageRubric: TriageRubricSchema.optional(),
+  observabilitySnapshot: ObservabilitySnapshotSchema.optional(),
+  solutionExplanation: z.string().optional(),
+  solutionFiles: z.array(DebugLabFileSchema).optional(),
+  createdAt: z.coerce.date(),
+});
+
+// Debug Lab Item Schema (client-safe, omits solutions and hidden tests)
+export const DebugLabItemClientSchema = DebugLabItemSchema.omit({
+  hiddenTests: true,
+  solutionExplanation: true,
+  solutionFiles: true,
+  triageRubric: true, // Don't reveal expected answers
+});
+
+// Debug Lab Attempt Schema
+export const DebugLabAttemptSchema = z.object({
+  id: z.string(),
+  tenantId: z.string(),
+  userId: z.string(),
+  itemId: z.string(),
+  status: DebugLabStatusSchema,
+  triageAnswers: TriageAnswersSchema.nullable(),
+  triageScore: TriageScoreSchema.nullable(),
+  submission: DebugLabSubmissionSchema.nullable(),
+  executionResult: ExecutionResultSchema.nullable(),
+  testRunCount: z.number().int().min(0),
+  submissionCount: z.number().int().min(0),
+  startedAt: z.coerce.date(),
+  completedAt: z.coerce.date().nullable(),
+});
+
+// ============ Debug Lab API Requests/Responses ============
+
+// GET /api/debug-lab/next
+export const GetNextDebugLabResponseSchema = z.object({
+  item: DebugLabItemClientSchema.nullable(),
+  reason: z.string(),
+});
+
+// POST /api/debug-lab/start
+export const StartDebugLabRequestSchema = z.object({
+  itemId: z.string(),
+});
+
+export const StartDebugLabResponseSchema = z.object({
+  attempt: DebugLabAttemptSchema,
+  item: DebugLabItemClientSchema,
+});
+
+// POST /api/debug-lab/:attemptId/triage
+export const SubmitTriageRequestSchema = z.object({
+  attemptId: z.string(),
+  triageAnswers: TriageAnswersSchema,
+});
+
+export const SubmitTriageResponseSchema = z.object({
+  attempt: DebugLabAttemptSchema,
+  triageScore: TriageScoreSchema,
+  rubricExplanation: z.string().optional(),
+});
+
+// POST /api/debug-lab/:attemptId/run-tests
+export const RunTestsRequestSchema = z.object({
+  attemptId: z.string(),
+  files: z.record(z.string()),
+});
+
+export const RunTestsResponseSchema = z.object({
+  attempt: DebugLabAttemptSchema,
+  executionResult: ExecutionResultSchema,
+});
+
+// POST /api/debug-lab/:attemptId/submit
+export const SubmitDebugLabRequestSchema = z.object({
+  attemptId: z.string(),
+  files: z.record(z.string()),
+  explanation: z.string().min(10, 'Explanation must be at least 10 characters'),
+});
+
+export const SubmitDebugLabResponseSchema = z.object({
+  attempt: DebugLabAttemptSchema,
+  executionResult: ExecutionResultSchema,
+  passed: z.boolean(),
+  /** Taxonomy metadata for UI display */
+  taxonomy: z.object({
+    defectCategory: DefectCategorySchema,
+    severity: SeverityLevelSchema,
+    priority: PriorityLevelSchema,
+    signals: z.array(DebugSignalSchema),
+  }),
+  /** Solution explanation (only shown on pass or after max attempts) */
+  solutionExplanation: z.string().optional(),
+});
+
+// GET /api/debug-lab/items (list available items)
+export const ListDebugLabItemsResponseSchema = z.object({
+  items: z.array(DebugLabItemClientSchema.pick({
+    id: true,
+    title: true,
+    description: true,
+    difficulty: true,
+    language: true,
+    defectCategory: true,
+    severity: true,
+    requiredTriage: true,
+  })),
+});
+
+// GET /api/debug-lab/attempts (list user's attempts)
+export const ListDebugLabAttemptsResponseSchema = z.object({
+  attempts: z.array(DebugLabAttemptSchema),
+});
+
+// ============ AI Diagnostic Coach Schemas ============
+
+/**
+ * Diagnostic stages (state machine)
+ */
+export const DiagnosticStageSchema = z.enum([
+  'TRIAGE',       // Classify the defect
+  'REPRODUCE',    // Establish reproduction
+  'LOCALIZE',     // Narrow down location
+  'HYPOTHESIZE',  // Form hypotheses
+  'FIX',          // Implement fix (user)
+  'VERIFY',       // Verify fix works
+  'POSTMORTEM',   // Generate learnings
+]);
+
+export type DiagnosticStage = z.infer<typeof DiagnosticStageSchema>;
+
+/**
+ * Guidance types from coach
+ */
+export const GuidanceTypeSchema = z.enum([
+  'socratic_question',
+  'checklist',
+  'pattern_hint',
+  'next_step',
+  'counterexample',
+  'knowledge_card',
+]);
+
+/**
+ * Triage evidence
+ */
+export const TriageEvidenceSchema = z.object({
+  defectCategory: z.string(),
+  severity: z.string(),
+  priority: z.string(),
+  observations: z.string(),
+  timestamp: z.string().datetime(),
+});
+
+/**
+ * Reproduction evidence
+ */
+export const ReproductionEvidenceSchema = z.object({
+  steps: z.array(z.string()),
+  isDeterministic: z.boolean(),
+  reproCommand: z.string().optional(),
+  successRate: z.number().min(0).max(1).optional(),
+  timestamp: z.string().datetime(),
+});
+
+/**
+ * Localization evidence
+ */
+export const LocalizationEvidenceSchema = z.object({
+  suspectedFiles: z.array(z.string()),
+  suspectedFunctions: z.array(z.string()),
+  stackTrace: z.string().optional(),
+  narrowingHistory: z.array(z.string()).optional(),
+  timestamp: z.string().datetime(),
+});
+
+/**
+ * Hypothesis evidence
+ */
+export const HypothesisEvidenceSchema = z.object({
+  id: z.string(),
+  hypothesis: z.string(),
+  testMethod: z.string(),
+  status: z.enum(['untested', 'confirmed', 'rejected']),
+  evidence: z.string().optional(),
+  timestamp: z.string().datetime(),
+});
+
+/**
+ * Fix attempt evidence
+ */
+export const FixAttemptEvidenceSchema = z.object({
+  id: z.string(),
+  hypothesisId: z.string(),
+  approach: z.string(),
+  filesModified: z.array(z.string()),
+  testsPassed: z.boolean(),
+  testOutput: z.string().optional(),
+  timestamp: z.string().datetime(),
+});
+
+/**
+ * Verification evidence
+ */
+export const VerificationEvidenceSchema = z.object({
+  visibleTestsPassed: z.boolean(),
+  hiddenTestsPassed: z.boolean().optional(),
+  edgeCasesChecked: z.array(z.string()),
+  regressionTestsPassed: z.boolean(),
+  timestamp: z.string().datetime(),
+});
+
+/**
+ * All diagnostic evidence
+ */
+export const DiagnosticEvidenceSchema = z.object({
+  triage: TriageEvidenceSchema.optional(),
+  reproduction: ReproductionEvidenceSchema.optional(),
+  localization: LocalizationEvidenceSchema.optional(),
+  hypotheses: z.array(HypothesisEvidenceSchema).optional(),
+  fixAttempts: z.array(FixAttemptEvidenceSchema).optional(),
+  verification: VerificationEvidenceSchema.optional(),
+});
+
+/**
+ * AI guidance entry
+ */
+export const AIGuidanceEntrySchema = z.object({
+  id: z.string(),
+  stage: DiagnosticStageSchema,
+  type: GuidanceTypeSchema,
+  content: z.string(),
+  helpful: z.boolean().optional(),
+  timestamp: z.string().datetime(),
+});
+
+/**
+ * Stage transition record
+ */
+export const StageTransitionSchema = z.object({
+  from: DiagnosticStageSchema.nullable(),
+  to: DiagnosticStageSchema,
+  timestamp: z.string().datetime(),
+  reason: z.string().optional(),
+});
+
+/**
+ * Full diagnostic session
+ */
+export const DiagnosticSessionSchema = z.object({
+  id: z.string(),
+  attemptId: z.string(),
+  tenantId: z.string(),
+  userId: z.string(),
+  currentStage: DiagnosticStageSchema,
+  stageHistory: z.array(StageTransitionSchema),
+  evidence: DiagnosticEvidenceSchema,
+  aiGuidance: z.array(AIGuidanceEntrySchema),
+  aiEnabled: z.boolean(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+// ============ AI Coach Request/Response Schemas ============
+
+/**
+ * Problem context for AI (NO solution/answer info)
+ */
+export const ProblemContextSchema = z.object({
+  problemId: z.string(),
+  problemTitle: z.string(),
+  problemStatement: z.string(),
+  visibleTestCases: z.array(z.string()),
+  defectCategory: z.string().optional(),
+  signals: z.array(z.string()).optional(),
+});
+
+/**
+ * Request to AI coach
+ */
+export const AICoachRequestSchema = z.object({
+  stage: DiagnosticStageSchema,
+  problemContext: ProblemContextSchema,
+  evidence: DiagnosticEvidenceSchema,
+  userMessage: z.string().optional(),
+});
+
+/**
+ * Response from AI coach
+ * CRITICAL: Must NOT contain code blocks, fixes, or line numbers
+ */
+export const AICoachResponseSchema = z.object({
+  guidance: z.string(),
+  guidanceType: GuidanceTypeSchema,
+  questions: z.array(z.string()).optional(),
+  checklist: z.array(z.string()).optional(),
+  suggestedNextStage: DiagnosticStageSchema.optional(),
+  confidence: z.number().min(0).max(1),
+}).refine(
+  (data) => {
+    // Reject if guidance contains code blocks
+    const hasCodeBlock = /```[\s\S]*```/.test(data.guidance);
+    const hasInlineCode = /`[^`]+`/.test(data.guidance) && /\b(function|const|let|var|return|if|for|while)\b/.test(data.guidance);
+    return !hasCodeBlock && !hasInlineCode;
+  },
+  { message: 'AI guidance must not contain code blocks or inline code fixes' }
+);
+
+// ============ Diagnostic Coach API Schemas ============
+
+// POST /api/diagnostic-coach/start
+export const StartDiagnosticSessionRequestSchema = z.object({
+  attemptId: z.string(),
+  aiEnabled: z.boolean().default(true),
+});
+
+export const StartDiagnosticSessionResponseSchema = z.object({
+  session: DiagnosticSessionSchema,
+});
+
+// POST /api/diagnostic-coach/:sessionId/guidance
+export const GetGuidanceRequestSchema = z.object({
+  sessionId: z.string(),
+  userMessage: z.string().optional(),
+});
+
+export const GetGuidanceResponseSchema = z.object({
+  guidance: AICoachResponseSchema,
+  session: DiagnosticSessionSchema,
+});
+
+// POST /api/diagnostic-coach/:sessionId/evidence
+export const AddEvidenceRequestSchema = z.object({
+  sessionId: z.string(),
+  evidenceType: z.enum(['triage', 'reproduction', 'localization', 'hypothesis', 'fixAttempt', 'verification']),
+  evidence: z.union([
+    TriageEvidenceSchema,
+    ReproductionEvidenceSchema,
+    LocalizationEvidenceSchema,
+    HypothesisEvidenceSchema,
+    FixAttemptEvidenceSchema,
+    VerificationEvidenceSchema,
+  ]),
+});
+
+export const AddEvidenceResponseSchema = z.object({
+  session: DiagnosticSessionSchema,
+  stageComplete: z.boolean(),
+  recommendedNextStage: DiagnosticStageSchema.optional(),
+});
+
+// POST /api/diagnostic-coach/:sessionId/transition
+export const TransitionStageRequestSchema = z.object({
+  sessionId: z.string(),
+  targetStage: DiagnosticStageSchema,
+  reason: z.string().optional(),
+});
+
+export const TransitionStageResponseSchema = z.object({
+  session: DiagnosticSessionSchema,
+  success: z.boolean(),
+  error: z.string().optional(),
 });

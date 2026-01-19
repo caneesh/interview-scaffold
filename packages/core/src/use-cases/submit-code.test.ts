@@ -852,4 +852,156 @@ function numIslands(grid) {
       expect(result.validation.heuristicErrors).not.toContain('MISSING_VISITED_CHECK');
     });
   });
+
+  describe('Complexity Budgeting', () => {
+    it('detects TIME_BUDGET_EXCEEDED when budget test times out', async () => {
+      const mockProblem = createMockProblem({
+        timeoutBudgetMs: 500,
+        largeHiddenTests: [
+          { input: 'large input', expectedOutput: 'output', isHidden: true },
+        ],
+      });
+
+      const deps = createMockDeps({
+        contentRepo: {
+          findById: vi.fn().mockResolvedValue(mockProblem),
+        } as unknown as ContentRepo,
+        codeExecutor: {
+          execute: vi.fn().mockResolvedValue([
+            { input: 'test1', expected: '9', actual: '9', passed: true, error: null },
+          ]),
+          executeWithTimeout: vi.fn().mockResolvedValue([
+            { input: 'large input', expected: 'output', actual: '', passed: false, error: 'Time Limit Exceeded' },
+          ]),
+        } as CodeExecutor,
+      });
+
+      const result = await submitCode(
+        {
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          attemptId: 'attempt-1',
+          code: 'function solution() {}',
+          language: 'javascript',
+        },
+        deps
+      );
+
+      expect(result.validation.heuristicErrors).toContain('TIME_BUDGET_EXCEEDED');
+      expect(result.validation.timeBudgetResult).toBeDefined();
+      expect(result.validation.timeBudgetResult?.exceeded).toBe(true);
+      expect(result.validation.timeBudgetResult?.budgetMs).toBe(500);
+      expect(result.validation.complexitySuggestion).toBeDefined();
+    });
+
+    it('includes timeBudgetResult when budget tests pass', async () => {
+      const mockProblem = createMockProblem({
+        timeoutBudgetMs: 1000,
+        largeHiddenTests: [
+          { input: 'large input', expectedOutput: 'output', isHidden: true },
+        ],
+      });
+
+      const deps = createMockDeps({
+        contentRepo: {
+          findById: vi.fn().mockResolvedValue(mockProblem),
+        } as unknown as ContentRepo,
+        codeExecutor: {
+          execute: vi.fn().mockResolvedValue([
+            { input: 'test1', expected: '9', actual: '9', passed: true, error: null },
+          ]),
+          executeWithTimeout: vi.fn().mockResolvedValue([
+            { input: 'large input', expected: 'output', actual: 'output', passed: true, error: null },
+          ]),
+        } as CodeExecutor,
+      });
+
+      const result = await submitCode(
+        {
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          attemptId: 'attempt-1',
+          code: `function maxSum(arr, k) { return arr.slice(0, k).reduce((a, b) => a + b); }`,
+          language: 'javascript',
+        },
+        deps
+      );
+
+      expect(result.validation.heuristicErrors).not.toContain('TIME_BUDGET_EXCEEDED');
+      expect(result.validation.timeBudgetResult).toBeDefined();
+      expect(result.validation.timeBudgetResult?.exceeded).toBe(false);
+      expect(result.validation.complexitySuggestion).toBeUndefined();
+    });
+
+    it('skips budget tests when executeWithTimeout is not available', async () => {
+      const mockProblem = createMockProblem({
+        timeoutBudgetMs: 500,
+        largeHiddenTests: [
+          { input: 'large input', expectedOutput: 'output', isHidden: true },
+        ],
+      });
+
+      const deps = createMockDeps({
+        contentRepo: {
+          findById: vi.fn().mockResolvedValue(mockProblem),
+        } as unknown as ContentRepo,
+        codeExecutor: {
+          execute: vi.fn().mockResolvedValue([
+            { input: 'test1', expected: '9', actual: '9', passed: true, error: null },
+          ]),
+          // No executeWithTimeout method
+        } as CodeExecutor,
+      });
+
+      const result = await submitCode(
+        {
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          attemptId: 'attempt-1',
+          code: 'function solution() {}',
+          language: 'javascript',
+        },
+        deps
+      );
+
+      expect(result.validation.timeBudgetResult).toBeUndefined();
+    });
+
+    it('returns SHOW_MICRO_LESSON when time budget is exceeded', async () => {
+      const mockProblem = createMockProblem({
+        timeoutBudgetMs: 500,
+        largeHiddenTests: [
+          { input: 'large input', expectedOutput: 'output', isHidden: true },
+        ],
+      });
+
+      const deps = createMockDeps({
+        contentRepo: {
+          findById: vi.fn().mockResolvedValue(mockProblem),
+        } as unknown as ContentRepo,
+        codeExecutor: {
+          execute: vi.fn().mockResolvedValue([
+            { input: 'test1', expected: '9', actual: '9', passed: true, error: null },
+          ]),
+          executeWithTimeout: vi.fn().mockResolvedValue([
+            { input: 'large input', expected: 'output', actual: '', passed: false, error: 'Time Limit Exceeded' },
+          ]),
+        } as CodeExecutor,
+      });
+
+      const result = await submitCode(
+        {
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          attemptId: 'attempt-1',
+          code: 'function solution() {}',
+          language: 'javascript',
+        },
+        deps
+      );
+
+      expect(result.gatingDecision.action).toBe('SHOW_MICRO_LESSON');
+      expect(result.gatingDecision.microLessonId).toBe('sliding_window_complexity');
+    });
+  });
 });

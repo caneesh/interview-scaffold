@@ -8,3 +8,5 @@ export * from './data/index.js';
 export * from './validation/index.js';
 export * from './hints/index.js';
 export * from './adversary/index.js';
+export * from './coaching/index.js';
+export * from './adapters/index.js';

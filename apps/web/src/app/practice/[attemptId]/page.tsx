@@ -9,6 +9,7 @@ import { PatternDiscovery } from '@/components/PatternDiscovery';
 import { PatternChallenge } from '@/components/PatternChallenge';
 import { CodeEditor } from '@/components/CodeEditor';
 import { TestResults } from '@/components/TestResults';
+import { PerformancePanel } from '@/components/PerformancePanel';
 import { ReflectionForm } from '@/components/ReflectionForm';
 import { SuccessReflectionForm } from '@/components/SuccessReflectionForm';
 import { MicroLessonModal } from '@/components/MicroLessonModal';
@@ -47,6 +48,15 @@ interface ValidationData {
   llmConfidence?: number;
   microLessonId?: string;
   successReflectionPrompt?: string;
+  gatingAction?: 'PROCEED' | 'PROCEED_WITH_REFLECTION' | 'SHOW_MICRO_LESSON' | 'REQUIRE_REFLECTION' | 'BLOCK_SUBMISSION';
+  gatingReason?: string;
+  timeBudgetResult?: {
+    exceeded: boolean;
+    budgetMs: number;
+    testsRun: number;
+    testsFailed: number;
+  };
+  complexitySuggestion?: string;
 }
 
 interface Attempt {
@@ -967,7 +977,25 @@ export default function AttemptPage() {
             {/* Inline feedback area */}
             <div className="solve-feedback-area">
               {testResults.length > 0 && (
-                <TestResults results={testResults} />
+                <>
+                  <TestResults results={testResults} />
+                  <PerformancePanel
+                    correctness={{
+                      passed: testResults.filter(r => r.passed).length,
+                      total: testResults.length,
+                      allPassed: testResults.every(r => r.passed),
+                    }}
+                    timeBudget={validation?.timeBudgetResult ? {
+                      exceeded: validation.timeBudgetResult.exceeded,
+                      budgetMs: validation.timeBudgetResult.budgetMs,
+                      suggestion: validation.complexitySuggestion,
+                    } : undefined}
+                    nextAction={validation?.gatingAction ? {
+                      type: validation.gatingAction,
+                      message: validation.gatingReason ?? '',
+                    } : undefined}
+                  />
+                </>
               )}
 
               {validation?.llmFeedback && validation.llmConfidence !== undefined && (

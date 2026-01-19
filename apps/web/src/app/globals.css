@@ -3087,3 +3087,119 @@ button {
   gap: 0.75rem;
   padding-top: 0.5rem;
 }
+
+/* ============ Performance Panel ============ */
+
+.performance-panel {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.performance-panel-title {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.performance-section {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.performance-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.performance-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.performance-section-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.performance-status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.performance-status.status-pass {
+  color: var(--success);
+}
+
+.performance-status.status-fail {
+  color: var(--error);
+}
+
+.performance-suggestion {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(234, 179, 8, 0.1);
+  border-radius: 0.375rem;
+  border-left: 3px solid var(--warning);
+}
+
+.performance-suggestion svg {
+  flex-shrink: 0;
+  color: var(--warning);
+  margin-top: 0.125rem;
+}
+
+.performance-suggestion p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.performance-next-action {
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background: var(--bg-tertiary);
+}
+
+.performance-next-action--proceed {
+  border-left: 3px solid var(--success);
+}
+
+.performance-next-action--proceed-with-reflection {
+  border-left: 3px solid var(--success);
+}
+
+.performance-next-action--show-micro-lesson {
+  border-left: 3px solid var(--warning);
+}
+
+.performance-next-action--require-reflection {
+  border-left: 3px solid var(--warning);
+}
+
+.performance-next-action--block-submission {
+  border-left: 3px solid var(--error);
+}
+
+.performance-next-action-message {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

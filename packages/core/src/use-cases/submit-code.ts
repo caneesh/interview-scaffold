@@ -17,6 +17,7 @@ import { runHeuristics } from '../validation/heuristics.js';
 import { detectForbiddenConcepts, getForbiddenForPattern } from '../validation/forbidden.js';
 import { makeGatingDecision } from '../validation/gating.js';
 import type { LLMValidationPort, LLMValidationResponse } from '../validation/llm-port.js';
+import type { PatternId } from '../entities/pattern.js';
 
 export interface SubmitCodeInput {
   readonly tenantId: TenantId;
@@ -52,6 +53,14 @@ export interface CodeExecutor {
     language: string,
     testCases: readonly { input: string; expectedOutput: string }[]
   ): Promise<readonly TestResultData[]>;
+
+  /** Execute with custom timeout for complexity budget testing */
+  executeWithTimeout?(
+    code: string,
+    language: string,
+    testCases: readonly { input: string; expectedOutput: string }[],
+    timeoutMs: number
+  ): Promise<readonly TestResultData[]>;
 }
 
 export class CodeSubmitError extends Error {
@@ -62,6 +71,30 @@ export class CodeSubmitError extends Error {
     super(message);
     this.name = 'CodeSubmitError';
   }
+}
+
+/**
+ * Generate pattern-specific feedback when time budget is exceeded.
+ */
+function generateBudgetFeedback(pattern: PatternId, targetComplexity: string): string {
+  const patternHints: Partial<Record<PatternId, string>> = {
+    SLIDING_WINDOW: 'Consider a single-pass sliding window approach to achieve O(n).',
+    TWO_POINTERS: 'Try a two-pointer technique to avoid nested iterations.',
+    PREFIX_SUM: 'Precompute prefix sums to answer range queries in O(1).',
+    BINARY_SEARCH: 'Binary search can reduce O(n) searches to O(log n).',
+    INTERVAL_MERGING: 'Sort intervals first, then merge in a single pass.',
+    DYNAMIC_PROGRAMMING: 'Use memoization or tabulation to avoid redundant computation.',
+    BFS: 'BFS with proper visited tracking runs in O(V + E).',
+    DFS: 'DFS with proper visited tracking runs in O(V + E).',
+    BACKTRACKING: 'Prune invalid branches early to reduce search space.',
+    GREEDY: 'A greedy approach can often achieve O(n log n) with sorting.',
+    HEAP: 'Use a heap to efficiently track min/max in O(log n) per operation.',
+    TRIE: 'A trie enables O(L) lookup where L is the word length.',
+    UNION_FIND: 'Union-Find with path compression achieves near O(1) per operation.',
+  };
+
+  const hint = patternHints[pattern] ?? 'Consider a more efficient algorithmic approach.';
+  return `Your approach likely exceeds the expected ${targetComplexity} time complexity. ${hint}`;
 }
 
 export async function submitCode(
@@ -118,6 +151,52 @@ export async function submitCode(
     }))
   );
 
+  // ============ Budget Tests (Large Hidden Tests) ============
+  // Run large hidden tests with stricter timeout to detect suboptimal complexity
+  let budgetTestResults: readonly TestResultData[] = [];
+  let timeBudgetExceeded = false;
+  let timeBudgetResult: CodingValidationData['timeBudgetResult'] = undefined;
+  let complexitySuggestion: string | undefined;
+
+  if (
+    problem.largeHiddenTests &&
+    problem.largeHiddenTests.length > 0 &&
+    problem.timeoutBudgetMs &&
+    codeExecutor.executeWithTimeout
+  ) {
+    const budgetTimeout = problem.timeoutBudgetMs;
+
+    budgetTestResults = await codeExecutor.executeWithTimeout(
+      code,
+      language,
+      problem.largeHiddenTests.map((tc) => ({
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
+      })),
+      budgetTimeout
+    );
+
+    // Check if any budget test timed out (Time Limit Exceeded)
+    const timedOutTests = budgetTestResults.filter(
+      (r) => !r.passed && r.error?.includes('Time Limit Exceeded')
+    );
+    timeBudgetExceeded = timedOutTests.length > 0;
+
+    timeBudgetResult = {
+      exceeded: timeBudgetExceeded,
+      budgetMs: budgetTimeout,
+      testsRun: budgetTestResults.length,
+      testsFailed: budgetTestResults.filter((r) => !r.passed).length,
+    };
+
+    if (timeBudgetExceeded) {
+      complexitySuggestion = generateBudgetFeedback(
+        attempt.pattern,
+        problem.targetComplexity
+      );
+    }
+  }
+
   const now = clock.now();
   const stepId = idGenerator.generate();
 
@@ -149,6 +228,16 @@ export async function submitCode(
       message: r.suggestion ?? 'Heuristic check failed',
       evidence: r.evidence,
     }));
+
+  // 2b. Add TIME_BUDGET_EXCEEDED error if budget was exceeded
+  if (timeBudgetExceeded && complexitySuggestion) {
+    heuristicErrors.push({
+      type: 'TIME_BUDGET_EXCEEDED',
+      severity: 'ERROR',
+      message: complexitySuggestion,
+      evidence: ['Large input test exceeded time budget'],
+    });
+  }
 
   // 3. Detect forbidden concepts
   const additionalForbidden = getForbiddenForPattern(attempt.pattern);
@@ -257,6 +346,8 @@ export async function submitCode(
     llmFeedback: llmResult?.feedback,
     llmConfidence: llmResult?.confidence,
     successReflectionPrompt: gatingDecision.successReflectionPrompt,
+    timeBudgetResult,
+    complexitySuggestion,
   };
 
   // ============ Determine next state based on gating ============

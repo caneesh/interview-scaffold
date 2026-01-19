@@ -16,6 +16,10 @@ export interface SeedProblem {
   readonly canonicalId?: string; // reference to canonical if this is a sibling
   readonly testCases: readonly SeedTestCase[];
   readonly hints: readonly string[];
+  /** Time budget in ms for large hidden tests (e.g., 500, 1000) */
+  readonly timeoutBudgetMs?: number;
+  /** Large hidden tests run with budget timeout to detect suboptimal complexity */
+  readonly largeHiddenTests?: readonly SeedTestCase[];
 }
 
 export interface SeedTestCase {
@@ -325,6 +329,23 @@ Constraints:
     'Consider sorting the intervals first, then processing them in order.',
     'Two intervals [a,b] and [c,d] overlap if c <= b (when sorted by start).',
     'Sort by start, iterate through, extend current interval or start new one.',
+  ],
+  // Complexity budgeting: O(n log n) should complete within 500ms for 10000 intervals
+  timeoutBudgetMs: 500,
+  largeHiddenTests: [
+    {
+      // 10000 non-overlapping intervals - O(n²) will timeout, O(n log n) will pass
+      // Each interval is [i*2, i*2+1] so no overlaps occur
+      input: JSON.stringify({
+        intervals: Array.from({ length: 10000 }, (_, i) => [i * 2, i * 2 + 1]),
+      }),
+      // Expected: same as input since no intervals overlap (already sorted)
+      expectedOutput: JSON.stringify(
+        Array.from({ length: 10000 }, (_, i) => [i * 2, i * 2 + 1])
+      ),
+      isHidden: true,
+      explanation: 'Large input (n=10000) to verify O(n log n) complexity',
+    },
   ],
 };
 

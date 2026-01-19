@@ -12,63 +12,84 @@ export function createPistonExecutor(
 ): CodeExecutor {
   const client = createPistonClient(config);
 
+  async function executeWithConfig(
+    code: string,
+    language: string,
+    testCases: readonly { input: string; expectedOutput: string }[],
+    overrideConfig?: Partial<PistonExecutorConfig>
+  ): Promise<readonly TestResultData[]> {
+    // Validate language
+    const normalizedLang = normalizeLanguage(language);
+    if (!normalizedLang) {
+      return createErrorResults(testCases, `Unsupported language: ${language}`);
+    }
+
+    // Validate code length
+    if (code.length > MAX_CODE_LENGTH) {
+      return createErrorResults(testCases, 'Code exceeds maximum length (50KB)');
+    }
+
+    // Validate non-empty code
+    if (code.trim().length === 0) {
+      return createErrorResults(testCases, 'Code cannot be empty');
+    }
+
+    const langConfig = LANGUAGE_CONFIGS[normalizedLang];
+    const wrapper = getWrapper(normalizedLang);
+
+    // Extract function name from user code
+    const functionName = wrapper.extractFunctionName(code);
+    if (!functionName) {
+      return createErrorResults(
+        testCases,
+        'Could not detect function name in code. Make sure your code contains a function definition.'
+      );
+    }
+
+    // Merge configs
+    const effectiveConfig = { ...config, ...overrideConfig };
+
+    // Execute each test case with delay to respect rate limits
+    const results: TestResultData[] = [];
+    const RATE_LIMIT_DELAY_MS = 250; // Piston public API: 1 req per 200ms
+
+    for (let i = 0; i < testCases.length; i++) {
+      // Add delay between requests to avoid rate limiting
+      if (i > 0) {
+        await sleep(RATE_LIMIT_DELAY_MS);
+      }
+
+      const result = await executeTestCase(
+        client,
+        langConfig,
+        wrapper,
+        code,
+        functionName,
+        testCases[i]!,
+        effectiveConfig
+      );
+      results.push(result);
+    }
+
+    return results;
+  }
+
   return {
     async execute(
       code: string,
       language: string,
       testCases: readonly { input: string; expectedOutput: string }[]
     ): Promise<readonly TestResultData[]> {
-      // Validate language
-      const normalizedLang = normalizeLanguage(language);
-      if (!normalizedLang) {
-        return createErrorResults(testCases, `Unsupported language: ${language}`);
-      }
+      return executeWithConfig(code, language, testCases);
+    },
 
-      // Validate code length
-      if (code.length > MAX_CODE_LENGTH) {
-        return createErrorResults(testCases, 'Code exceeds maximum length (50KB)');
-      }
-
-      // Validate non-empty code
-      if (code.trim().length === 0) {
-        return createErrorResults(testCases, 'Code cannot be empty');
-      }
-
-      const langConfig = LANGUAGE_CONFIGS[normalizedLang];
-      const wrapper = getWrapper(normalizedLang);
-
-      // Extract function name from user code
-      const functionName = wrapper.extractFunctionName(code);
-      if (!functionName) {
-        return createErrorResults(
-          testCases,
-          'Could not detect function name in code. Make sure your code contains a function definition.'
-        );
-      }
-
-      // Execute each test case with delay to respect rate limits
-      const results: TestResultData[] = [];
-      const RATE_LIMIT_DELAY_MS = 250; // Piston public API: 1 req per 200ms
-
-      for (let i = 0; i < testCases.length; i++) {
-        // Add delay between requests to avoid rate limiting
-        if (i > 0) {
-          await sleep(RATE_LIMIT_DELAY_MS);
-        }
-
-        const result = await executeTestCase(
-          client,
-          langConfig,
-          wrapper,
-          code,
-          functionName,
-          testCases[i]!,
-          config
-        );
-        results.push(result);
-      }
-
-      return results;
+    async executeWithTimeout(
+      code: string,
+      language: string,
+      testCases: readonly { input: string; expectedOutput: string }[],
+      timeoutMs: number
+    ): Promise<readonly TestResultData[]> {
+      return executeWithConfig(code, language, testCases, { runTimeout: timeoutMs });
     },
   };
 }
@@ -233,6 +254,21 @@ export function createPistonExecutorWithFallback(
     async execute(code, language, testCases) {
       try {
         return await executor.execute(code, language, testCases);
+      } catch {
+        // Service unavailable - return all tests as failed with error
+        return testCases.map((tc) => ({
+          input: tc.input,
+          expected: tc.expectedOutput,
+          actual: '',
+          passed: false,
+          error: 'Code execution service temporarily unavailable',
+        }));
+      }
+    },
+
+    async executeWithTimeout(code, language, testCases, timeoutMs) {
+      try {
+        return await executor.executeWithTimeout!(code, language, testCases, timeoutMs);
       } catch {
         // Service unavailable - return all tests as failed with error
         return testCases.map((tc) => ({

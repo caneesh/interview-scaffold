@@ -18,6 +18,10 @@ export interface Problem {
   readonly hints: readonly string[];
   /** Optional adversary prompts for post-completion challenges */
   readonly adversaryPrompts?: readonly AdversaryPrompt[];
+  /** Time budget in ms for large hidden tests (e.g., 500, 1000) */
+  readonly timeoutBudgetMs?: number;
+  /** Large hidden tests run with budget timeout to detect suboptimal complexity */
+  readonly largeHiddenTests?: readonly TestCase[];
   readonly createdAt: Date;
 }
 

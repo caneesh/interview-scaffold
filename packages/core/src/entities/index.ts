@@ -9,3 +9,5 @@ export * from './content-pack.js';
 export * from './trace.js';
 export * from './invariant-template.js';
 export * from './bug-hunt.js';
+export * from './debug-lab.js';
+export * from './diagnostic-coach.js';

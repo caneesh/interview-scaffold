@@ -48,6 +48,7 @@ export const ERROR_TYPES = [
   // Complexity errors
   'COMPLEXITY_TOO_HIGH',
   'SUBOPTIMAL_SOLUTION',
+  'TIME_BUDGET_EXCEEDED',
 
   // Test errors
   'WRONG_OUTPUT',
