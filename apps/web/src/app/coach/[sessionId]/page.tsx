@@ -96,6 +96,11 @@ export default function CoachingSessionPage() {
 
       setSession(data);
 
+      // Use framing questions from the API if available
+      if (data.framingQuestions && data.framingQuestions.length > 0) {
+        setFramingQuestions(data.framingQuestions);
+      }
+
       // Fetch problem data if we have it
       if (data.session?.problemId) {
         const problemRes = await fetch(`/api/problems/list`);
@@ -118,32 +123,29 @@ export default function CoachingSessionPage() {
     fetchSession();
   }, [fetchSession]);
 
-  // When starting a session, fetch initial framing questions
+  // Fallback: Generate questions if API didn't return any
   useEffect(() => {
-    if (session?.currentStage === 'PROBLEM_FRAMING' && framingQuestions.length === 0) {
-      // Initial questions are returned when session is created
-      // For now, generate some placeholder questions based on problem
-      if (problem) {
-        setFramingQuestions([
-          {
-            id: 'q1',
-            text: `What are the inputs and outputs of this problem?`,
-            category: 'Understanding',
-          },
-          {
-            id: 'q2',
-            text: `What constraints should you consider?`,
-            category: 'Constraints',
-          },
-          {
-            id: 'q3',
-            text: `Can you describe a simple example?`,
-            category: 'Examples',
-          },
-        ]);
-      }
+    if (problem && session?.currentStage === 'PROBLEM_FRAMING' && framingQuestions.length === 0) {
+      // Only use fallback if API didn't return questions
+      setFramingQuestions([
+        {
+          id: 'fallback-q1',
+          text: `What are the inputs and outputs of this problem?`,
+          category: 'Understanding',
+        },
+        {
+          id: 'fallback-q2',
+          text: `What constraints should you consider?`,
+          category: 'Constraints',
+        },
+        {
+          id: 'fallback-q3',
+          text: `Can you describe a simple example?`,
+          category: 'Examples',
+        },
+      ]);
     }
-  }, [session?.currentStage, framingQuestions.length, problem]);
+  }, [problem, session?.currentStage, framingQuestions.length]);
 
   function handleStageComplete() {
     // Refresh session to get updated stage

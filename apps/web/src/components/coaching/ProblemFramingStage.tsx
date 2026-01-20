@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Question {
   id: string;
@@ -42,6 +42,13 @@ export function ProblemFramingStage({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [localScore, setLocalScore] = useState(understandingScore);
   const [isComplete, setIsComplete] = useState(false);
+
+  // Sync localQuestions when currentQuestions changes (e.g., after initial load)
+  useEffect(() => {
+    if (currentQuestions.length > 0 && localQuestions.length === 0) {
+      setLocalQuestions(currentQuestions);
+    }
+  }, [currentQuestions, localQuestions.length]);
 
   async function submitAnswer(questionId: string) {
     const answer = answers[questionId];

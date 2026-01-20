@@ -26,6 +26,15 @@ export async function GET(
     const session = storageToSessionFormat(sessionData.session);
     const progress = getSessionProgress(session);
 
+    // Get framing questions if in problem framing stage
+    const framingQuestions = session.stageData.problemFraming?.questions
+      .filter(q => q.userAnswer === null)
+      .map(q => ({
+        id: q.id,
+        text: q.question,
+        category: q.category,
+      })) ?? [];
+
     return NextResponse.json({
       session: {
         id: session.id,
@@ -44,6 +53,9 @@ export async function GET(
         totalStages: progress.totalStages,
         percentComplete: progress.percentComplete,
       },
+      // Include stage-specific data
+      framingQuestions,
+      understandingScore: session.stageData.problemFraming?.understandingScore ?? 0,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
