@@ -245,8 +245,16 @@ export function machineStateToCoachingStage(
   return mapping[state];
 }
 
-// In-memory store
-const coachingSessions = new Map<string, CoachingSessionData>();
+// In-memory store with persistence across hot reloads
+// In development, Next.js hot reloads can clear module-level variables,
+// so we use globalThis to maintain state across reloads.
+declare global {
+  // eslint-disable-next-line no-var
+  var __coachingSessionsStore: Map<string, CoachingSessionData> | undefined;
+}
+
+const coachingSessions = globalThis.__coachingSessionsStore ?? new Map<string, CoachingSessionData>();
+globalThis.__coachingSessionsStore = coachingSessions;
 
 export function getCoachingSession(sessionId: string): CoachingSessionData | undefined {
   return coachingSessions.get(sessionId);

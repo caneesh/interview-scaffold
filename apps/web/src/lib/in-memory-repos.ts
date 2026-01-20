@@ -35,9 +35,21 @@ function seedToProblem(seed: SeedProblem, tenantId: string): Problem {
   };
 }
 
-// In-memory storage
-const attempts = new Map<string, Attempt>();
-const skills = new Map<string, SkillState>();
+// In-memory storage with persistence across hot reloads
+// In development, Next.js hot reloads can clear module-level variables,
+// so we use globalThis to maintain state across reloads.
+declare global {
+  // eslint-disable-next-line no-var
+  var __attemptsStore: Map<string, Attempt> | undefined;
+  // eslint-disable-next-line no-var
+  var __skillsStore: Map<string, SkillState> | undefined;
+}
+
+const attempts = globalThis.__attemptsStore ?? new Map<string, Attempt>();
+globalThis.__attemptsStore = attempts;
+
+const skills = globalThis.__skillsStore ?? new Map<string, SkillState>();
+globalThis.__skillsStore = skills;
 
 /**
  * In-Memory Content Repository
