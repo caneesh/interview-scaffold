@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-type AppMode = 'dashboard' | 'solve' | 'review';
+type AppMode = 'dashboard' | 'solve' | 'review' | 'coach';
 
 interface AppShellProps {
   children: ReactNode;
@@ -25,6 +25,11 @@ function getAppMode(pathname: string): AppMode {
     return 'solve';
   }
 
+  // Coach mode: /coach/[sessionId] - active coaching session
+  if (pathname.startsWith('/coach/') && pathname !== '/coach') {
+    return 'coach';
+  }
+
   // Dashboard mode for all other pages
   return 'dashboard';
 }
@@ -38,6 +43,7 @@ function DashboardHeader() {
         </Link>
         <nav className="nav">
           <Link href="/practice">Practice</Link>
+          <Link href="/coach">Coach</Link>
           <Link href="/explorer">Explorer</Link>
           <Link href="/skills">Skills</Link>
         </nav>
@@ -55,6 +61,22 @@ function SolveHeader() {
         </Link>
         <Link href="/practice" className="btn btn-secondary btn-sm">
           Exit to Dashboard
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+function CoachHeader() {
+  return (
+    <header className="header header--coach">
+      <div className="container header-inner">
+        <Link href="/" className="logo">
+          Scaffold
+        </Link>
+        <div className="coach-header-label">Coaching Mode</div>
+        <Link href="/coach" className="btn btn-secondary btn-sm">
+          Exit to Coach
         </Link>
       </div>
     </header>
@@ -80,9 +102,20 @@ export function AppShell({ children }: AppShellProps) {
     );
   }
 
+  const renderHeader = () => {
+    switch (mode) {
+      case 'solve':
+        return <SolveHeader />;
+      case 'coach':
+        return <CoachHeader />;
+      default:
+        return <DashboardHeader />;
+    }
+  };
+
   return (
     <div className="layout" data-mode={mode}>
-      {mode === 'solve' ? <SolveHeader /> : <DashboardHeader />}
+      {renderHeader()}
       <main className="main">
         <div className="container">
           {children}

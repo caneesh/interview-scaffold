@@ -12,3 +12,5 @@ export * from './coaching/index.js';
 export * from './adapters/index.js';
 export * from './features/index.js';
 export * from './learner-centric/index.js';
+export * from './anti-cheat/index.js';
+export * from './state-machine/index.js';

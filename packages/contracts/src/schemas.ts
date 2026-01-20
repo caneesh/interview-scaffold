@@ -1185,7 +1185,7 @@ export const CoachingSessionSchema = z.object({
 
 // POST /api/coaching/sessions - Start a coaching session
 export const StartCoachingSessionRequestSchema = z.object({
-  attemptId: z.string(),
+  attemptId: z.string().optional(), // Auto-generated if not provided
   problemId: z.string(),
 });
 

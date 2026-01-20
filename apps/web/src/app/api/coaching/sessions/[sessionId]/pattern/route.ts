@@ -2,11 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SubmitPatternSelectionRequestSchema } from '@scaffold/contracts';
 import { processPatternRecognition } from '@scaffold/core/learner-centric';
 import {
+  detectMemorization,
+  InterviewStateMachine,
+} from '@scaffold/core';
+import type { HelpLevel, MemorizationDetectionResult, MemorizationClassification } from '@scaffold/core';
+import {
   getCoachingSession,
   setCoachingSession,
   storageToSessionFormat,
   sessionToStorageFormat,
+  storageToMachineContextFormat,
+  machineContextToStorageFormat,
+  type MemorizationTrackingData,
 } from '@/lib/coaching-session-store';
+
+/**
+ * Generate a non-accusatory warning message based on memorization classification
+ */
+function getWarningMessage(classification: MemorizationClassification): string {
+  switch (classification) {
+    case 'likely_memorized':
+      return 'It looks like you may have seen this problem before. ' +
+        'To help you build genuine understanding, please answer a few additional questions ' +
+        'about your reasoning.';
+    case 'partially_memorized':
+      return 'Your explanation seems quite polished. ' +
+        'To ensure you understand the underlying concepts, ' +
+        'please elaborate on your reasoning with these follow-up questions.';
+    default:
+      return 'Please provide more detail about your reasoning.';
+  }
+}
 
 /**
  * POST /api/coaching/sessions/:sessionId/pattern
@@ -53,13 +79,135 @@ export async function POST(
       );
     }
 
-    // Process the pattern selection
+    // Get memorization tracking data
+    const memTracking = sessionData.memorizationTracking ?? {
+      detectionHistory: [],
+      activeReprompts: [],
+      restrictedHelpLevel: null,
+      previousResponses: [],
+      stageStartedAt: session.startedAt.toISOString(),
+    };
+
+    // Calculate response time
+    const responseTimeMs = Date.now() - new Date(memTracking.stageStartedAt).getTime();
+
+    // Run anti-memorization detection on the justification
+    const detectionResult = detectMemorization({
+      responseText: justification,
+      previousResponses: memTracking.previousResponses,
+      stage: 'PATTERN_RECOGNITION',
+      problemId: session.problemId,
+      pattern: problem.pattern,
+      responseTimeMs,
+      attemptCount: (session.stageData.patternRecognition?.attempts.length ?? 0) + 1,
+      currentHelpLevel: session.helpLevel,
+      // antiCheatMarkers can be added to Problem entity later
+    });
+
+    // If memorization detected, return reprompt questions and update tracking
+    if (detectionResult.classification !== 'authentic') {
+      // Update memorization tracking
+      const updatedMemTracking: MemorizationTrackingData = {
+        ...memTracking,
+        detectionHistory: [
+          ...memTracking.detectionHistory,
+          {
+            stage: 'PATTERN_RECOGNITION',
+            timestamp: new Date().toISOString(),
+            classification: detectionResult.classification,
+            confidence: detectionResult.confidence,
+            action: detectionResult.action,
+          },
+        ],
+        activeReprompts: detectionResult.reprompts.map(r => ({
+          id: r.id,
+          question: r.question,
+          targetConcept: r.targetConcept,
+          answered: false,
+        })),
+        restrictedHelpLevel: detectionResult.recommendedHelpLevel,
+        previousResponses: [...memTracking.previousResponses, justification],
+      };
+
+      // Update session with memorization tracking
+      setCoachingSession(sessionId, {
+        ...sessionData,
+        memorizationTracking: updatedMemTracking,
+      });
+
+      // Return warning with reprompt questions
+      return NextResponse.json({
+        session: {
+          id: session.id,
+          attemptId: session.attemptId,
+          tenantId: session.tenantId,
+          userId: session.userId,
+          problemId: session.problemId,
+          currentStage: session.currentStage,
+          helpLevel: detectionResult.recommendedHelpLevel,
+          startedAt: session.startedAt.toISOString(),
+          completedAt: session.completedAt?.toISOString() ?? null,
+        },
+        warning: true,
+        warningType: detectionResult.classification,
+        warningMessage: getWarningMessage(detectionResult.classification),
+        repromptQuestions: detectionResult.reprompts.map(r => ({
+          id: r.id,
+          question: r.question,
+        })),
+        allowedHelpLevel: detectionResult.recommendedHelpLevel,
+        explanation: detectionResult.explanation,
+        response: null,
+        status: 'PENDING',
+        isCorrect: false,
+      });
+    }
+
+    // Process the pattern selection (no memorization detected)
     const result = processPatternRecognition(session, problem, selectedPattern, justification);
+
+    // Update state machine if advancing
+    let machineInfo = null;
+    if (result.shouldAdvance && sessionData.machineContext) {
+      const machineContext = storageToMachineContextFormat(sessionData.machineContext);
+      const machine = new InterviewStateMachine(machineContext);
+      const transitionResult = machine.process('STAGE_PASSED', {
+        attemptId: session.attemptId,
+        timestamp: new Date(),
+        userId: session.userId,
+      });
+
+      if (transitionResult.success) {
+        const progress = machine.getProgress();
+        machineInfo = {
+          currentState: progress.currentState,
+          stateIndex: progress.stateIndex,
+          percentComplete: progress.percentComplete,
+          validEvents: machine.getValidEvents(),
+        };
+      }
+    }
+
+    // Update memorization tracking with successful response
+    const updatedMemTracking: MemorizationTrackingData = {
+      ...memTracking,
+      previousResponses: [...memTracking.previousResponses, justification],
+      // Reset stage timer if advancing
+      stageStartedAt: result.shouldAdvance
+        ? new Date().toISOString()
+        : memTracking.stageStartedAt,
+    };
 
     // Update stored session with proper type conversion
     setCoachingSession(sessionId, {
       session: sessionToStorageFormat(result.session),
       problem,
+      machineContext: machineInfo && sessionData.machineContext
+        ? machineContextToStorageFormat(
+            storageToMachineContextFormat(sessionData.machineContext)
+          )
+        : sessionData.machineContext,
+      memorizationTracking: updatedMemTracking,
     });
 
     const patternData = result.session.stageData.patternRecognition;
@@ -79,6 +227,7 @@ export async function POST(
       response: result.response,
       status: patternData?.status ?? 'PENDING',
       isCorrect: result.shouldAdvance,
+      stateMachine: machineInfo,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

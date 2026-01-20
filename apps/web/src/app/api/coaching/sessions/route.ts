@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StartCoachingSessionRequestSchema } from '@scaffold/contracts';
 import { createCoachingSession } from '@scaffold/core/learner-centric';
+import { createInitialContext, InterviewStateMachine } from '@scaffold/core';
 import { attemptRepo, contentRepo, idGenerator } from '@/lib/deps';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
-import { setCoachingSession, sessionToStorageFormat } from '@/lib/coaching-session-store';
+import {
+  setCoachingSession,
+  sessionToStorageFormat,
+  machineContextToStorageFormat,
+  createInitialMemorizationTracking,
+} from '@/lib/coaching-session-store';
 
 /**
  * POST /api/coaching/sessions
@@ -25,16 +31,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { attemptId, problemId } = parsed.data;
-
-    // Verify attempt exists
-    const attempt = await attemptRepo.findById(tenantId, attemptId);
-    if (!attempt) {
-      return NextResponse.json(
-        { error: { code: 'ATTEMPT_NOT_FOUND', message: 'Attempt not found' } },
-        { status: 404 }
-      );
-    }
+    const { problemId } = parsed.data;
+    // Auto-generate attemptId if not provided
+    const attemptId = parsed.data.attemptId ?? idGenerator.generate();
 
     // Get problem
     const problem = await contentRepo.findById(tenantId, problemId);
@@ -55,14 +54,29 @@ export async function POST(request: NextRequest) {
       problem
     );
 
+    // Initialize state machine context for formal state transitions
+    const machineContext = createInitialContext({
+      attemptId: sessionId,
+      userId,
+      problemId,
+      pattern: problem.pattern,
+    });
+    const machine = new InterviewStateMachine(machineContext);
+
     // Store session with proper type conversion (dates as ISO strings)
+    // Include state machine context and memorization tracking
     setCoachingSession(sessionId, {
       session: sessionToStorageFormat(session),
       problem,
+      machineContext: machineContextToStorageFormat(machine.getContext()),
+      memorizationTracking: createInitialMemorizationTracking(),
     });
 
     // Get initial questions from problem framing data
     const initialQuestions = session.stageData.problemFraming?.currentQuestionBatch ?? [];
+
+    // Get state machine progress info
+    const progress = machine.getProgress();
 
     return NextResponse.json({
       session: {
@@ -77,6 +91,14 @@ export async function POST(request: NextRequest) {
         completedAt: session.completedAt?.toISOString() ?? null,
       },
       initialQuestions,
+      // Include state machine info in response
+      stateMachine: {
+        currentState: progress.currentState,
+        stateIndex: progress.stateIndex,
+        totalStates: progress.totalStates,
+        percentComplete: progress.percentComplete,
+        validEvents: machine.getValidEvents(),
+      },
     });
   } catch (error) {
     // Log error with context for debugging
