@@ -99,16 +99,27 @@ async function executeTests(
 ): Promise<ExecutionResult> {
   const startTime = Date.now();
 
-  // Build the workspace: merge original files with modifications
-  const pistonFiles: { name: string; content: string }[] = [];
-
-  for (const file of item.files) {
-    const content = modifiedFiles[file.path] ?? file.content;
-    pistonFiles.push({ name: file.path, content });
-  }
-
   // Extract the test file from the testCommand (e.g., "node test.js" -> "test.js")
   const testFile = item.testCommand.replace('node ', '').trim();
+
+  // Build the workspace: merge original files with modifications
+  // Piston runs the first file, so we put the test file first
+  const pistonFiles: { name: string; content: string }[] = [];
+
+  // First, add the test file
+  const testFileObj = item.files.find(f => f.path === testFile);
+  if (testFileObj) {
+    const content = modifiedFiles[testFileObj.path] ?? testFileObj.content;
+    pistonFiles.push({ name: testFileObj.path, content });
+  }
+
+  // Then add all other files
+  for (const file of item.files) {
+    if (file.path !== testFile) {
+      const content = modifiedFiles[file.path] ?? file.content;
+      pistonFiles.push({ name: file.path, content });
+    }
+  }
 
   try {
     // Execute tests directly using Piston
@@ -119,8 +130,6 @@ async function executeTests(
       files: pistonFiles,
       run_timeout: 30000,
       compile_timeout: 10000,
-      // Specify which file to run
-      main: testFile,
     });
 
     const stdout = response.run.stdout || '';

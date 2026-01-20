@@ -167,16 +167,27 @@ async function executeTests(
 ): Promise<ExecutionResult> {
   const startTime = Date.now();
 
-  // Build the workspace: merge original files with modifications
-  const pistonFiles: { name: string; content: string }[] = [];
-
-  for (const file of item.files) {
-    const content = modifiedFiles[file.path] ?? file.content;
-    pistonFiles.push({ name: file.path, content });
-  }
-
   // Extract the test file from the testCommand (e.g., "node test.js" -> "test.js")
   const testFile = item.testCommand.replace('node ', '').trim();
+
+  // Build the workspace: merge original files with modifications
+  // Piston runs the first file, so we put the test file first
+  const pistonFiles: { name: string; content: string }[] = [];
+
+  // First, add the test file
+  const testFileObj = item.files.find(f => f.path === testFile);
+  if (testFileObj) {
+    const content = modifiedFiles[testFileObj.path] ?? testFileObj.content;
+    pistonFiles.push({ name: testFileObj.path, content });
+  }
+
+  // Then add all other files
+  for (const file of item.files) {
+    if (file.path !== testFile) {
+      const content = modifiedFiles[file.path] ?? file.content;
+      pistonFiles.push({ name: file.path, content });
+    }
+  }
 
   try {
     // Execute tests directly using Piston
@@ -187,8 +198,6 @@ async function executeTests(
       files: pistonFiles,
       run_timeout: 30000,
       compile_timeout: 10000,
-      // Specify which file to run
-      main: testFile,
     });
 
     const stdout = response.run.stdout || '';
@@ -251,22 +260,32 @@ async function executeHiddenTests(
     };
   }
 
+  // Hidden tests should have a test.js file
+  const testFile = 'test.js';
+
   // Merge source files (not test files) with hidden tests
+  // Piston runs the first file, so we put the test file first
   const pistonFiles: { name: string; content: string }[] = [];
 
+  // First, add the test file from hidden tests
+  const hiddenTestFile = item.hiddenTests.find(f => f.path === testFile);
+  if (hiddenTestFile) {
+    pistonFiles.push({ name: hiddenTestFile.path, content: hiddenTestFile.content });
+  }
+
+  // Add source files (not test files from original)
   for (const file of item.files) {
-    // Skip test files from original (we'll use hidden tests)
     if (file.path === 'test.js' || file.path.includes('.test.')) continue;
     const content = modifiedFiles[file.path] ?? file.content;
     pistonFiles.push({ name: file.path, content });
   }
 
+  // Add remaining hidden test files
   for (const file of item.hiddenTests) {
-    pistonFiles.push({ name: file.path, content: file.content });
+    if (file.path !== testFile) {
+      pistonFiles.push({ name: file.path, content: file.content });
+    }
   }
-
-  // Hidden tests should have a test.js file
-  const testFile = 'test.js';
 
   try {
     const response = await pistonClient.execute({
@@ -275,7 +294,6 @@ async function executeHiddenTests(
       files: pistonFiles,
       run_timeout: 30000,
       compile_timeout: 10000,
-      main: testFile,
     });
 
     const stdout = response.run.stdout || '';

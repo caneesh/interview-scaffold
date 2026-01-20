@@ -31,6 +31,14 @@
     "./adversary": {
       "types": "./dist/adversary/index.d.ts",
       "import": "./dist/adversary/index.js"
+    },
+    "./data": {
+      "types": "./dist/data/index.d.ts",
+      "import": "./dist/data/index.js"
+    },
+    "./learner-centric": {
+      "types": "./dist/learner-centric/index.d.ts",
+      "import": "./dist/learner-centric/index.js"
     }
   },
   "scripts": {

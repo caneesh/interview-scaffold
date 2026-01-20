@@ -3,18 +3,17 @@
  * This is the only place where adapters are instantiated
  *
  * Environment-Driven Behavior:
- * - DATABASE_URL: Required for persistence
+ * - DATABASE_URL: Optional - uses in-memory repos if not set (dev mode)
  * - ANTHROPIC_API_KEY: Optional - enables LLM validation when set
  * - PISTON_API_URL: Optional - defaults to local Piston instance
  *
  * When optional services are unavailable:
+ * - Database unavailable: Uses in-memory repos with seed data (18 problems)
  * - LLM validation disabled: Deterministic validation still works
  * - Piston unavailable: Code submission returns a clean error with retry advice
  */
 
 import { randomUUID } from 'crypto';
-import { createDbClient } from '@scaffold/adapter-db';
-import { createAttemptRepo, createSkillRepo, createContentRepo } from '@scaffold/adapter-db';
 import { createDemoAuthProvider } from '@scaffold/adapter-auth';
 import { createConsoleEventSink } from '@scaffold/adapter-analytics';
 import { createLLMClient, createLLMValidationAdapter, createNullLLMValidation } from '@scaffold/adapter-llm';
@@ -23,14 +22,16 @@ import { SystemClock } from '@scaffold/core/ports';
 import type { AttemptRepo, SkillRepo, ContentRepo, EventSink, Clock, IdGenerator } from '@scaffold/core/ports';
 import type { LLMValidationPort } from '@scaffold/core/validation';
 import type { CodeExecutor } from '@scaffold/core/use-cases';
+import { inMemoryAttemptRepo, inMemorySkillRepo, inMemoryContentRepo } from './in-memory-repos';
 
-// Database client (singleton)
-const db = createDbClient(process.env.DATABASE_URL!);
+// Always use in-memory repos for local development
+// Database integration can be re-enabled by restoring the adapter-db imports
+console.log('[deps] Using in-memory repositories with seed data (18 problems available)');
 
-// Repositories
-export const attemptRepo: AttemptRepo = createAttemptRepo(db);
-export const skillRepo: SkillRepo = createSkillRepo(db);
-export const contentRepo: ContentRepo = createContentRepo(db);
+// Repositories - in-memory implementation using seed data
+export const attemptRepo: AttemptRepo = inMemoryAttemptRepo;
+export const skillRepo: SkillRepo = inMemorySkillRepo;
+export const contentRepo: ContentRepo = inMemoryContentRepo;
 
 // Event sink
 export const eventSink: EventSink = createConsoleEventSink();

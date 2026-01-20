@@ -1062,3 +1062,275 @@ export const TransitionStageResponseSchema = z.object({
   success: z.boolean(),
   error: z.string().optional(),
 });
+
+// ============ Learner-Centric Coaching Schemas ============
+
+/**
+ * Coaching stages
+ */
+export const CoachingStageSchema = z.enum([
+  'PROBLEM_FRAMING',
+  'PATTERN_RECOGNITION',
+  'FEYNMAN_VALIDATION',
+  'STRATEGY_DESIGN',
+  'CODING',
+  'REFLECTION',
+]);
+
+export type CoachingStageType = z.infer<typeof CoachingStageSchema>;
+
+/**
+ * Help level (1-5)
+ */
+export const HelpLevelSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+]);
+
+/**
+ * Answer quality assessment
+ */
+export const AnswerQualitySchema = z.enum(['SHALLOW', 'ADEQUATE', 'DEEP']);
+
+/**
+ * Pattern gate status
+ */
+export const PatternGateStatusSchema = z.enum(['PENDING', 'PASSED', 'FAILED']);
+
+/**
+ * Coach response type
+ */
+export const CoachResponseTypeSchema = z.enum([
+  'QUESTION',
+  'FEEDBACK',
+  'GUIDANCE',
+  'WARNING',
+  'HINT',
+  'CONGRATULATIONS',
+  'NEXT_STAGE',
+]);
+
+/**
+ * Coach next action
+ */
+export const CoachNextActionSchema = z.enum([
+  'CONTINUE',
+  'ADVANCE',
+  'RETRY',
+  'REQUEST_HELP',
+  'COMPLETE',
+]);
+
+/**
+ * Coach response metadata
+ */
+export const CoachResponseMetadataSchema = z.object({
+  stage: CoachingStageSchema,
+  attemptCount: z.number().int().min(0),
+  helpUsed: z.number().min(0),
+  timeElapsed: z.number().min(0),
+});
+
+/**
+ * Coach response
+ */
+export const CoachResponseSchema = z.object({
+  type: CoachResponseTypeSchema,
+  content: z.string(),
+  questions: z.array(z.string()),
+  helpLevel: HelpLevelSchema.nullable(),
+  nextAction: CoachNextActionSchema,
+  metadata: CoachResponseMetadataSchema,
+});
+
+/**
+ * Problem framing question
+ */
+export const ProblemFramingQuestionSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  category: z.enum([
+    'INPUT_OUTPUT',
+    'CONSTRAINTS',
+    'EDGE_CASES',
+    'EXAMPLES',
+    'CLARIFICATION',
+    'RESTATEMENT',
+  ]),
+  userAnswer: z.string().nullable(),
+  answerQuality: AnswerQualitySchema.nullable(),
+  followUpQuestion: z.string().nullable(),
+  timestamp: z.coerce.date(),
+});
+
+/**
+ * Coaching session (simplified for API)
+ */
+export const CoachingSessionSchema = z.object({
+  id: z.string(),
+  attemptId: z.string(),
+  tenantId: z.string(),
+  userId: z.string(),
+  problemId: z.string(),
+  currentStage: CoachingStageSchema,
+  helpLevel: HelpLevelSchema,
+  startedAt: z.coerce.date(),
+  completedAt: z.coerce.date().nullable(),
+});
+
+// ============ Coaching API Request/Response Schemas ============
+
+// POST /api/coaching/sessions - Start a coaching session
+export const StartCoachingSessionRequestSchema = z.object({
+  attemptId: z.string(),
+  problemId: z.string(),
+});
+
+export const StartCoachingSessionResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  initialQuestions: z.array(z.string()),
+});
+
+// POST /api/coaching/sessions/:sessionId/framing - Submit framing answer
+export const SubmitFramingAnswerRequestSchema = z.object({
+  sessionId: z.string(),
+  questionId: z.string(),
+  answer: z.string().min(1),
+});
+
+export const SubmitFramingAnswerResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  understandingScore: z.number().min(0).max(1),
+  isComplete: z.boolean(),
+});
+
+// POST /api/coaching/sessions/:sessionId/pattern - Submit pattern selection
+export const SubmitPatternSelectionRequestSchema = z.object({
+  sessionId: z.string(),
+  selectedPattern: z.string(),
+  justification: z.string().min(20),
+});
+
+export const SubmitPatternSelectionResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  status: PatternGateStatusSchema,
+  isCorrect: z.boolean(),
+});
+
+// POST /api/coaching/sessions/:sessionId/feynman - Submit Feynman explanation
+export const SubmitFeynmanExplanationRequestSchema = z.object({
+  sessionId: z.string(),
+  explanation: z.string().min(10),
+});
+
+export const SubmitFeynmanExplanationResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  score: z.number().min(0).max(1),
+  isValid: z.boolean(),
+});
+
+// POST /api/coaching/sessions/:sessionId/strategy - Submit strategy
+export const SubmitStrategyRequestSchema = z.object({
+  sessionId: z.string(),
+  strategy: z.string().min(50),
+});
+
+export const SubmitStrategyResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  isReady: z.boolean(),
+  adversarialQuestions: z.array(z.object({
+    id: z.string(),
+    question: z.string(),
+  })),
+});
+
+// POST /api/coaching/sessions/:sessionId/strategy/adversarial - Answer adversarial question
+export const SubmitAdversarialAnswerRequestSchema = z.object({
+  sessionId: z.string(),
+  questionId: z.string(),
+  answer: z.string().min(10),
+});
+
+export const SubmitAdversarialAnswerResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  isReady: z.boolean(),
+});
+
+// POST /api/coaching/sessions/:sessionId/code - Analyze code
+export const AnalyzeCodeRequestSchema = z.object({
+  sessionId: z.string(),
+  code: z.string(),
+  language: z.string(),
+});
+
+export const AnalyzeCodeResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  observations: z.array(z.object({
+    id: z.string(),
+    type: z.string(),
+    description: z.string(),
+    lineNumber: z.number().nullable(),
+  })),
+  warnings: z.array(z.object({
+    id: z.string(),
+    type: z.string(),
+    description: z.string(),
+    lineNumber: z.number().nullable(),
+  })),
+});
+
+// POST /api/coaching/sessions/:sessionId/help - Request help
+export const RequestHelpRequestSchema = z.object({
+  sessionId: z.string(),
+  requestedLevel: HelpLevelSchema,
+  explicitlyRequested: z.boolean().default(false),
+  context: z.object({
+    code: z.string().optional(),
+    strategy: z.string().optional(),
+  }).optional(),
+});
+
+export const RequestHelpResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  level: HelpLevelSchema,
+  penalty: z.number().min(0).max(1),
+});
+
+// POST /api/coaching/sessions/:sessionId/reflection - Submit coaching reflection
+export const SubmitCoachingReflectionRequestSchema = z.object({
+  sessionId: z.string(),
+  keyInsight: z.string().min(20),
+  misleadingFactors: z.array(z.string()),
+  recognitionTips: z.string().min(20),
+});
+
+export const SubmitCoachingReflectionResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  response: CoachResponseSchema,
+  summary: z.string(),
+  suggestedFollowUps: z.array(z.object({
+    problemId: z.string(),
+    title: z.string(),
+  })),
+});
+
+// GET /api/coaching/sessions/:sessionId - Get session state
+export const GetCoachingSessionResponseSchema = z.object({
+  session: CoachingSessionSchema,
+  currentStage: CoachingStageSchema,
+  progress: z.object({
+    stageIndex: z.number().int().min(0),
+    totalStages: z.number().int().positive(),
+    percentComplete: z.number().min(0).max(100),
+  }),
+});
