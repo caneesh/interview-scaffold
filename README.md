@@ -142,6 +142,41 @@ The app runs at `http://localhost:3000`.
 | `/api/problems/next` | GET | Get MEP-recommended next problem |
 | `/api/skills` | GET | Get user skill matrix |
 
+## Debug Track
+
+The Debug Track teaches systematic debugging skills through real-world bug scenarios. Users work through a gate-based workflow that reinforces methodical debugging practices.
+
+### Features
+
+- **14 Seed Scenarios** covering 6 bug categories (FUNCTIONAL_LOGIC, ALGORITHMIC, PERFORMANCE, RESOURCE, CONCURRENCY, INTEGRATION)
+- **7-Gate Workflow**: SYMPTOM -> DETERMINISM -> PATTERN -> ROOT_CAUSE -> FIX -> REGRESSION -> REFLECTION
+- **Progressive Hints**: 4-6 hints per scenario, from subtle to explicit
+- **Scoring System**: Weighted evaluation with hint deductions
+- **Interview Simulation Mode**: Timed practice with realistic constraints
+
+### Bug Categories
+
+| Category | Examples |
+|----------|----------|
+| FUNCTIONAL_LOGIC | Off-by-one, missing guards, boundary conditions |
+| ALGORITHMIC | Missing memoization, incorrect visited state |
+| PERFORMANCE | O(n^2) string ops, nested loop inefficiency |
+| RESOURCE | Memory leaks, string concatenation in loops |
+| CONCURRENCY | Race conditions, deadlocks, non-atomic operations |
+| INTEGRATION | Missing error handling, retry without backoff |
+
+### Documentation
+
+- [Debug Track Overview](./docs/DEBUG_TRACK.md) - Full documentation
+- [Scenario Authoring Guide](./docs/DEBUG_SCENARIO_AUTHORING.md) - How to create new scenarios
+
+### Running Debug Track
+
+```bash
+pnpm dev
+# Navigate to http://localhost:3000/debug
+```
+
 ## License
 
 Private - All rights reserved
