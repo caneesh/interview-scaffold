@@ -60,7 +60,7 @@ export function CodeArtifactViewer({ artifacts }: CodeArtifactViewerProps) {
       {/* Code content */}
       <div className="code-artifact-content">
         <pre className={`code-artifact-pre language-${activeArtifact.language}`}>
-          <code>{addLineNumbers(activeArtifact.content)}</code>
+          <code>{addLineNumbers(activeArtifact.code)}</code>
         </pre>
       </div>
 

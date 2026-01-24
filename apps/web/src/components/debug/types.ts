@@ -49,7 +49,7 @@ export type DebugAttemptStatus = (typeof DEBUG_ATTEMPT_STATUSES)[number];
 export interface CodeArtifact {
   readonly id?: string;
   readonly filename: string;
-  readonly content: string;
+  readonly code: string;
   readonly language: string;
   readonly description?: string;
 }
