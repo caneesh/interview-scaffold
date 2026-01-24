@@ -159,11 +159,13 @@ export default function DebugAttemptPage() {
       if (data.error) {
         setError(data.error.message || 'Failed to submit answer');
       } else {
-        setLastFeedback(data.evaluationResult);
+        // API returns 'evaluation', not 'evaluationResult'
+        const evalResult = data.evaluation || data.evaluationResult;
+        setLastFeedback(evalResult);
         // Preserve scenario when updating attempt
         setAttempt((prev) => prev ? { ...data.attempt, scenario: prev.scenario } : data.attempt);
         // Clear current hint text when moving to next gate
-        if (data.evaluationResult.isCorrect) {
+        if (evalResult?.isCorrect) {
           setCurrentHintText(undefined);
         }
         // Handle completion data
@@ -201,12 +203,14 @@ export default function DebugAttemptPage() {
           setError(data.error.message || 'Failed to get hint');
         }
       } else {
+        // API returns hint as string directly, not { text: string }
+        const hintText = typeof data.hint === 'string' ? data.hint : data.hint?.text || `Hint ${hints.length + 1}`;
         const newHint: DebugHint = {
           level: hints.length + 1,
-          text: data.hint.text,
+          text: hintText,
         };
         setHints((prev) => [...prev, newHint]);
-        setCurrentHintText(data.hint.text);
+        setCurrentHintText(hintText);
         // Preserve scenario when updating attempt
         setAttempt((prev) => prev ? { ...data.attempt, scenario: prev.scenario } : data.attempt);
       }
