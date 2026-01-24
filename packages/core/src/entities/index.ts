@@ -12,3 +12,4 @@ export * from './bug-hunt.js';
 export * from './debug-lab.js';
 export * from './diagnostic-coach.js';
 export * from './enhanced-problem.js';
+export * from './debug-track.js';

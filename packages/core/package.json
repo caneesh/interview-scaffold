@@ -39,6 +39,10 @@
     "./learner-centric": {
       "types": "./dist/learner-centric/index.d.ts",
       "import": "./dist/learner-centric/index.js"
+    },
+    "./debug-track": {
+      "types": "./dist/debug-track/index.d.ts",
+      "import": "./dist/debug-track/index.js"
     }
   },
   "scripts": {

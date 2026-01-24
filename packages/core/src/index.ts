@@ -14,3 +14,4 @@ export * from './features/index.js';
 export * from './learner-centric/index.js';
 export * from './anti-cheat/index.js';
 export * from './state-machine/index.js';
+// Note: debug-track is exported as a separate subpath './debug-track' to avoid naming conflicts
