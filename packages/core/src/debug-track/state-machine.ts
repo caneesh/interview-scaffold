@@ -280,3 +280,34 @@ export const GATE_WEIGHTS: Readonly<Record<DebugGate, number>> = {
   REGRESSION_PREVENTION: 0.1,     // Forward thinking
   REFLECTION: 0.05,               // Low stakes consolidation
 };
+
+// ============ Gate Prompts ============
+
+/**
+ * GATE_PROMPTS - User-facing instructions for each debug gate.
+ * These guide the user through the debugging process.
+ */
+export const GATE_PROMPTS: Readonly<Record<DebugGate, string>> = {
+  SYMPTOM_CLASSIFICATION:
+    'Describe the symptoms you observe. What is the bug doing (or not doing)? What error messages or unexpected behaviors are present?',
+  DETERMINISM_ANALYSIS:
+    'Is this bug deterministic (always happens) or non-deterministic (intermittent)? Does it depend on timing, environment, or specific inputs?',
+  PATTERN_CLASSIFICATION:
+    'What type of bug is this? Classify it (e.g., off-by-one, race condition, null reference, resource leak, etc.).',
+  ROOT_CAUSE_HYPOTHESIS:
+    'Form a hypothesis about the root cause. What specific code path or condition is causing this bug? Be as specific as possible.',
+  FIX_STRATEGY:
+    'Propose a fix strategy. How would you fix this bug? What changes to the code are needed?',
+  REGRESSION_PREVENTION:
+    'How would you prevent this bug from recurring? What tests, code changes, or process improvements would help catch similar issues?',
+  REFLECTION:
+    'Reflect on what you learned. What made this bug tricky? What debugging techniques were most effective?',
+};
+
+/**
+ * Get the user-facing prompt for a debug gate.
+ * Used by API routes to provide instructions to the user.
+ */
+export function getGatePrompt(gate: DebugGate): string {
+  return GATE_PROMPTS[gate];
+}
