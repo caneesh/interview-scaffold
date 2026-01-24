@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-type AppMode = 'dashboard' | 'solve' | 'review' | 'coach';
+type AppMode = 'dashboard' | 'solve' | 'review' | 'coach' | 'debug';
 
 interface AppShellProps {
   children: ReactNode;
@@ -30,6 +30,11 @@ function getAppMode(pathname: string): AppMode {
     return 'coach';
   }
 
+  // Debug mode: /debug/attempts/[attemptId] - active debug session
+  if (pathname.startsWith('/debug/attempts/') && pathname !== '/debug/attempts') {
+    return 'debug';
+  }
+
   // Dashboard mode for all other pages
   return 'dashboard';
 }
@@ -43,6 +48,7 @@ function DashboardHeader() {
         </Link>
         <nav className="nav">
           <Link href="/practice">Practice</Link>
+          <Link href="/debug">Debug</Link>
           <Link href="/coach">Coach</Link>
           <Link href="/explorer">Explorer</Link>
           <Link href="/skills">Skills</Link>
@@ -83,6 +89,22 @@ function CoachHeader() {
   );
 }
 
+function DebugHeader() {
+  return (
+    <header className="header header--debug">
+      <div className="container header-inner">
+        <Link href="/" className="logo">
+          Scaffold
+        </Link>
+        <div className="debug-header-label">Debug Mode</div>
+        <Link href="/debug" className="btn btn-secondary btn-sm">
+          Exit to Debug
+        </Link>
+      </div>
+    </header>
+  );
+}
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const mode = getAppMode(pathname);
@@ -108,6 +130,8 @@ export function AppShell({ children }: AppShellProps) {
         return <SolveHeader />;
       case 'coach':
         return <CoachHeader />;
+      case 'debug':
+        return <DebugHeader />;
       default:
         return <DashboardHeader />;
     }
