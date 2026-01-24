@@ -117,7 +117,8 @@ export default function DebugAttemptPage() {
       if (data.error) {
         setError(data.error.message || 'Failed to load attempt');
       } else {
-        setAttempt(data.attempt);
+        // Merge scenario into attempt (API returns them separately)
+        setAttempt({ ...data.attempt, scenario: data.scenario });
         // Restore hints from attempt if any
         if (data.hints) {
           setHints(data.hints);
@@ -159,7 +160,8 @@ export default function DebugAttemptPage() {
         setError(data.error.message || 'Failed to submit answer');
       } else {
         setLastFeedback(data.evaluationResult);
-        setAttempt(data.attempt);
+        // Preserve scenario when updating attempt
+        setAttempt((prev) => prev ? { ...data.attempt, scenario: prev.scenario } : data.attempt);
         // Clear current hint text when moving to next gate
         if (data.evaluationResult.isCorrect) {
           setCurrentHintText(undefined);
@@ -205,7 +207,8 @@ export default function DebugAttemptPage() {
         };
         setHints((prev) => [...prev, newHint]);
         setCurrentHintText(data.hint.text);
-        setAttempt(data.attempt);
+        // Preserve scenario when updating attempt
+        setAttempt((prev) => prev ? { ...data.attempt, scenario: prev.scenario } : data.attempt);
       }
     } catch (err) {
       setError('Failed to get hint. Please try again.');
