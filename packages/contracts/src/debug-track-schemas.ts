@@ -20,7 +20,15 @@ export const DebugPatternCategorySchema = z.enum([
   'PRODUCTION_REALITY',
 ]);
 
-export const DebugDifficultySchema = z.enum(['EASY', 'MEDIUM', 'HARD', 'EXPERT']);
+export const DebugDifficultySchema = z.enum([
+  'BEGINNER',
+  'EASY',
+  'INTERMEDIATE',
+  'MEDIUM',
+  'ADVANCED',
+  'HARD',
+  'EXPERT',
+]);
 
 export const DebugGateSchema = z.enum([
   'SYMPTOM_CLASSIFICATION',
