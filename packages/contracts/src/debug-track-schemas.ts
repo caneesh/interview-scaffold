@@ -140,7 +140,7 @@ export const DebugAttemptSchema = z.object({
  * POST /api/debug/attempts/start
  */
 export const StartDebugAttemptRequestSchema = z.object({
-  scenarioId: z.string().uuid(),
+  scenarioId: z.string().min(1),
 });
 
 /**
