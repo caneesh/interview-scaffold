@@ -78,6 +78,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: <ChartIcon />,
     section: 'progress',
   },
+  {
+    label: 'Settings',
+    href: '/settings',
+    icon: <SettingsIcon />,
+    section: 'progress',
+  },
 ];
 
 const SECTION_LABELS: Record<string, string> = {
@@ -151,6 +157,7 @@ function getPageTitle(pathname: string): string {
     '/features': 'Features',
     '/daily': 'Daily Challenge',
     '/interview': 'Mock Interview',
+    '/settings': 'Settings',
   };
 
   // Check exact match first
@@ -287,6 +294,15 @@ function ChartIcon() {
   );
 }
 
+function SettingsIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 function UserIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -404,6 +420,105 @@ function Sidebar({
 }
 
 /**
+ * User Menu component with dropdown for user actions.
+ */
+function UserMenu() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<{ email: string | null } | null>(null);
+
+  // Fetch user info on mount
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setUser({ email: data.profile?.email || null });
+        }
+      } catch {
+        // Silently fail - user might not be authenticated
+      }
+    }
+    fetchUser();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-menu')) {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
+  const displayEmail = user?.email || 'User';
+
+  return (
+    <div className="user-menu">
+      <button
+        className="user-menu-trigger"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        <span className="user-menu-avatar">{userInitial}</span>
+        <span className="user-menu-email">{displayEmail}</span>
+        <ChevronDownIcon />
+      </button>
+
+      {isOpen && (
+        <div className="user-menu-dropdown" role="menu">
+          <Link
+            href="/settings"
+            className="user-menu-item"
+            role="menuitem"
+            onClick={() => setIsOpen(false)}
+          >
+            <SettingsIcon />
+            <span>Settings</span>
+          </Link>
+          <div className="user-menu-divider" />
+          <Link
+            href="/auth/logout"
+            className="user-menu-item"
+            role="menuitem"
+            onClick={() => setIsOpen(false)}
+          >
+            <LogoutIcon />
+            <span>Log out</span>
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M16 17L21 12L16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M21 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+/**
  * Topbar component with page title and user actions.
  */
 function Topbar({
@@ -444,14 +559,7 @@ function Topbar({
             <span className="topbar-search-btn__shortcut">Cmd+K</span>
           </button>
         )}
-        <Tooltip content="User menu" position="bottom">
-          <IconButton
-            icon={<UserIcon />}
-            aria-label="User menu"
-            variant="ghost"
-            size="md"
-          />
-        </Tooltip>
+        <UserMenu />
       </div>
     </header>
   );
