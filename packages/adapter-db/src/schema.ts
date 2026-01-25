@@ -9,6 +9,7 @@ import {
   uuid,
   index,
   unique,
+  primaryKey,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
@@ -287,6 +288,396 @@ export const debugMastery = pgTable(
       table.userId,
       table.patternKey,
       table.category
+    ),
+  })
+);
+
+// ============ Content Bank - Items ============
+
+/**
+ * Content Items - unified content catalog for all tracks.
+ * Supports global content (tenantId null) or tenant-specific content.
+ */
+export const contentItems = pgTable(
+  'content_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id').references(() => tenants.id), // nullable for global content
+    track: text('track').notNull(), // 'coding_interview' | 'debug_lab' | 'system_design'
+    slug: text('slug').notNull(),
+    title: text('title').notNull(),
+    summary: text('summary'),
+    difficulty: text('difficulty').notNull(), // 'easy' | 'medium' | 'hard'
+    pattern: text('pattern'), // algorithm pattern or debug category
+    rung: integer('rung'), // difficulty ladder level
+    tags: jsonb('tags').notNull().$type<string[]>().default([]),
+    estimatedTimeMinutes: integer('estimated_time_minutes'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    tenantTrackDifficultyIdx: index('content_items_tenant_track_difficulty_idx').on(
+      table.tenantId,
+      table.track,
+      table.difficulty
+    ),
+    tenantTrackPatternRungIdx: index('content_items_tenant_track_pattern_rung_idx').on(
+      table.tenantId,
+      table.track,
+      table.pattern,
+      table.rung
+    ),
+    slugUniqueIdx: unique('content_items_slug_unique').on(
+      table.tenantId,
+      table.track,
+      table.slug
+    ),
+  })
+);
+
+// ============ Content Bank - Versions ============
+
+/**
+ * Content Versions - versioned content bodies supporting draft/publish workflow.
+ * Body is flexible JSON to support different content types.
+ */
+export const contentVersions = pgTable(
+  'content_versions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    contentItemId: uuid('content_item_id')
+      .notNull()
+      .references(() => contentItems.id),
+    version: integer('version').notNull(),
+    status: text('status').notNull(), // 'draft' | 'published' | 'archived'
+    body: jsonb('body').notNull().$type<Record<string, unknown>>(),
+    schemaVersion: integer('schema_version').notNull().default(1),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    publishedAt: timestamp('published_at'),
+  },
+  (table) => ({
+    contentVersionIdx: unique('content_versions_content_version_unique').on(
+      table.contentItemId,
+      table.version
+    ),
+    statusIdx: index('content_versions_status_idx').on(
+      table.contentItemId,
+      table.status
+    ),
+  })
+);
+
+// ============ Content Bank - Authors (optional) ============
+
+/**
+ * Content Item Authors - tracks authorship/ownership of content.
+ */
+export const contentItemAuthors = pgTable(
+  'content_item_authors',
+  {
+    contentItemId: uuid('content_item_id')
+      .notNull()
+      .references(() => contentItems.id),
+    userId: text('user_id').notNull(),
+    role: text('role').notNull(), // 'author' | 'reviewer' | 'editor'
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.contentItemId, table.userId] }),
+  })
+);
+
+// ============ Submissions ============
+
+/**
+ * Submissions - user-submitted content for evaluation.
+ * Supports multiple content types: code, text, diagrams, gate answers, etc.
+ */
+export const submissions = pgTable(
+  'submissions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    attemptId: uuid('attempt_id')
+      .notNull()
+      .references(() => attempts.id),
+    userId: text('user_id').notNull(),
+    type: text('type').notNull(), // 'code' | 'text' | 'diagram' | 'gate' | 'triage' | 'reflection' | 'files'
+    language: text('language'), // programming language for code submissions
+    contentText: text('content_text'), // plain text content
+    contentJson: jsonb('content_json').notNull().$type<Record<string, unknown>>().default({}),
+    isFinal: boolean('is_final').notNull().default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    attemptIdx: index('submissions_attempt_idx').on(table.attemptId),
+    userIdx: index('submissions_user_idx').on(table.userId),
+    // P0 fix: Add composite index for user submission history queries
+    userCreatedIdx: index('submissions_user_created_idx').on(table.userId, table.createdAt),
+  })
+);
+
+// ============ Evaluation Runs ============
+
+/**
+ * Evaluation Runs - tracks evaluation/grading processes.
+ * Supports different evaluation types: coding tests, debug gates, rubrics, AI reviews.
+ */
+export const evaluationRuns = pgTable(
+  'evaluation_runs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    attemptId: uuid('attempt_id')
+      .notNull()
+      .references(() => attempts.id),
+    submissionId: uuid('submission_id').references(() => submissions.id),
+    userId: text('user_id').notNull(),
+    track: text('track').notNull(),
+    type: text('type').notNull(), // 'coding_tests' | 'debug_gate' | 'rubric' | 'ai_review'
+    status: text('status').notNull(), // 'queued' | 'running' | 'succeeded' | 'failed' | 'canceled'
+    startedAt: timestamp('started_at'),
+    completedAt: timestamp('completed_at'),
+    summary: jsonb('summary').$type<Record<string, unknown>>(),
+    details: jsonb('details').$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    attemptIdx: index('evaluation_runs_attempt_idx').on(table.attemptId),
+    submissionIdx: index('evaluation_runs_submission_idx').on(table.submissionId),
+    statusIdx: index('evaluation_runs_status_idx').on(table.status),
+    // P0 fix: Add composite index for user progress queries by track
+    userTrackCreatedIdx: index('evaluation_runs_user_track_created_idx').on(
+      table.userId,
+      table.track,
+      table.createdAt
+    ),
+  })
+);
+
+// ============ Coding Test Results ============
+
+/**
+ * Coding Test Results - individual test case results within an evaluation run.
+ */
+export const codingTestResults = pgTable(
+  'coding_test_results',
+  {
+    evaluationRunId: uuid('evaluation_run_id')
+      .notNull()
+      .references(() => evaluationRuns.id),
+    testIndex: integer('test_index').notNull(),
+    passed: boolean('passed').notNull(),
+    isHidden: boolean('is_hidden').notNull().default(false),
+    expected: text('expected'),
+    actual: text('actual'),
+    stdout: text('stdout'),
+    stderr: text('stderr'),
+    durationMs: integer('duration_ms'),
+    error: text('error'),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.evaluationRunId, table.testIndex] }),
+  })
+);
+
+// ============ Rubric Scores ============
+
+/**
+ * Rubric Scores - scores per criterion within an evaluation run.
+ */
+export const rubricScores = pgTable(
+  'rubric_scores',
+  {
+    evaluationRunId: uuid('evaluation_run_id')
+      .notNull()
+      .references(() => evaluationRuns.id),
+    criterion: text('criterion').notNull(),
+    score: real('score').notNull(),
+    maxScore: real('max_score').notNull(),
+    rationale: text('rationale'),
+    evidence: jsonb('evidence').$type<Record<string, unknown>>(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.evaluationRunId, table.criterion] }),
+  })
+);
+
+// ============ Debug Diagnostics ============
+
+/**
+ * Debug Diagnostics - key-value diagnostic data within an evaluation run.
+ */
+export const debugDiagnostics = pgTable(
+  'debug_diagnostics',
+  {
+    evaluationRunId: uuid('evaluation_run_id')
+      .notNull()
+      .references(() => evaluationRuns.id),
+    key: text('key').notNull(),
+    value: jsonb('value').$type<Record<string, unknown>>(),
+    evidence: jsonb('evidence').$type<Record<string, unknown>>(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.evaluationRunId, table.key] }),
+  })
+);
+
+// ============ AI Feedback ============
+
+/**
+ * AI Feedback - stores AI-generated feedback and coaching responses.
+ */
+export const aiFeedback = pgTable(
+  'ai_feedback',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull(),
+    attemptId: uuid('attempt_id').references(() => attempts.id),
+    submissionId: uuid('submission_id').references(() => submissions.id),
+    type: text('type').notNull(), // feedback type: 'hint' | 'explanation' | 'review' | 'guidance'
+    model: text('model').notNull(), // AI model used
+    promptVersion: text('prompt_version').notNull(),
+    inputHash: text('input_hash').notNull(), // hash of input for deduplication
+    output: jsonb('output').notNull().$type<Record<string, unknown>>(),
+    evidence: jsonb('evidence').$type<Record<string, unknown>>(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdx: index('ai_feedback_user_idx').on(table.userId),
+    attemptIdx: index('ai_feedback_attempt_idx').on(table.attemptId),
+    inputHashIdx: index('ai_feedback_input_hash_idx').on(table.inputHash),
+    // P0 fix: Add composite index for user+attempt queries
+    userAttemptIdx: index('ai_feedback_user_attempt_idx').on(table.userId, table.attemptId),
+  })
+);
+
+// ============ Socratic Turns ============
+
+/**
+ * Socratic Turns - conversation turns in Socratic coaching dialogues.
+ */
+export const socraticTurns = pgTable(
+  'socratic_turns',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    attemptId: uuid('attempt_id')
+      .notNull()
+      .references(() => attempts.id),
+    userId: text('user_id').notNull(),
+    turnIndex: integer('turn_index').notNull(),
+    role: text('role').notNull(), // 'user' | 'assistant' | 'system'
+    message: text('message').notNull(),
+    question: jsonb('question').$type<Record<string, unknown>>(), // structured question if applicable
+    validation: jsonb('validation').$type<Record<string, unknown>>(), // validation result if applicable
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    attemptIdx: index('socratic_turns_attempt_idx').on(table.attemptId),
+    attemptTurnIdx: unique('socratic_turns_attempt_turn_unique').on(
+      table.attemptId,
+      table.turnIndex
+    ),
+  })
+);
+
+// ============ User Track Progress (TrackE) ============
+
+/**
+ * User Track Progress - aggregated progress per user per track.
+ * Tracks overall mastery and activity across a track (coding_interview, debug_lab, system_design).
+ */
+export const userTrackProgress = pgTable(
+  'user_track_progress',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    userId: text('user_id').notNull(),
+    track: text('track').notNull(), // 'coding_interview' | 'debug_lab' | 'system_design'
+    masteryScore: real('mastery_score').notNull().default(0), // 0-100, aggregated across content
+    attemptsCount: integer('attempts_count').notNull().default(0),
+    completedCount: integer('completed_count').notNull().default(0),
+    lastActivityAt: timestamp('last_activity_at'),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    // Idempotency: Track which attempt ID was last applied to prevent double-counting
+    lastAppliedAttemptId: uuid('last_applied_attempt_id'),
+  },
+  (table) => ({
+    tenantUserIdx: index('user_track_progress_tenant_user_idx').on(
+      table.tenantId,
+      table.userId
+    ),
+    tenantUserTrackIdx: index('user_track_progress_tenant_user_track_idx').on(
+      table.tenantId,
+      table.userId,
+      table.track
+    ),
+    // Unique constraint to prevent duplicate track progress entries
+    uniqueTrackProgress: unique('user_track_progress_unique').on(
+      table.tenantId,
+      table.userId,
+      table.track
+    ),
+  })
+);
+
+// ============ User Content Progress (TrackE) ============
+
+/**
+ * User Content Progress - progress per user per content item.
+ * Tracks individual problem/scenario completion and scores.
+ */
+export const userContentProgress = pgTable(
+  'user_content_progress',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id),
+    userId: text('user_id').notNull(),
+    contentItemId: uuid('content_item_id').references(() => contentItems.id), // nullable for legacy problems
+    problemId: uuid('problem_id').references(() => problems.id), // for backward compat with existing problems table
+    track: text('track').notNull(), // 'coding_interview' | 'debug_lab' | 'system_design'
+    attemptsCount: integer('attempts_count').notNull().default(0),
+    bestScore: real('best_score'), // highest score achieved (0-100)
+    lastScore: real('last_score'), // most recent attempt score
+    completedAt: timestamp('completed_at'), // first successful completion
+    lastAttemptAt: timestamp('last_attempt_at'),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    // Idempotency: Track which attempt ID was last applied to prevent double-counting
+    lastAppliedAttemptId: uuid('last_applied_attempt_id'),
+  },
+  (table) => ({
+    tenantUserIdx: index('user_content_progress_tenant_user_idx').on(
+      table.tenantId,
+      table.userId
+    ),
+    tenantUserContentIdx: index('user_content_progress_tenant_user_content_idx').on(
+      table.tenantId,
+      table.userId,
+      table.contentItemId
+    ),
+    tenantUserProblemIdx: index('user_content_progress_tenant_user_problem_idx').on(
+      table.tenantId,
+      table.userId,
+      table.problemId
+    ),
+    // Unique constraint for content items (when contentItemId is set)
+    uniqueContentProgress: unique('user_content_progress_content_unique').on(
+      table.tenantId,
+      table.userId,
+      table.contentItemId
+    ),
+    // Unique constraint for legacy problems (when problemId is set)
+    uniqueProblemProgress: unique('user_content_progress_problem_unique').on(
+      table.tenantId,
+      table.userId,
+      table.problemId
+    ),
+    // P0 fix: Add index for activity tracking queries
+    activityIdx: index('user_content_progress_activity_idx').on(
+      table.userId,
+      table.track,
+      table.lastAttemptAt
     ),
   })
 );

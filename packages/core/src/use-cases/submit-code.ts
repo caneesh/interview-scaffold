@@ -18,6 +18,8 @@ import { detectForbiddenConcepts, getForbiddenForPattern } from '../validation/f
 import { makeGatingDecision } from '../validation/gating.js';
 import type { LLMValidationPort, LLMValidationResponse } from '../validation/llm-port.js';
 import type { PatternId } from '../entities/pattern.js';
+import type { ProgressRepo } from '../ports/progress-repo.js';
+import { aggregateProgress } from './aggregate-progress.js';
 
 export interface SubmitCodeInput {
   readonly tenantId: TenantId;
@@ -45,6 +47,7 @@ export interface SubmitCodeDeps {
   readonly idGenerator: IdGenerator;
   readonly codeExecutor: CodeExecutor;
   readonly llmValidation?: LLMValidationPort; // Optional LLM validation
+  readonly progressRepo?: ProgressRepo; // Optional progress aggregation (TrackE)
 }
 
 export interface CodeExecutor {
@@ -460,6 +463,28 @@ export async function submitCode(
         updatedAt: now,
         lastAppliedAttemptId: attemptId, // Track which attempt was applied
       });
+    }
+
+    // ============ Aggregate Progress (TrackE) ============
+    // Update user_track_progress and user_content_progress tables.
+    // Uses lastAppliedAttemptId pattern for idempotency.
+    if (deps.progressRepo) {
+      await aggregateProgress(
+        {
+          tenantId,
+          userId,
+          attemptId,
+          attempt: updatedAttempt,
+          score: attemptScore,
+          track: 'coding_interview',
+          problemId: attempt.problemId,
+        },
+        {
+          progressRepo: deps.progressRepo,
+          clock,
+          idGenerator,
+        }
+      );
     }
   }
 

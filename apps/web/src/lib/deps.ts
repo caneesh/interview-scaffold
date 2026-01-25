@@ -18,11 +18,31 @@ import { createDemoAuthProvider } from '@scaffold/adapter-auth';
 import { createConsoleEventSink } from '@scaffold/adapter-analytics';
 import { createLLMClient, createLLMValidationAdapter, createNullLLMValidation } from '@scaffold/adapter-llm';
 import { createPistonExecutor, createPistonClient, type PistonClient } from '@scaffold/adapter-piston';
-import { SystemClock } from '@scaffold/core/ports';
-import type { AttemptRepo, SkillRepo, ContentRepo, EventSink, Clock, IdGenerator } from '@scaffold/core/ports';
+import { SystemClock, createNullSocraticCoach } from '@scaffold/core/ports';
+import type {
+  AttemptRepo,
+  SkillRepo,
+  ContentRepo,
+  EventSink,
+  Clock,
+  IdGenerator,
+  ContentBankRepoPort,
+  SubmissionsRepoPort,
+  EvaluationsRepoPort,
+  UnifiedAICoachRepoPort,
+  SocraticCoachPort,
+} from '@scaffold/core/ports';
 import type { LLMValidationPort } from '@scaffold/core/validation';
 import type { CodeExecutor } from '@scaffold/core/use-cases';
 import { inMemoryAttemptRepo, inMemorySkillRepo, inMemoryContentRepo } from './in-memory-repos';
+import {
+  createInMemoryContentBankRepo,
+  createInMemorySubmissionsRepo,
+  createInMemoryEvaluationsRepo,
+  createInMemoryAICoachRepo,
+  createInMemoryTrackAttemptRepo,
+  type TrackAttemptRepo,
+} from './in-memory-track-repos';
 
 // Always use in-memory repos for local development
 // Database integration can be re-enabled by restoring the adapter-db imports
@@ -81,3 +101,23 @@ export const codeExecutor: CodeExecutor = createPistonExecutor({
   runTimeout: 5000,
   compileTimeout: 15000,
 });
+
+// ============ TrackC: New unified content bank repositories ============
+
+// Content Bank Repository - stores content items and versions
+export const contentBankRepo: ContentBankRepoPort = createInMemoryContentBankRepo();
+
+// Submissions Repository - stores user submissions
+export const submissionsRepo: SubmissionsRepoPort = createInMemorySubmissionsRepo();
+
+// Evaluations Repository - stores evaluation runs and results
+export const evaluationsRepo: EvaluationsRepoPort = createInMemoryEvaluationsRepo();
+
+// AI Coach Repository - stores AI feedback and Socratic turns
+export const aiCoachRepo: UnifiedAICoachRepoPort = createInMemoryAICoachRepo();
+
+// Track Attempt Repository - stores track-based attempts
+export const trackAttemptRepo: TrackAttemptRepo = createInMemoryTrackAttemptRepo();
+
+// Socratic Coach - AI-powered coaching (uses null implementation if no API key)
+export const socraticCoach: SocraticCoachPort = createNullSocraticCoach();

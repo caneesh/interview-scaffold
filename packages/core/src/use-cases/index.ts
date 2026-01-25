@@ -11,3 +11,6 @@ export * from './pattern-discovery.js';
 export * from './pattern-challenge.js';
 export * from './diagnostic-coaching.js';
 export * from './postmortem-generator.js';
+export * from './generate-socratic-question.js';
+export * from './validate-socratic-response.js';
+export * from './aggregate-progress.js';

@@ -1334,3 +1334,269 @@ export const GetCoachingSessionResponseSchema = z.object({
     percentComplete: z.number().min(0).max(100),
   }),
 });
+
+// ============ TrackC: Track-aware API Endpoints ============
+
+// Track enum
+export const TrackSchema = z.enum(['coding_interview', 'debug_lab', 'system_design']);
+
+// Content difficulty
+export const ContentDifficultySchema = z.enum(['easy', 'medium', 'hard']);
+
+// Content version status
+export const ContentVersionStatusSchema = z.enum(['draft', 'published', 'archived']);
+
+// Content Item (metadata)
+export const ContentItemSchema = z.object({
+  id: z.string(),
+  tenantId: z.string().nullable(),
+  track: TrackSchema,
+  slug: z.string(),
+  title: z.string(),
+  summary: z.string().nullable(),
+  difficulty: ContentDifficultySchema,
+  pattern: z.string().nullable(),
+  rung: z.number().nullable(),
+  tags: z.array(z.string()),
+  estimatedTimeMinutes: z.number().nullable(),
+  createdAt: z.coerce.date(),
+});
+
+// Content Version (with body)
+export const ContentVersionSchema = z.object({
+  id: z.string(),
+  contentItemId: z.string(),
+  version: z.number().int().positive(),
+  status: ContentVersionStatusSchema,
+  body: z.record(z.unknown()),
+  schemaVersion: z.number().int().positive(),
+  createdAt: z.coerce.date(),
+  publishedAt: z.coerce.date().nullable(),
+});
+
+// Content Item with Version
+export const ContentItemWithVersionSchema = z.object({
+  item: ContentItemSchema,
+  version: ContentVersionSchema,
+});
+
+// GET /api/content/next - Track-aware content selection
+export const GetNextContentRequestSchema = z.object({
+  track: TrackSchema,
+  pattern: z.string().optional(),
+  rung: z.number().optional(),
+  difficulty: ContentDifficultySchema.optional(),
+});
+
+export const GetNextContentResponseSchema = z.object({
+  content: ContentItemWithVersionSchema.nullable(),
+  reason: z.string(),
+});
+
+// POST /api/attempts/start (extended for track support)
+export const StartTrackAttemptRequestSchema = z.object({
+  track: TrackSchema,
+  contentItemId: z.string(),
+  versionId: z.string().optional(), // Uses published version if not specified
+});
+
+export const StartTrackAttemptResponseSchema = z.object({
+  attemptId: z.string(),
+  track: TrackSchema,
+  content: ContentItemWithVersionSchema,
+  startedAt: z.coerce.date(),
+  resumed: z.boolean().optional(),
+});
+
+// ============ Submissions API ============
+
+// Submission types
+export const SubmissionTypeSchema = z.enum([
+  'code',
+  'text',
+  'diagram',
+  'gate',
+  'triage',
+  'reflection',
+  'files',
+]);
+
+// Submission entity
+export const SubmissionSchema = z.object({
+  id: z.string(),
+  attemptId: z.string(),
+  userId: z.string(),
+  type: SubmissionTypeSchema,
+  language: z.string().nullable(),
+  contentText: z.string().nullable(),
+  contentJson: z.record(z.unknown()),
+  isFinal: z.boolean(),
+  createdAt: z.coerce.date(),
+});
+
+// POST /api/attempts/:attemptId/submissions - Create submission
+export const CreateSubmissionRequestSchema = z.object({
+  type: SubmissionTypeSchema,
+  language: z.string().optional(),
+  contentText: z.string().optional(),
+  contentJson: z.record(z.unknown()).optional(),
+  isFinal: z.boolean().optional(),
+});
+
+export const CreateSubmissionResponseSchema = z.object({
+  submission: SubmissionSchema,
+});
+
+// GET /api/attempts/:attemptId/submissions - List submissions
+export const ListSubmissionsRequestSchema = z.object({
+  type: SubmissionTypeSchema.optional(),
+  limit: z.number().int().positive().optional(),
+  offset: z.number().int().min(0).optional(),
+});
+
+export const ListSubmissionsResponseSchema = z.object({
+  submissions: z.array(SubmissionSchema),
+  total: z.number().int().min(0),
+});
+
+// ============ Evaluations API ============
+
+// Evaluation types
+export const EvaluationTypeSchema = z.enum([
+  'coding_tests',
+  'debug_gate',
+  'rubric',
+  'ai_review',
+]);
+
+// Evaluation status
+export const EvaluationStatusSchema = z.enum([
+  'queued',
+  'running',
+  'succeeded',
+  'failed',
+  'canceled',
+]);
+
+// Evaluation Run entity
+export const EvaluationRunSchema = z.object({
+  id: z.string(),
+  attemptId: z.string(),
+  submissionId: z.string().nullable(),
+  userId: z.string(),
+  track: TrackSchema,
+  type: EvaluationTypeSchema,
+  status: EvaluationStatusSchema,
+  startedAt: z.coerce.date().nullable(),
+  completedAt: z.coerce.date().nullable(),
+  summary: z.record(z.unknown()).nullable(),
+  details: z.record(z.unknown()).nullable(),
+  createdAt: z.coerce.date(),
+});
+
+// POST /api/attempts/:attemptId/evaluate - Trigger evaluation
+export const TriggerEvaluationRequestSchema = z.object({
+  submissionId: z.string().optional(), // Uses latest submission if not specified
+  type: EvaluationTypeSchema.optional(), // Defaults based on track
+});
+
+export const TriggerEvaluationResponseSchema = z.object({
+  evaluationRun: EvaluationRunSchema,
+});
+
+// GET /api/attempts/:attemptId/evaluate - Get evaluation status/results
+export const GetEvaluationResponseSchema = z.object({
+  evaluationRun: EvaluationRunSchema.nullable(),
+  testResults: z.array(z.object({
+    testIndex: z.number().int().min(0),
+    passed: z.boolean(),
+    isHidden: z.boolean(),
+    expected: z.string().nullable(),
+    actual: z.string().nullable(),
+    stdout: z.string().nullable(),
+    stderr: z.string().nullable(),
+    durationMs: z.number().nullable(),
+    error: z.string().nullable(),
+  })).optional(),
+});
+
+// ============ Unified Socratic Coaching API (TrackC) ============
+// NOTE: These schemas use "Unified" prefix to avoid conflicts with
+// socratic-coach-schemas.ts which has different schema structures.
+
+// Unified Socratic roles
+export const UnifiedSocraticRoleSchema = z.enum(['user', 'assistant', 'system']);
+
+// Unified Socratic question (structured, different from evidence-gated version)
+export const UnifiedSocraticQuestionMetaSchema = z.object({
+  questionType: z.string(),
+  targetConcept: z.string().optional(),
+  expectedInsight: z.string().optional(),
+  options: z.array(z.string()).optional(),
+});
+
+// Unified Socratic validation result
+export const UnifiedSocraticValidationSchema = z.object({
+  isCorrect: z.boolean(),
+  confidence: z.number().min(0).max(1),
+  feedback: z.string().optional(),
+  misconceptions: z.array(z.string()).optional(),
+  nextQuestionHint: z.string().optional(),
+});
+
+// Unified Socratic turn entity
+export const UnifiedSocraticTurnSchema = z.object({
+  id: z.string(),
+  attemptId: z.string(),
+  userId: z.string(),
+  turnIndex: z.number().int().min(0),
+  role: UnifiedSocraticRoleSchema,
+  message: z.string(),
+  question: UnifiedSocraticQuestionMetaSchema.nullable(),
+  validation: UnifiedSocraticValidationSchema.nullable(),
+  createdAt: z.coerce.date(),
+});
+
+// POST /api/coaching/:attemptId/next-question - Get next Socratic question
+export const GetNextQuestionRequestSchema = z.object({
+  context: z.object({
+    latestCode: z.string().optional(),
+    language: z.string().optional(),
+    testResults: z.array(z.object({
+      input: z.string(),
+      expected: z.string(),
+      actual: z.string(),
+      passed: z.boolean(),
+      error: z.string().nullable(),
+    })).optional(),
+  }).optional(),
+});
+
+export const GetNextQuestionResponseSchema = z.object({
+  turn: UnifiedSocraticTurnSchema,
+  question: z.string(),
+  questionType: z.string(),
+  targetConcept: z.string().optional(),
+  options: z.array(z.string()).optional(),
+  source: z.enum(['ai', 'deterministic']),
+});
+
+// POST /api/coaching/:attemptId/validate - Validate user response
+export const ValidateResponseRequestSchema = z.object({
+  turnId: z.string(),
+  response: z.string(),
+});
+
+export const ValidateResponseResponseSchema = z.object({
+  turn: UnifiedSocraticTurnSchema,
+  validation: UnifiedSocraticValidationSchema,
+  followUpQuestion: z.string().optional(),
+  nextAction: z.enum([
+    'continue',
+    'retry',
+    'escalate',
+    'complete',
+    'needs_more_info',
+  ]),
+  source: z.enum(['ai', 'deterministic']),
+});

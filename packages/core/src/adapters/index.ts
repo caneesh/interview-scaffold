@@ -5,3 +5,4 @@
  */
 
 export * from './anthropic-ai-coach.js';
+export * from './problem-content-bridge.js';

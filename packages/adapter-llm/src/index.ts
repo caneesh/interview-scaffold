@@ -279,3 +279,6 @@ export function createNullLLMValidation(): LLMValidationPort {
     isEnabled: () => false,
   };
 }
+
+// Export Socratic Coach adapter
+export * from './socratic-coach-adapter.js';
