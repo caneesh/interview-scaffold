@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect, type ReactNode } from 'react';
 import { IconButton } from './ui/IconButton';
 import { Tooltip } from './ui/Tooltip';
+import { CommandPalette, useCommandPalette } from './CommandPalette';
 
 type AppMode = 'dashboard' | 'solve' | 'review' | 'coach' | 'debug';
 
@@ -295,6 +296,15 @@ function UserIcon() {
   );
 }
 
+function SearchIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 function CloseIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -328,7 +338,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`app-sidebar ${collapsed ? 'app-sidebar--collapsed' : ''}`}
+      className={`app-sidebar app-sidebar--light ${collapsed ? 'app-sidebar--collapsed' : ''}`}
       aria-expanded={!collapsed}
     >
       <div className="app-sidebar__header">
@@ -400,10 +410,12 @@ function Topbar({
   title,
   showMenuButton = false,
   onMenuClick,
+  onSearchClick,
 }: {
   title: string;
   showMenuButton?: boolean;
   onMenuClick?: () => void;
+  onSearchClick?: () => void;
 }) {
   return (
     <header className="app-topbar">
@@ -421,6 +433,17 @@ function Topbar({
         <h1 className="app-topbar__title">{title}</h1>
       </div>
       <div className="app-topbar__right">
+        {onSearchClick && (
+          <button
+            className="topbar-search-btn focus-ring"
+            onClick={onSearchClick}
+            aria-label="Open command palette"
+          >
+            <SearchIcon />
+            <span>Search...</span>
+            <span className="topbar-search-btn__shortcut">Cmd+K</span>
+          </button>
+        )}
         <Tooltip content="User menu" position="bottom">
           <IconButton
             icon={<UserIcon />}
@@ -483,6 +506,9 @@ export function AppShell({ children }: AppShellProps) {
   // Sidebar collapsed state - persist in localStorage
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Command palette
+  const { isOpen: commandPaletteOpen, open: openCommandPalette, close: closeCommandPalette } = useCommandPalette();
 
   // Load sidebar state from localStorage
   useEffect(() => {
@@ -620,11 +646,15 @@ export function AppShell({ children }: AppShellProps) {
           title={pageTitle}
           showMenuButton={true}
           onMenuClick={() => setMobileMenuOpen(true)}
+          onSearchClick={openCommandPalette}
         />
         <main id="main-content" className="app-main">
           <div className="app-main__inner">{children}</div>
         </main>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette isOpen={commandPaletteOpen} onClose={closeCommandPalette} />
     </div>
   );
 }
