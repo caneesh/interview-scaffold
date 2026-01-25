@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { startAttempt } from '@scaffold/core/use-cases';
 import { StartAttemptRequestSchema } from '@scaffold/contracts';
 import { attemptRepo, contentRepo, skillRepo, eventSink, clock, idGenerator } from '@/lib/deps';
+import { isLegacyAttempt } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
@@ -48,6 +49,13 @@ async function handleLegacyAttempt(
   // Check for existing active attempt - return it instead of erroring
   const activeAttempt = await attemptRepo.findActive(tenantId, userId);
   if (activeAttempt) {
+    // Only resume legacy attempts; track attempts should use a different endpoint
+    if (!isLegacyAttempt(activeAttempt)) {
+      return NextResponse.json(
+        { error: { code: 'TRACK_ATTEMPT_IN_PROGRESS', message: 'A track-based attempt is in progress. Complete it or use /api/track-attempts/start.' } },
+        { status: 400 }
+      );
+    }
     const problem = await contentRepo.findById(tenantId, activeAttempt.problemId);
     return NextResponse.json({
       attempt: activeAttempt,

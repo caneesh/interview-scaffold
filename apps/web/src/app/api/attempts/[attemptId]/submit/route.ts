@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { submitCode } from '@scaffold/core/use-cases';
 import { SubmitCodeRequestSchema } from '@scaffold/contracts';
 import { attemptRepo, contentRepo, skillRepo, eventSink, clock, idGenerator, codeExecutor, getLLMValidation } from '@/lib/deps';
+import { isLegacyAttempt } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
@@ -38,6 +39,15 @@ export async function POST(
         { status: 404 }
       );
     }
+
+    // This route only supports legacy problem-based attempts
+    if (!isLegacyAttempt(attempt)) {
+      return NextResponse.json(
+        { error: { code: 'TRACK_ATTEMPT_NOT_SUPPORTED', message: 'Use /api/attempts/[attemptId]/submissions for track-based attempts' } },
+        { status: 400 }
+      );
+    }
+
     const problem = await contentRepo.findById(tenantId, attempt.problemId);
     const problemStatement = problem?.statement ?? '';
 

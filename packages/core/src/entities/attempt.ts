@@ -3,9 +3,17 @@ import type { RungLevel } from './rung.js';
 import type { ProblemId } from './problem.js';
 import type { TenantId } from './tenant.js';
 import type { Step, HintLevel } from './step.js';
+import type { Track } from './track.js';
+import type { ContentItemId, ContentVersionId } from './content-item.js';
 
 /**
- * Attempt - a user's attempt at solving a problem
+ * Attempt - a user's attempt at solving a problem or content item
+ *
+ * Unified attempts table supports both:
+ * - Legacy problem-based attempts: problemId is set
+ * - Track-based content bank attempts: contentItemId and track are set
+ *
+ * Invariant: exactly one of (problemId) OR (contentItemId) must be set.
  */
 export const ATTEMPT_STATES = [
   'THINKING_GATE',
@@ -19,11 +27,13 @@ export const ATTEMPT_STATES = [
 
 export type AttemptState = (typeof ATTEMPT_STATES)[number];
 
-export interface Attempt {
+/**
+ * Base attempt fields common to both legacy and track attempts
+ */
+interface AttemptBase {
   readonly id: string;
   readonly tenantId: TenantId;
   readonly userId: string;
-  readonly problemId: ProblemId;
   readonly pattern: PatternId;
   readonly rung: RungLevel;
   readonly state: AttemptState;
@@ -33,6 +43,45 @@ export interface Attempt {
   readonly score: AttemptScore | null;
   readonly startedAt: Date;
   readonly completedAt: Date | null;
+}
+
+/**
+ * Legacy problem-based attempt
+ */
+export interface LegacyAttempt extends AttemptBase {
+  readonly problemId: ProblemId;
+  readonly track?: undefined;
+  readonly contentItemId?: undefined;
+  readonly contentVersionId?: undefined;
+}
+
+/**
+ * Track-based content bank attempt
+ */
+export interface TrackAttempt extends AttemptBase {
+  readonly problemId?: undefined;
+  readonly track: Track;
+  readonly contentItemId: ContentItemId;
+  readonly contentVersionId: ContentVersionId | null;
+}
+
+/**
+ * Unified Attempt type - either legacy or track-based
+ */
+export type Attempt = LegacyAttempt | TrackAttempt;
+
+/**
+ * Type guard to check if an attempt is a legacy problem-based attempt
+ */
+export function isLegacyAttempt(attempt: Attempt): attempt is LegacyAttempt {
+  return attempt.problemId !== undefined;
+}
+
+/**
+ * Type guard to check if an attempt is a track-based attempt
+ */
+export function isTrackAttempt(attempt: Attempt): attempt is TrackAttempt {
+  return attempt.contentItemId !== undefined;
 }
 
 export interface AttemptScore {

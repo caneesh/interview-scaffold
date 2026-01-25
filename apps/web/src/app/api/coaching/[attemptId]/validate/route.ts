@@ -6,6 +6,7 @@ import {
   socraticCoach,
   idGenerator,
 } from '@/lib/deps';
+import { isLegacyAttempt } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
@@ -36,6 +37,14 @@ export async function POST(
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: 'Attempt does not belong to user' } },
         { status: 403 }
+      );
+    }
+
+    // Coaching validation only supports legacy problem-based attempts
+    if (!isLegacyAttempt(attempt)) {
+      return NextResponse.json(
+        { error: { code: 'TRACK_ATTEMPT_NOT_SUPPORTED', message: 'Coaching validation only supports legacy problem-based attempts' } },
+        { status: 400 }
       );
     }
 

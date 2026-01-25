@@ -1,5 +1,6 @@
 import type { TenantId } from '../entities/tenant.js';
-import type { AttemptId, Attempt, AttemptScore } from '../entities/attempt.js';
+import type { AttemptId, Attempt, AttemptScore, LegacyAttempt } from '../entities/attempt.js';
+import { isLegacyAttempt } from '../entities/attempt.js';
 import type { Track } from '../entities/track.js';
 import type {
   UserTrackProgress,
@@ -185,13 +186,13 @@ export class ProgressAggregator {
   }
 
   /**
-   * Convenience method for coding interview track.
+   * Convenience method for coding interview track (legacy attempts only).
    * Derives track from attempt pattern.
    */
   async aggregateCodingAttempt(
     tenantId: TenantId,
     userId: string,
-    attempt: Attempt,
+    attempt: LegacyAttempt,
     score: AttemptScore
   ): Promise<AggregateProgressOutput> {
     return this.aggregate({

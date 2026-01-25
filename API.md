@@ -1511,3 +1511,546 @@ curl -X POST http://localhost:3000/api/debug-lab/{attemptId}/submit \
     "explanation": "The bug was caused by incorrect boundary handling in the array iteration"
   }'
 ```
+
+---
+
+## Evaluation API (TrackC Unified System)
+
+### Trigger Evaluation
+
+**POST** `/api/attempts/{attemptId}/evaluate`
+
+Triggers an asynchronous evaluation run for an attempt. Creates a queued evaluation that will be processed (in a real system, by a worker; currently simulated inline).
+
+**Headers:**
+```http
+x-tenant-id: string (optional)
+x-user-id: string (optional)
+```
+
+**Path Parameters:**
+- `attemptId` (string): Attempt identifier (supports both legacy and track-based attempts)
+
+**Request Body:**
+```json
+{
+  "submissionId": "string (optional)",
+  "type": "coding_tests | debug_gate | rubric | ai_review (optional)"
+}
+```
+
+**Field Descriptions:**
+- `submissionId`: Specific submission to evaluate. If omitted, uses latest submission for the attempt.
+- `type`: Evaluation type. If omitted, inferred from track:
+  - `coding_interview` → `coding_tests`
+  - `debug_lab` → `debug_gate`
+  - `system_design` → `rubric`
+
+**Response (202 Accepted):**
+```json
+{
+  "evaluationRun": {
+    "id": "eval-run-123",
+    "attemptId": "attempt-456",
+    "submissionId": "sub-789 | null",
+    "userId": "user-001",
+    "track": "coding_interview | debug_lab | system_design",
+    "type": "coding_tests",
+    "status": "queued | running | succeeded | failed | canceled",
+    "startedAt": "2026-01-24T10:00:00Z | null",
+    "completedAt": "2026-01-24T10:00:05Z | null",
+    "summary": {
+      "passed": true,
+      "testsPassed": 5,
+      "testsTotal": 5
+    } | null,
+    "details": {
+      "testResults": [...]
+    } | null,
+    "createdAt": "2026-01-24T10:00:00Z"
+  }
+}
+```
+
+**Summary Field (varies by evaluation type):**
+
+- **coding_tests**:
+  ```json
+  {
+    "passed": true,
+    "testsPassed": 5,
+    "testsTotal": 5
+  }
+  ```
+
+- **debug_gate**:
+  ```json
+  {
+    "passed": true,
+    "diagnosticsPassed": 3,
+    "diagnosticsTotal": 3
+  }
+  ```
+
+- **rubric**:
+  ```json
+  {
+    "overallScore": 85,
+    "maxScore": 100,
+    "criteriaScores": {
+      "pattern_recognition": 20,
+      "implementation_quality": 25,
+      "edge_cases": 20,
+      "efficiency": 20
+    }
+  }
+  ```
+
+- **ai_review**:
+  ```json
+  {
+    "grade": "PASS | PARTIAL | FAIL",
+    "confidence": 0.95,
+    "feedback": "Excellent use of sliding window pattern..."
+  }
+  ```
+
+**Error Codes:**
+- `VALIDATION_ERROR` (400): Invalid request body
+- `ATTEMPT_NOT_FOUND` (404): Attempt does not exist
+- `SUBMISSION_NOT_FOUND` (404): Specified submission does not exist
+- `FORBIDDEN` (403): Attempt does not belong to user
+- `INTERNAL_ERROR` (500): Evaluation failed
+
+**Current Implementation Note:**
+
+**[Stub behavior as of 2026-01-24]**
+
+The evaluation endpoint currently includes a stub implementation that:
+- Returns fake test results with hardcoded values
+- Simulates pass/fail based on whether code exists (not actual execution)
+- Does NOT execute code against real test cases
+
+**Expected real implementation**:
+1. Fetch test cases from problem/content item
+2. Execute code via Piston API for each test case
+3. Compare actual outputs with expected outputs
+4. Record real execution results in `coding_test_results` table
+
+**[Evidence: apps/web/src/app/api/attempts/[attemptId]/evaluate/route.ts lines 221-281]**
+
+---
+
+### Get Evaluation Status
+
+**GET** `/api/attempts/{attemptId}/evaluate`
+
+Retrieves the latest evaluation run status and results for an attempt.
+
+**Headers:**
+```http
+x-tenant-id: string (optional)
+x-user-id: string (optional)
+```
+
+**Path Parameters:**
+- `attemptId` (string): Attempt identifier
+
+**Response (200):**
+```json
+{
+  "evaluationRun": {
+    "id": "eval-run-123",
+    "attemptId": "attempt-456",
+    "submissionId": "sub-789",
+    "userId": "user-001",
+    "track": "coding_interview",
+    "type": "coding_tests",
+    "status": "succeeded",
+    "startedAt": "2026-01-24T10:00:00Z",
+    "completedAt": "2026-01-24T10:00:05Z",
+    "summary": {
+      "passed": true,
+      "testsPassed": 5,
+      "testsTotal": 5
+    },
+    "details": {
+      "testResults": [...]
+    },
+    "createdAt": "2026-01-24T10:00:00Z"
+  },
+  "testResults": [
+    {
+      "testIndex": 0,
+      "passed": true,
+      "isHidden": false,
+      "expected": "3",
+      "actual": "3",
+      "stdout": "",
+      "stderr": "",
+      "durationMs": 15,
+      "error": null
+    }
+  ] | null
+}
+```
+
+**Response (200) - No Evaluation:**
+```json
+{
+  "evaluationRun": null
+}
+```
+
+**Error Codes:**
+- `ATTEMPT_NOT_FOUND` (404): Attempt does not exist
+- `FORBIDDEN` (403): Attempt does not belong to user
+- `INTERNAL_ERROR` (500): Failed to retrieve evaluation
+
+---
+
+## Submissions API (TrackC Unified System)
+
+### Create Submission
+
+**POST** `/api/submissions`
+
+Creates a new submission for an attempt. Submissions are stored separately from attempts and can be evaluated asynchronously.
+
+**Headers:**
+```http
+x-tenant-id: string (optional)
+x-user-id: string (optional)
+```
+
+**Request Body:**
+```json
+{
+  "attemptId": "attempt-456",
+  "type": "code | text | diagram | gate | triage | reflection | files",
+  "language": "javascript (optional, for code submissions)",
+  "contentText": "plain text content (optional)",
+  "contentJson": {
+    "code": "function solution() { ... }",
+    "additional": "metadata"
+  } | {},
+  "isFinal": false
+}
+```
+
+**Field Descriptions:**
+- `type`: Submission type determines structure and validation
+  - `code`: Programming code submission
+  - `text`: Free-form text response
+  - `diagram`: System design diagram or flowchart
+  - `gate`: Thinking gate or pattern gate answer
+  - `triage`: Debug triage classification
+  - `reflection`: Post-attempt reflection
+  - `files`: Multi-file submission (Debug Lab)
+- `language`: Programming language for code submissions (javascript, python, java, etc.)
+- `contentText`: Plain text content (code, explanation, etc.)
+- `contentJson`: Structured content (flexible schema based on type)
+- `isFinal`: Mark as final submission for attempt (default: false)
+
+**Response (201 Created):**
+```json
+{
+  "submission": {
+    "id": "sub-789",
+    "attemptId": "attempt-456",
+    "userId": "user-001",
+    "type": "code",
+    "language": "javascript",
+    "contentText": "function solution() { ... }",
+    "contentJson": {},
+    "isFinal": false,
+    "createdAt": "2026-01-24T10:00:00Z"
+  }
+}
+```
+
+**Error Codes:**
+- `VALIDATION_ERROR` (400): Invalid request body
+- `ATTEMPT_NOT_FOUND` (404): Attempt does not exist
+- `FORBIDDEN` (403): Attempt does not belong to user
+
+---
+
+### List Submissions for Attempt
+
+**GET** `/api/attempts/{attemptId}/submissions`
+
+Retrieves all submissions for an attempt, ordered by creation time (newest first).
+
+**Headers:**
+```http
+x-tenant-id: string (optional)
+x-user-id: string (optional)
+```
+
+**Path Parameters:**
+- `attemptId` (string): Attempt identifier
+
+**Query Parameters:**
+- `type` (string, optional): Filter by submission type
+- `limit` (number, optional): Max submissions to return (default: all)
+- `offset` (number, optional): Skip first N submissions (default: 0)
+
+**Response (200):**
+```json
+{
+  "submissions": [
+    {
+      "id": "sub-789",
+      "attemptId": "attempt-456",
+      "userId": "user-001",
+      "type": "code",
+      "language": "javascript",
+      "contentText": "function solution() { ... }",
+      "contentJson": {},
+      "isFinal": false,
+      "createdAt": "2026-01-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+**Error Codes:**
+- `ATTEMPT_NOT_FOUND` (404): Attempt does not exist
+- `FORBIDDEN` (403): Attempt does not belong to user
+
+---
+
+## AI Feedback API
+
+### Get AI Feedback for Attempt
+
+**GET** `/api/attempts/{attemptId}/ai-feedback`
+
+Retrieves AI-generated feedback for an attempt (hints, explanations, reviews, Socratic questions).
+
+**Headers:**
+```http
+x-tenant-id: string (optional)
+x-user-id: string (optional)
+```
+
+**Path Parameters:**
+- `attemptId` (string): Attempt identifier
+
+**Query Parameters:**
+- `type` (string, optional): Filter by feedback type (hint | explanation | review | guidance)
+- `limit` (number, optional): Max items to return (default: 10)
+
+**Response (200):**
+```json
+{
+  "feedback": [
+    {
+      "id": "ai-feedback-123",
+      "userId": "user-001",
+      "attemptId": "attempt-456",
+      "submissionId": "sub-789 | null",
+      "type": "hint",
+      "model": "claude-sonnet-4-20250514",
+      "promptVersion": "v2.1",
+      "inputHash": "sha256-...",
+      "output": {
+        "hint": "Consider using a sliding window approach...",
+        "nextAction": "Try implementing with two pointers"
+      },
+      "evidence": {
+        "testsFailed": ["test-0", "test-2"],
+        "heuristicErrors": ["loop-missing-increment"]
+      },
+      "createdAt": "2026-01-24T10:00:00Z"
+    }
+  ]
+}
+```
+
+**Error Codes:**
+- `ATTEMPT_NOT_FOUND` (404): Attempt does not exist
+- `FORBIDDEN` (403): Attempt does not belong to user
+
+---
+
+### Get Socratic Turns
+
+**GET** `/api/attempts/{attemptId}/socratic`
+
+Retrieves the Socratic coaching dialogue history for an attempt.
+
+**Headers:**
+```http
+x-tenant-id: string (optional)
+x-user-id: string (optional)
+```
+
+**Path Parameters:**
+- `attemptId` (string): Attempt identifier
+
+**Query Parameters:**
+- `limit` (number, optional): Max turns to return (default: all)
+- `offset` (number, optional): Skip first N turns (default: 0)
+
+**Response (200):**
+```json
+{
+  "turns": [
+    {
+      "id": "turn-001",
+      "attemptId": "attempt-456",
+      "userId": "user-001",
+      "turnIndex": 0,
+      "role": "assistant",
+      "message": "I noticed your solution has some edge case issues. What happens when the array has duplicate values?",
+      "question": {
+        "id": "q-001",
+        "question": "What happens when the array has duplicate values?",
+        "targetConcept": "duplicate handling",
+        "difficulty": "probe",
+        "evidenceRefs": [
+          {
+            "source": "test_result",
+            "sourceId": "test-2",
+            "description": "Test with duplicates failed: expected [1, 2] but got [1, 1]"
+          }
+        ]
+      },
+      "validation": null,
+      "createdAt": "2026-01-24T10:00:00Z"
+    },
+    {
+      "id": "turn-002",
+      "attemptId": "attempt-456",
+      "userId": "user-001",
+      "turnIndex": 1,
+      "role": "user",
+      "message": "I think duplicates would break my hash map assumption",
+      "question": null,
+      "validation": {
+        "isCorrect": true,
+        "feedback": "Good insight! Let's explore how to handle this...",
+        "nextAction": "continue",
+        "confidence": 0.85
+      },
+      "createdAt": "2026-01-24T10:00:01Z"
+    }
+  ]
+}
+```
+
+**Error Codes:**
+- `ATTEMPT_NOT_FOUND` (404): Attempt does not exist
+- `FORBIDDEN` (403): Attempt does not belong to user
+
+---
+
+## Evaluation Flow Example
+
+```bash
+# 1. Start an attempt (returns attemptId)
+curl -X POST http://localhost:3000/api/attempts/start \
+  -H "Content-Type: application/json" \
+  -d '{"problemId": "prob-001"}'
+
+# 2. Create a code submission
+curl -X POST http://localhost:3000/api/submissions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "attemptId": "attempt-456",
+    "type": "code",
+    "language": "javascript",
+    "contentText": "function twoSum(nums, target) { ... }",
+    "isFinal": true
+  }'
+
+# 3. Trigger evaluation (returns evaluation run ID)
+curl -X POST http://localhost:3000/api/attempts/attempt-456/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "coding_tests"
+  }'
+
+# Response:
+# {
+#   "evaluationRun": {
+#     "id": "eval-run-123",
+#     "status": "queued",
+#     ...
+#   }
+# }
+
+# 4. Poll for evaluation results (or wait for webhook in production)
+curl -X GET http://localhost:3000/api/attempts/attempt-456/evaluate
+
+# Response when complete:
+# {
+#   "evaluationRun": {
+#     "id": "eval-run-123",
+#     "status": "succeeded",
+#     "summary": {
+#       "passed": true,
+#       "testsPassed": 5,
+#       "testsTotal": 5
+#     },
+#     ...
+#   },
+#   "testResults": [
+#     {
+#       "testIndex": 0,
+#       "passed": true,
+#       "expected": "3",
+#       "actual": "3",
+#       ...
+#     }
+#   ]
+# }
+
+# 5. Get AI feedback if available
+curl -X GET http://localhost:3000/api/attempts/attempt-456/ai-feedback
+
+# 6. Get Socratic coaching dialogue
+curl -X GET http://localhost:3000/api/attempts/attempt-456/socratic
+```
+
+---
+
+## Implementation Status Notes
+
+**[As of 2026-01-24]**
+
+### Fully Implemented
+- Legacy practice flow (`/api/attempts/start`, `/api/attempts/[id]/submit`)
+- Bug Hunt mode (`/api/bug-hunt/*`)
+- Debug Lab mode (`/api/debug-lab/*`)
+- Pattern Discovery (`/api/attempts/[id]/pattern-discovery/*`)
+- Pattern Challenge (`/api/attempts/[id]/pattern-challenge/*`)
+- Trace Visualization (`/api/trace/execute`)
+
+### Partially Implemented
+- **Evaluation API**: Endpoints exist but use stub execution (see `evaluate` endpoint note above)
+- **Submissions API**: Schema defined, in-memory implementation active, DB not wired
+- **AI Feedback API**: Schema defined, not yet exposed as API endpoints
+
+### Not Yet Implemented
+- **Socratic Coach**: Adapter exists but not wired (deps.ts line 123 hardcoded to null)
+- **Database Integration**: Schema exists, adapters not wired (see MIGRATION.md)
+- **Webhooks**: No webhook support for async evaluation completion
+- **Batch Operations**: No bulk submission or evaluation endpoints
+
+---
+
+## Data Models Reference
+
+For complete data model schemas, see:
+- **Database Schema**: `packages/adapter-db/src/schema.ts`
+- **Entity Types**: `packages/core/src/entities/`
+- **Port Interfaces**: `packages/core/src/ports/`
+- **Migration Guide**: `MIGRATION.md`
+
+---
+
+**Last Updated**: 2026-01-24
+**Reflects Code State**: Commit `8d790fc` with verified findings from code analysis

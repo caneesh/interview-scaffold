@@ -33,6 +33,19 @@ export interface SocraticCoachAdapterConfig {
   model?: string;
   maxTokens?: number;
   temperature?: number;
+  /**
+   * Optional callback for error tracking/logging.
+   * Called when LLM returns invalid schema or API errors occur.
+   * Enables storing error metadata to ai_feedback for observability.
+   */
+  onError?: (error: SocraticCoachError) => void;
+}
+
+export interface SocraticCoachError {
+  type: 'api_error' | 'parse_error' | 'validation_error';
+  message: string;
+  context?: Record<string, unknown>;
+  timestamp: Date;
 }
 
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
@@ -46,6 +59,56 @@ export function createSocraticCoachAdapter(config: SocraticCoachAdapterConfig): 
   const model = config.model ?? DEFAULT_MODEL;
   const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
   const temperature = config.temperature ?? DEFAULT_TEMPERATURE;
+  const onError = config.onError;
+
+  /**
+   * Report error via callback for observability/storage
+   */
+  function reportError(type: SocraticCoachError['type'], message: string, context?: Record<string, unknown>): void {
+    if (onError) {
+      onError({ type, message, context, timestamp: new Date() });
+    }
+  }
+
+  /**
+   * Build a safe needs_more_info result when we cannot produce a valid response.
+   * This ensures fail-closed behavior: no AI claims without evidence.
+   */
+  function buildSafeNeedsMoreInfoResult(
+    context: SocraticContext,
+    reason: string
+  ): GenerateSocraticQuestionResult {
+    const minimalEvidenceRef: EvidenceRef = {
+      source: 'attempt_history',
+      sourceId: `attempt-${context.attemptId}`,
+      description: `Unable to generate AI response: ${reason}`,
+    };
+
+    return {
+      question: {
+        id: `q-fallback-${Date.now()}`,
+        question: 'I need more information to help you effectively. Can you tell me more about what you\'re trying to accomplish?',
+        targetConcept: 'understanding',
+        difficulty: 'probe',
+        evidenceRefs: [minimalEvidenceRef],
+      },
+      mistakeAnalysis: {
+        testsFailed: [],
+        conceptMissed: 'unknown - insufficient evidence',
+        evidenceRefs: [minimalEvidenceRef],
+        suggestedFocus: 'Gather more context',
+        confidence: 0,
+        pattern: context.pattern,
+        attemptCount: context.codeSubmissions,
+      },
+      nextAction: {
+        action: 'needs_more_info',
+        reason,
+        evidenceRefs: [minimalEvidenceRef],
+      },
+      source: 'ai',
+    };
+  }
 
   return {
     isEnabled(): boolean {
@@ -71,7 +134,12 @@ export function createSocraticCoachAdapter(config: SocraticCoachAdapterConfig): 
         const analyzerResult = parseAnalyzerResponse(analyzerText, context);
 
         if (!analyzerResult) {
-          return null;
+          reportError('parse_error', 'Failed to parse analyzer response', {
+            responseText: analyzerText.slice(0, 500),
+            attemptId: context.attemptId,
+          });
+          // FAIL CLOSED: Return needs_more_info instead of null
+          return buildSafeNeedsMoreInfoResult(context, 'AI response could not be parsed');
         }
 
         // Check if analyzer returned needs_more_info
@@ -93,14 +161,28 @@ export function createSocraticCoachAdapter(config: SocraticCoachAdapterConfig): 
         const verifierText = extractText(verifierResponse);
         const verifiedResult = parseVerifierResponse(verifierText, analyzerResult);
 
-        // Validate the final result
+        // Validate the final result - CRITICAL EVIDENCE GATING
         const validation = validateSocraticCoachResponse(verifiedResult);
         if (!validation.valid) {
-          return null;
+          reportError('validation_error', validation.reason ?? 'Validation failed', {
+            attemptId: context.attemptId,
+            validationReason: validation.reason,
+          });
+          // FAIL CLOSED: Return needs_more_info when validation fails
+          return buildSafeNeedsMoreInfoResult(
+            context,
+            `AI response failed validation: ${validation.reason ?? 'missing evidence'}`
+          );
         }
 
         return verifiedResult;
-      } catch (_error: unknown) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        reportError('api_error', errorMessage, {
+          attemptId: context.attemptId,
+        });
+        // Return null to let use-case fall back to deterministic
+        // This is the safest option for API failures
         return null;
       }
     },
@@ -108,6 +190,34 @@ export function createSocraticCoachAdapter(config: SocraticCoachAdapterConfig): 
     async validateSocraticResponse(
       context: SocraticValidationContext
     ): Promise<ValidateSocraticResponseResult | null> {
+      /**
+       * Build a safe needs_more_info validation result when we cannot produce a valid response.
+       * This ensures fail-closed behavior: no AI claims without evidence.
+       */
+      function buildSafeValidationResult(reason: string): ValidateSocraticResponseResult {
+        const minimalEvidenceRef: EvidenceRef = {
+          source: 'attempt_history',
+          sourceId: `question-${context.question.id}`,
+          description: `Unable to validate response: ${reason}`,
+        };
+
+        return {
+          validation: {
+            isCorrect: false,
+            feedback: 'I need more context to provide helpful feedback. Let\'s continue exploring your understanding.',
+            nextAction: 'needs_more_info',
+            evidenceRefs: [minimalEvidenceRef],
+            confidence: 0,
+          },
+          nextAction: {
+            action: 'needs_more_info',
+            reason,
+            evidenceRefs: [minimalEvidenceRef],
+          },
+          source: 'ai',
+        };
+      }
+
       try {
         // ============ Pass 1: Validation Analysis ============
         const validationPrompt = buildValidationPrompt(context);
@@ -124,7 +234,12 @@ export function createSocraticCoachAdapter(config: SocraticCoachAdapterConfig): 
         const result = parseValidationResponse(validationText, context);
 
         if (!result) {
-          return null;
+          reportError('parse_error', 'Failed to parse validation response', {
+            responseText: validationText.slice(0, 500),
+            questionId: context.question.id,
+          });
+          // FAIL CLOSED: Return needs_more_info instead of null
+          return buildSafeValidationResult('AI response could not be parsed');
         }
 
         // ============ Pass 2: Verify No Answers Revealed ============
@@ -141,6 +256,9 @@ export function createSocraticCoachAdapter(config: SocraticCoachAdapterConfig): 
         const verifyText = extractText(verifyResponse);
         if (verifyText.toLowerCase().includes('contains_answer')) {
           // Feedback reveals answer, reject and return safe version
+          reportError('validation_error', 'AI feedback contained answer - sanitized', {
+            questionId: context.question.id,
+          });
           return {
             ...result,
             validation: {
@@ -151,7 +269,13 @@ export function createSocraticCoachAdapter(config: SocraticCoachAdapterConfig): 
         }
 
         return result;
-      } catch (_error: unknown) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        reportError('api_error', errorMessage, {
+          questionId: context.question.id,
+        });
+        // Return null to let use-case fall back to deterministic
+        // This is the safest option for API failures
         return null;
       }
     },

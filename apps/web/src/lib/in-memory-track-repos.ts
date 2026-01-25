@@ -11,6 +11,7 @@ import type {
   SubmissionsRepoPort,
   EvaluationsRepoPort,
   UnifiedAICoachRepoPort,
+  ProgressRepo,
 } from '@scaffold/core/ports';
 import type {
   ContentItem,
@@ -52,6 +53,11 @@ import type {
   UnifiedSocraticQuestion,
   SocraticValidation,
 } from '@scaffold/core/ports';
+import type {
+  UserTrackProgress,
+  UserContentProgress,
+  IdempotentProgressResult,
+} from '@scaffold/core/entities';
 
 // ============ Track Attempt Types ============
 
@@ -97,6 +103,10 @@ declare global {
   var __socraticTurnsStore: Map<string, UnifiedSocraticTurn> | undefined;
   // eslint-disable-next-line no-var
   var __trackAttemptsStore: Map<string, TrackAttempt> | undefined;
+  // eslint-disable-next-line no-var
+  var __trackProgressStore: Map<string, UserTrackProgress> | undefined;
+  // eslint-disable-next-line no-var
+  var __contentProgressStore: Map<string, UserContentProgress> | undefined;
 }
 
 const contentItems = globalThis.__contentItemsStore ?? new Map<string, ContentItem>();
@@ -128,6 +138,12 @@ globalThis.__socraticTurnsStore = socraticTurns;
 
 const trackAttempts = globalThis.__trackAttemptsStore ?? new Map<string, TrackAttempt>();
 globalThis.__trackAttemptsStore = trackAttempts;
+
+const trackProgress = globalThis.__trackProgressStore ?? new Map<string, UserTrackProgress>();
+globalThis.__trackProgressStore = trackProgress;
+
+const contentProgress = globalThis.__contentProgressStore ?? new Map<string, UserContentProgress>();
+globalThis.__contentProgressStore = contentProgress;
 
 // ============ Content Bank Repository ============
 
@@ -770,6 +786,141 @@ export function createInMemoryTrackAttemptRepo(): TrackAttemptRepo {
     async update(attempt: TrackAttempt): Promise<TrackAttempt> {
       trackAttempts.set(attempt.id, attempt);
       return attempt;
+    },
+  };
+}
+
+// ============ Progress Repository ============
+
+/**
+ * Helper to create a composite key for track progress lookup.
+ */
+function trackProgressKey(tenantId: string, userId: string, track: string): string {
+  return `${tenantId}:${userId}:${track}`;
+}
+
+/**
+ * Helper to create a composite key for content progress lookup.
+ */
+function contentProgressKey(tenantId: string, userId: string, contentItemId: string | null, problemId: string | null): string {
+  // Use whichever ID is available, preferring contentItemId
+  const itemKey = contentItemId ?? problemId ?? 'unknown';
+  return `${tenantId}:${userId}:${itemKey}`;
+}
+
+export function createInMemoryProgressRepo(): ProgressRepo {
+  return {
+    // ============ Track Progress ============
+
+    async findTrackProgress(
+      tenantId: string,
+      userId: string,
+      track: string
+    ): Promise<UserTrackProgress | null> {
+      const key = trackProgressKey(tenantId, userId, track);
+      return trackProgress.get(key) ?? null;
+    },
+
+    async findAllTrackProgress(
+      tenantId: string,
+      userId: string
+    ): Promise<readonly UserTrackProgress[]> {
+      return Array.from(trackProgress.values()).filter(
+        (p) => p.tenantId === tenantId && p.userId === userId
+      );
+    },
+
+    async saveTrackProgress(progress: UserTrackProgress): Promise<UserTrackProgress> {
+      const key = trackProgressKey(progress.tenantId, progress.userId, progress.track);
+      trackProgress.set(key, progress);
+      return progress;
+    },
+
+    async updateTrackProgressIfNotApplied(
+      progress: UserTrackProgress,
+      attemptId: string
+    ): Promise<IdempotentProgressResult<UserTrackProgress>> {
+      const key = trackProgressKey(progress.tenantId, progress.userId, progress.track);
+      const existing = trackProgress.get(key);
+
+      // If the attempt was already applied, return no-op
+      if (existing?.lastAppliedAttemptId === attemptId) {
+        return { progress: existing, wasApplied: false };
+      }
+
+      // Apply the update with the new attemptId
+      const updatedProgress: UserTrackProgress = {
+        ...progress,
+        lastAppliedAttemptId: attemptId,
+      };
+      trackProgress.set(key, updatedProgress);
+      return { progress: updatedProgress, wasApplied: true };
+    },
+
+    // ============ Content Progress ============
+
+    async findContentProgressByContentItem(
+      tenantId: string,
+      userId: string,
+      contentItemId: string
+    ): Promise<UserContentProgress | null> {
+      const key = contentProgressKey(tenantId, userId, contentItemId, null);
+      return contentProgress.get(key) ?? null;
+    },
+
+    async findContentProgressByProblem(
+      tenantId: string,
+      userId: string,
+      problemId: string
+    ): Promise<UserContentProgress | null> {
+      const key = contentProgressKey(tenantId, userId, null, problemId);
+      return contentProgress.get(key) ?? null;
+    },
+
+    async findAllContentProgress(
+      tenantId: string,
+      userId: string
+    ): Promise<readonly UserContentProgress[]> {
+      return Array.from(contentProgress.values()).filter(
+        (p) => p.tenantId === tenantId && p.userId === userId
+      );
+    },
+
+    async findContentProgressByTrack(
+      tenantId: string,
+      userId: string,
+      track: string
+    ): Promise<readonly UserContentProgress[]> {
+      return Array.from(contentProgress.values()).filter(
+        (p) => p.tenantId === tenantId && p.userId === userId && p.track === track
+      );
+    },
+
+    async saveContentProgress(progress: UserContentProgress): Promise<UserContentProgress> {
+      const key = contentProgressKey(progress.tenantId, progress.userId, progress.contentItemId, progress.problemId);
+      contentProgress.set(key, progress);
+      return progress;
+    },
+
+    async updateContentProgressIfNotApplied(
+      progress: UserContentProgress,
+      attemptId: string
+    ): Promise<IdempotentProgressResult<UserContentProgress>> {
+      const key = contentProgressKey(progress.tenantId, progress.userId, progress.contentItemId, progress.problemId);
+      const existing = contentProgress.get(key);
+
+      // If the attempt was already applied, return no-op
+      if (existing?.lastAppliedAttemptId === attemptId) {
+        return { progress: existing, wasApplied: false };
+      }
+
+      // Apply the update with the new attemptId
+      const updatedProgress: UserContentProgress = {
+        ...progress,
+        lastAppliedAttemptId: attemptId,
+      };
+      contentProgress.set(key, updatedProgress);
+      return { progress: updatedProgress, wasApplied: true };
     },
   };
 }

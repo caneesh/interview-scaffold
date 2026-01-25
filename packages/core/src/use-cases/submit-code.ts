@@ -1,5 +1,5 @@
 import type { TenantId } from '../entities/tenant.js';
-import type { AttemptId, Attempt, AttemptScore } from '../entities/attempt.js';
+import type { AttemptId, Attempt, AttemptScore, LegacyAttempt } from '../entities/attempt.js';
 import type { TestResultData, CodingData, CodingValidationData } from '../entities/step.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
 import type { ContentRepo } from '../ports/content-repo.js';
@@ -7,7 +7,7 @@ import type { SkillRepo } from '../ports/skill-repo.js';
 import type { EventSink } from '../ports/event-sink.js';
 import type { Clock } from '../ports/clock.js';
 import type { IdGenerator } from '../ports/id-generator.js';
-import { hasPassedThinkingGate, hasPassedReflection, needsReflection } from '../entities/attempt.js';
+import { hasPassedThinkingGate, hasPassedReflection, needsReflection, isLegacyAttempt } from '../entities/attempt.js';
 import { computeNewScore, RUNG_UNLOCK_THRESHOLD } from '../entities/skill-state.js';
 import { computeAttemptScore } from './compute-attempt-score.js';
 import { ERROR_TYPES } from '../validation/types.js';
@@ -107,10 +107,19 @@ export async function submitCode(
   const { tenantId, userId, attemptId, code, language } = input;
   const { attemptRepo, contentRepo, skillRepo, eventSink, clock, idGenerator, codeExecutor } = deps;
 
-  const attempt = await attemptRepo.findById(tenantId, attemptId);
-  if (!attempt) {
+  const attemptRaw = await attemptRepo.findById(tenantId, attemptId);
+  if (!attemptRaw) {
     throw new CodeSubmitError('Attempt not found', 'ATTEMPT_NOT_FOUND');
   }
+
+  // This use-case is for legacy problem-based attempts only
+  if (!isLegacyAttempt(attemptRaw)) {
+    throw new CodeSubmitError(
+      'This endpoint only supports legacy problem-based attempts',
+      'TRACK_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+  const attempt: LegacyAttempt = attemptRaw;
 
   if (attempt.userId !== userId) {
     throw new CodeSubmitError('Unauthorized', 'UNAUTHORIZED');

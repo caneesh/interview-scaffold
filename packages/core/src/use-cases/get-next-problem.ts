@@ -7,6 +7,7 @@ import type { SkillRepo } from '../ports/skill-repo.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
 import { isRungUnlockedForUser, RUNG_UNLOCK_THRESHOLD } from '../entities/skill-state.js';
 import { selectSibling, createSelectionSeed } from './select-sibling.js';
+import { isLegacyAttempt } from '../entities/attempt.js';
 
 export interface GetNextProblemInput {
   readonly tenantId: TenantId;
@@ -37,10 +38,15 @@ export async function getNextProblem(
   const skills = await skillRepo.findAllByUser(tenantId, userId);
 
   // Get user's recent attempts to avoid repeats
+  // Only consider legacy attempts (with problemId) for problem selection
   const recentAttempts = await attemptRepo.findByUser(tenantId, userId, {
     limit: 10,
   });
-  const recentProblemIds = new Set(recentAttempts.map((a) => a.problemId));
+  const recentProblemIds = new Set(
+    recentAttempts
+      .filter(isLegacyAttempt)
+      .map((a) => a.problemId)
+  );
 
   // If pattern and rung specified, check if unlocked
   if (pattern && rung) {

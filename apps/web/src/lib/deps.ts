@@ -16,9 +16,14 @@
 import { randomUUID } from 'crypto';
 import { createDemoAuthProvider } from '@scaffold/adapter-auth';
 import { createConsoleEventSink } from '@scaffold/adapter-analytics';
-import { createLLMClient, createLLMValidationAdapter, createNullLLMValidation } from '@scaffold/adapter-llm';
+import { createLLMClient, createLLMValidationAdapter, createNullLLMValidation, createSocraticCoachAdapter } from '@scaffold/adapter-llm';
 import { createPistonExecutor, createPistonClient, type PistonClient } from '@scaffold/adapter-piston';
-import { SystemClock, createNullSocraticCoach } from '@scaffold/core/ports';
+import {
+  SystemClock,
+  createNullSocraticCoach,
+  createAttemptContextLoader,
+  type LoadAttemptContextFn,
+} from '@scaffold/core/ports';
 import type {
   AttemptRepo,
   SkillRepo,
@@ -31,6 +36,7 @@ import type {
   EvaluationsRepoPort,
   UnifiedAICoachRepoPort,
   SocraticCoachPort,
+  ProgressRepo,
 } from '@scaffold/core/ports';
 import type { LLMValidationPort } from '@scaffold/core/validation';
 import type { CodeExecutor } from '@scaffold/core/use-cases';
@@ -40,18 +46,103 @@ import {
   createInMemorySubmissionsRepo,
   createInMemoryEvaluationsRepo,
   createInMemoryAICoachRepo,
-  createInMemoryTrackAttemptRepo,
-  type TrackAttemptRepo,
+  createInMemoryProgressRepo,
 } from './in-memory-track-repos';
 
-// Always use in-memory repos for local development
-// Database integration can be re-enabled by restoring the adapter-db imports
-console.log('[deps] Using in-memory repositories with seed data (18 problems available)');
+// ============ Database Mode Detection ============
 
-// Repositories - in-memory implementation using seed data
-export const attemptRepo: AttemptRepo = inMemoryAttemptRepo;
-export const skillRepo: SkillRepo = inMemorySkillRepo;
-export const contentRepo: ContentRepo = inMemoryContentRepo;
+/**
+ * Indicates whether the application is running in database mode.
+ * When true, adapter-db repositories are used; when false, in-memory repos are used.
+ */
+export const isDatabaseMode = Boolean(process.env.DATABASE_URL);
+
+// Log active mode on startup (without revealing connection string)
+if (isDatabaseMode) {
+  console.log('[deps] Database mode ENABLED - using PostgreSQL repositories');
+} else {
+  console.log('[deps] Memory mode ACTIVE - using in-memory repositories with seed data (18 problems available)');
+}
+
+// ============ Database Client (lazy initialization) ============
+
+// Only import and instantiate DB client when DATABASE_URL is set
+// This avoids loading postgres dependencies when not needed
+let _dbClient: import('@scaffold/adapter-db').DbClient | null = null;
+
+function getDbClient(): import('@scaffold/adapter-db').DbClient {
+  if (_dbClient) {
+    return _dbClient;
+  }
+
+  if (!process.env.DATABASE_URL) {
+    throw new Error('[deps] DATABASE_URL is not set but DB client was requested');
+  }
+
+  // Dynamic import to avoid loading adapter-db when not in DB mode
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createDbClient } = require('@scaffold/adapter-db');
+  const client = createDbClient(process.env.DATABASE_URL) as import('@scaffold/adapter-db').DbClient;
+  _dbClient = client;
+  return client;
+}
+
+/**
+ * Returns the database client if in database mode, null otherwise.
+ * Useful for smoke tests and health checks.
+ */
+export function getDbClientIfAvailable(): import('@scaffold/adapter-db').DbClient | null {
+  if (!isDatabaseMode) return null;
+  return getDbClient();
+}
+
+// ============ Repository Initialization ============
+
+function initializeRepositories() {
+  if (isDatabaseMode) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const adapterDb = require('@scaffold/adapter-db');
+    const db = getDbClient();
+
+    return {
+      // Unified attempt repo - now handles both legacy and track attempts
+      attemptRepo: adapterDb.createAttemptRepo(db) as AttemptRepo,
+      skillRepo: inMemorySkillRepo as SkillRepo,
+      contentRepo: inMemoryContentRepo as ContentRepo,
+
+      // TrackC unified content bank repos - use DB when available
+      contentBankRepo: adapterDb.createContentBankRepo(db) as ContentBankRepoPort,
+      submissionsRepo: adapterDb.createSubmissionsRepo(db) as SubmissionsRepoPort,
+      evaluationsRepo: adapterDb.createEvaluationsRepo(db) as EvaluationsRepoPort,
+      aiCoachRepo: adapterDb.createUnifiedAIArtifactsRepo(db) as UnifiedAICoachRepoPort,
+
+      // Progress repo - use DB when available
+      progressRepo: adapterDb.createProgressRepo(db) as ProgressRepo,
+    };
+  }
+
+  // In-memory mode - use all in-memory implementations
+  return {
+    attemptRepo: inMemoryAttemptRepo as AttemptRepo,
+    skillRepo: inMemorySkillRepo as SkillRepo,
+    contentRepo: inMemoryContentRepo as ContentRepo,
+    contentBankRepo: createInMemoryContentBankRepo() as ContentBankRepoPort,
+    submissionsRepo: createInMemorySubmissionsRepo() as SubmissionsRepoPort,
+    evaluationsRepo: createInMemoryEvaluationsRepo() as EvaluationsRepoPort,
+    aiCoachRepo: createInMemoryAICoachRepo() as UnifiedAICoachRepoPort,
+    progressRepo: createInMemoryProgressRepo() as ProgressRepo,
+  };
+}
+
+// Initialize all repositories once
+const repos = initializeRepositories();
+
+// ============ Exported Repositories ============
+
+// Legacy repos
+export const attemptRepo: AttemptRepo = repos.attemptRepo;
+export const skillRepo: SkillRepo = repos.skillRepo;
+export const contentRepo: ContentRepo = repos.contentRepo;
 
 // Event sink
 export const eventSink: EventSink = createConsoleEventSink();
@@ -105,19 +196,42 @@ export const codeExecutor: CodeExecutor = createPistonExecutor({
 // ============ TrackC: New unified content bank repositories ============
 
 // Content Bank Repository - stores content items and versions
-export const contentBankRepo: ContentBankRepoPort = createInMemoryContentBankRepo();
+export const contentBankRepo: ContentBankRepoPort = repos.contentBankRepo;
 
 // Submissions Repository - stores user submissions
-export const submissionsRepo: SubmissionsRepoPort = createInMemorySubmissionsRepo();
+export const submissionsRepo: SubmissionsRepoPort = repos.submissionsRepo;
 
 // Evaluations Repository - stores evaluation runs and results
-export const evaluationsRepo: EvaluationsRepoPort = createInMemoryEvaluationsRepo();
+export const evaluationsRepo: EvaluationsRepoPort = repos.evaluationsRepo;
 
 // AI Coach Repository - stores AI feedback and Socratic turns
-export const aiCoachRepo: UnifiedAICoachRepoPort = createInMemoryAICoachRepo();
+export const aiCoachRepo: UnifiedAICoachRepoPort = repos.aiCoachRepo;
 
-// Track Attempt Repository - stores track-based attempts
-export const trackAttemptRepo: TrackAttemptRepo = createInMemoryTrackAttemptRepo();
+// Progress Repository - stores user progress (TrackE)
+export const progressRepo: ProgressRepo = repos.progressRepo;
 
-// Socratic Coach - AI-powered coaching (uses null implementation if no API key)
-export const socraticCoach: SocraticCoachPort = createNullSocraticCoach();
+// ============ Unified Attempt Context Loader ============
+
+/**
+ * Load attempt context for any attempt type (legacy or track-based).
+ * This provides a unified interface for loading attempt data needed for
+ * submissions, evaluations, and coaching.
+ */
+export const loadAttemptContext: LoadAttemptContextFn = createAttemptContextLoader({
+  attemptRepo: repos.attemptRepo,
+  contentRepo: repos.contentRepo,
+  contentBankRepo: repos.contentBankRepo,
+});
+
+// Socratic Coach - AI-powered coaching
+// When ANTHROPIC_API_KEY is set, use real LLM-powered coach; otherwise fall back to null (deterministic only)
+export const socraticCoach: SocraticCoachPort = process.env.ANTHROPIC_API_KEY
+  ? createSocraticCoachAdapter({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : createNullSocraticCoach();
+
+// Log whether Socratic coach is enabled for observability
+if (process.env.ANTHROPIC_API_KEY) {
+  console.log('[deps] Socratic coach enabled with LLM adapter (evidence-gated AI coaching active)');
+} else {
+  console.log('[deps] Socratic coach using null implementation (deterministic coaching only)');
+}

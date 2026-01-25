@@ -8,7 +8,8 @@
  */
 
 import type { TenantId } from '../entities/tenant.js';
-import type { AttemptId, Attempt } from '../entities/attempt.js';
+import type { AttemptId, Attempt, LegacyAttempt } from '../entities/attempt.js';
+import { isLegacyAttempt } from '../entities/attempt.js';
 import type { Problem } from '../entities/problem.js';
 import type { CodingData, ThinkingGateData, HintLevel, TestResultData } from '../entities/step.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
@@ -86,10 +87,19 @@ export async function validateSocraticResponse(
 
   // ============ 1. Load Attempt and Validate ============
 
-  const attempt = await attemptRepo.findById(tenantId, attemptId);
-  if (!attempt) {
+  const attemptRaw = await attemptRepo.findById(tenantId, attemptId);
+  if (!attemptRaw) {
     throw new ValidateSocraticResponseError('Attempt not found', 'ATTEMPT_NOT_FOUND');
   }
+
+  // Socratic validation only works with legacy problem-based attempts
+  if (!isLegacyAttempt(attemptRaw)) {
+    throw new ValidateSocraticResponseError(
+      'Socratic validation only supports legacy problem-based attempts',
+      'TRACK_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+  const attempt: LegacyAttempt = attemptRaw;
 
   if (attempt.userId !== userId) {
     throw new ValidateSocraticResponseError('Unauthorized', 'UNAUTHORIZED');

@@ -3,7 +3,8 @@
  * Handles the Socratic flow for helping users discover patterns
  */
 
-import type { Attempt } from '../entities/attempt.js';
+import type { Attempt, LegacyAttempt } from '../entities/attempt.js';
+import { isLegacyAttempt } from '../entities/attempt.js';
 import type { Problem } from '../entities/problem.js';
 import type { Step, PatternDiscoveryData, PatternDiscoveryQA } from '../entities/step.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
@@ -108,13 +109,22 @@ export async function startPatternDiscovery(
   const { attemptRepo, contentRepo, clock, idGenerator, llmPort } = deps;
 
   // 1. Load attempt
-  const attempt = await attemptRepo.findById(tenantId, attemptId);
-  if (!attempt) {
+  const attemptRaw = await attemptRepo.findById(tenantId, attemptId);
+  if (!attemptRaw) {
     throw new PatternDiscoveryError(
       'Attempt not found.',
       'ATTEMPT_NOT_FOUND'
     );
   }
+
+  // Pattern discovery only works with legacy problem-based attempts
+  if (!isLegacyAttempt(attemptRaw)) {
+    throw new PatternDiscoveryError(
+      'Pattern discovery only supports legacy problem-based attempts.',
+      'TRACK_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+  const attempt: LegacyAttempt = attemptRaw;
 
   // 2. Validate state
   if (attempt.state !== 'THINKING_GATE') {
@@ -202,13 +212,22 @@ export async function submitPatternDiscoveryAnswer(
   const { attemptRepo, contentRepo, clock, llmPort } = deps;
 
   // 1. Load attempt
-  const attempt = await attemptRepo.findById(tenantId, attemptId);
-  if (!attempt) {
+  const attemptRaw = await attemptRepo.findById(tenantId, attemptId);
+  if (!attemptRaw) {
     throw new PatternDiscoveryError(
       'Attempt not found.',
       'ATTEMPT_NOT_FOUND'
     );
   }
+
+  // Pattern discovery only works with legacy problem-based attempts
+  if (!isLegacyAttempt(attemptRaw)) {
+    throw new PatternDiscoveryError(
+      'Pattern discovery only supports legacy problem-based attempts.',
+      'TRACK_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+  const attempt: LegacyAttempt = attemptRaw;
 
   // 2. Find the pattern discovery step
   const stepIndex = attempt.steps.findIndex(s => s.id === stepId);
@@ -325,13 +344,22 @@ export async function abandonPatternDiscovery(
   const { attemptRepo, clock } = deps;
 
   // 1. Load attempt
-  const attempt = await attemptRepo.findById(tenantId, attemptId);
-  if (!attempt) {
+  const attemptRaw = await attemptRepo.findById(tenantId, attemptId);
+  if (!attemptRaw) {
     throw new PatternDiscoveryError(
       'Attempt not found.',
       'ATTEMPT_NOT_FOUND'
     );
   }
+
+  // Pattern discovery only works with legacy problem-based attempts
+  if (!isLegacyAttempt(attemptRaw)) {
+    throw new PatternDiscoveryError(
+      'Pattern discovery only supports legacy problem-based attempts.',
+      'TRACK_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+  const attempt: LegacyAttempt = attemptRaw;
 
   // 2. Find the pattern discovery step
   const stepIndex = attempt.steps.findIndex(s => s.id === stepId);

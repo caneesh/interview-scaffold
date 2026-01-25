@@ -3,6 +3,7 @@ import { submitStep } from '@scaffold/core/use-cases';
 import { generateHint, getHintBudgetState, isHintBudgetExhausted } from '@scaffold/core/hints';
 import { attemptRepo, contentRepo, eventSink, clock, idGenerator } from '@/lib/deps';
 import type { HintLevel } from '@scaffold/core/entities';
+import { isLegacyAttempt } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
@@ -25,6 +26,14 @@ export async function POST(
       return NextResponse.json(
         { error: { code: 'ATTEMPT_NOT_FOUND', message: 'Attempt not found' } },
         { status: 404 }
+      );
+    }
+
+    // Hints only work with legacy problem-based attempts
+    if (!isLegacyAttempt(attempt)) {
+      return NextResponse.json(
+        { error: { code: 'TRACK_ATTEMPT_NOT_SUPPORTED', message: 'Hints only support legacy problem-based attempts' } },
+        { status: 400 }
       );
     }
 

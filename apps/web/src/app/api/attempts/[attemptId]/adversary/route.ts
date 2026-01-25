@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { selectAdversaryPrompt } from '@scaffold/core/adversary';
 import type { AdversaryChallengeData, Step } from '@scaffold/core/entities';
+import { isLegacyAttempt } from '@scaffold/core/entities';
 import { attemptRepo, contentRepo, clock, idGenerator } from '@/lib/deps';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
@@ -31,6 +32,14 @@ export async function GET(
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: 'Not your attempt' } },
         { status: 403 }
+      );
+    }
+
+    // Adversary challenges only work with legacy problem-based attempts
+    if (!isLegacyAttempt(attempt)) {
+      return NextResponse.json(
+        { error: { code: 'TRACK_ATTEMPT_NOT_SUPPORTED', message: 'Adversary challenges only support legacy problem-based attempts' } },
+        { status: 400 }
       );
     }
 
@@ -166,6 +175,14 @@ export async function POST(
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: 'Not your attempt' } },
         { status: 403 }
+      );
+    }
+
+    // Adversary challenges only work with legacy problem-based attempts
+    if (!isLegacyAttempt(attempt)) {
+      return NextResponse.json(
+        { error: { code: 'TRACK_ATTEMPT_NOT_SUPPORTED', message: 'Adversary challenges only support legacy problem-based attempts' } },
+        { status: 400 }
       );
     }
 

@@ -4,12 +4,32 @@ import {
   evaluationsRepo,
   submissionsRepo,
   attemptRepo,
-  trackAttemptRepo,
+  contentBankRepo,
+  contentRepo,
   idGenerator,
-  clock,
+  codeExecutor,
 } from '@/lib/deps';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
-import type { Track } from '@scaffold/core/entities';
+import type { Track, Submission, TrackAttempt } from '@scaffold/core/entities';
+import { isLegacyAttempt, isTrackAttempt } from '@scaffold/core/entities';
+import {
+  runCodingEvaluation,
+  runSimulatedCodingEvaluation,
+  extractTestCasesFromContent,
+  NoCodeProvidedError,
+  LanguageNotSpecifiedError,
+  NoTestCasesError,
+  type CodingEvaluationOutput,
+} from '@/lib/evaluators/coding-evaluator';
+
+/**
+ * Check if simulator mode is enabled.
+ * Simulator mode is ONLY enabled when DEV_SIMULATOR=true explicitly.
+ * Default is false (real execution).
+ */
+function isSimulatorMode(): boolean {
+  return process.env.DEV_SIMULATOR === 'true';
+}
 
 /**
  * POST /api/attempts/[attemptId]/evaluate
@@ -17,8 +37,9 @@ import type { Track } from '@scaffold/core/entities';
  * Triggers an evaluation run for an attempt.
  * Creates a queued evaluation run and returns the run ID/status.
  *
- * The actual evaluation is performed asynchronously (in a real system,
- * this would be picked up by a worker).
+ * For coding_interview track:
+ * - Runs real code execution via Piston (default)
+ * - Set DEV_SIMULATOR=true to use simulated results (development only)
  */
 export async function POST(
   request: NextRequest,
@@ -29,30 +50,25 @@ export async function POST(
     const userId = request.headers.get('x-user-id') ?? DEMO_USER_ID;
     const { attemptId } = params;
 
-    // Try to find the attempt in both legacy and track systems
-    let track: Track = 'coding_interview'; // Default track
-    const legacyAttempt = await attemptRepo.findById(tenantId, attemptId);
-    const trackAttempt = await trackAttemptRepo.findById(tenantId, attemptId);
+    // Find the attempt using unified repo (handles both legacy and track attempts)
+    const attempt = await attemptRepo.findById(tenantId, attemptId);
 
-    if (!legacyAttempt && !trackAttempt) {
+    if (!attempt) {
       return NextResponse.json(
         { error: { code: 'ATTEMPT_NOT_FOUND', message: 'Attempt not found' } },
         { status: 404 }
       );
     }
 
-    const attemptUserId = legacyAttempt?.userId ?? trackAttempt?.userId;
-    if (attemptUserId !== userId) {
+    if (attempt.userId !== userId) {
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: 'Attempt does not belong to user' } },
         { status: 403 }
       );
     }
 
-    // Determine track from track attempt or default
-    if (trackAttempt) {
-      track = trackAttempt.track;
-    }
+    // Determine track from attempt type
+    const track: Track = isTrackAttempt(attempt) ? attempt.track : 'coding_interview';
 
     // Parse and validate request body
     const body = await request.json().catch(() => ({}));
@@ -68,7 +84,7 @@ export async function POST(
     const { submissionId, type } = parsed.data;
 
     // Get the submission to evaluate
-    let submission = null;
+    let submission: Submission | null = null;
     if (submissionId) {
       submission = await submissionsRepo.getSubmission(submissionId);
       if (!submission || submission.attemptId !== attemptId) {
@@ -95,30 +111,56 @@ export async function POST(
       type: evaluationType,
     });
 
-    // In a real system, we would:
-    // 1. Publish a message to a queue for async processing
-    // 2. A worker would pick up the message and run the evaluation
-    // 3. The worker would update the evaluation run status
-
-    // For now, we'll simulate immediate execution for coding_tests
-    // P0 fix: Wrap in try-catch to ensure evaluation run status is updated on error
+    // Execute evaluation for coding_tests
     if (evaluationType === 'coding_tests' && submission) {
       try {
-        // This would normally be done by a worker
-        await runCodingTestsEvaluation(evaluationRun.id, submission, attemptId, userId, track);
+        // Determine content source based on attempt type
+        const trackAttemptData: { contentItemId: string; versionId: string } | null =
+          isTrackAttempt(attempt)
+            ? { contentItemId: attempt.contentItemId, versionId: attempt.contentVersionId ?? '' }
+            : null;
+
+        const legacyProblemId = isLegacyAttempt(attempt) ? attempt.problemId : null;
+
+        await runCodingTestsEvaluation(
+          evaluationRun.id,
+          submission,
+          attemptId,
+          tenantId,
+          trackAttemptData,
+          legacyProblemId
+        );
       } catch (evalError) {
         console.error('Evaluation execution failed:', evalError);
-        // Mark the evaluation as failed so it doesn't stay in queued status
+
+        // Determine appropriate error response
+        const errorInfo = getEvaluationErrorInfo(evalError);
+
+        // Mark the evaluation as failed
         try {
           await evaluationsRepo.markEvaluationRunCompleted(evaluationRun.id, {
             status: 'failed',
             summary: {
-              error: 'Evaluation execution failed',
-              details: evalError instanceof Error ? evalError.message : 'Unknown error',
+              error: errorInfo.message,
+              errorCode: errorInfo.code,
             },
           });
         } catch (markError) {
           console.error('Failed to mark evaluation as failed:', markError);
+        }
+
+        // For configuration errors, return a clear actionable response
+        if (errorInfo.isConfigError) {
+          return NextResponse.json(
+            {
+              error: {
+                code: errorInfo.code,
+                message: errorInfo.message,
+              },
+              evaluationRun: await evaluationsRepo.getEvaluationRun(evaluationRun.id),
+            },
+            { status: 503 }
+          );
         }
       }
     }
@@ -150,19 +192,17 @@ export async function GET(
     const userId = request.headers.get('x-user-id') ?? DEMO_USER_ID;
     const { attemptId } = params;
 
-    // Verify the attempt exists and belongs to the user
-    const legacyAttempt = await attemptRepo.findById(tenantId, attemptId);
-    const trackAttempt = await trackAttemptRepo.findById(tenantId, attemptId);
+    // Verify the attempt exists and belongs to the user using unified repo
+    const attempt = await attemptRepo.findById(tenantId, attemptId);
 
-    if (!legacyAttempt && !trackAttempt) {
+    if (!attempt) {
       return NextResponse.json(
         { error: { code: 'ATTEMPT_NOT_FOUND', message: 'Attempt not found' } },
         { status: 404 }
       );
     }
 
-    const attemptUserId = legacyAttempt?.userId ?? trackAttempt?.userId;
-    if (attemptUserId !== userId) {
+    if (attempt.userId !== userId) {
       return NextResponse.json(
         { error: { code: 'FORBIDDEN', message: 'Attempt does not belong to user' } },
         { status: 403 }
@@ -214,68 +254,164 @@ function getDefaultEvaluationType(track: Track): 'coding_tests' | 'debug_gate' |
 }
 
 /**
- * Run coding tests evaluation (simplified inline execution)
+ * Extract error info for user-friendly error responses
+ */
+function getEvaluationErrorInfo(error: unknown): {
+  code: string;
+  message: string;
+  isConfigError: boolean;
+} {
+  if (error instanceof NoCodeProvidedError) {
+    return {
+      code: 'NO_CODE_PROVIDED',
+      message: error.message,
+      isConfigError: false,
+    };
+  }
+
+  if (error instanceof LanguageNotSpecifiedError) {
+    return {
+      code: 'LANGUAGE_NOT_SPECIFIED',
+      message: error.message,
+      isConfigError: false,
+    };
+  }
+
+  if (error instanceof NoTestCasesError) {
+    return {
+      code: 'NO_TEST_CASES',
+      message: error.message,
+      isConfigError: true,
+    };
+  }
+
+  // Check for Piston-related errors
+  if (error instanceof Error) {
+    if (error.message.includes('ECONNREFUSED') || error.message.includes('fetch failed')) {
+      return {
+        code: 'CODE_RUNNER_UNAVAILABLE',
+        message:
+          'Code execution service is not available. ' +
+          'Ensure PISTON_API_URL is set and the Piston service is running, ' +
+          'or set DEV_SIMULATOR=true to use simulated results.',
+        isConfigError: true,
+      };
+    }
+  }
+
+  return {
+    code: 'EVALUATION_FAILED',
+    message: error instanceof Error ? error.message : 'Unknown evaluation error',
+    isConfigError: false,
+  };
+}
+
+/**
+ * Run coding tests evaluation with real code execution or simulation
  *
- * In a real system, this would be done by a worker process.
+ * Content source priority:
+ * 1. trackAttempt - uses content bank via versionId
+ * 2. legacyProblemId - uses legacy content repo
  */
 async function runCodingTestsEvaluation(
   evaluationRunId: string,
-  submission: { contentText: string | null; contentJson: Record<string, unknown> },
+  submission: Submission,
   attemptId: string,
-  userId: string,
-  track: Track
+  tenantId: string,
+  trackAttempt: { contentItemId: string; versionId: string } | null,
+  legacyProblemId: string | null
 ): Promise<void> {
-  try {
-    // Mark as running
-    await evaluationsRepo.markEvaluationRunRunning(evaluationRunId);
+  // Mark as running
+  await evaluationsRepo.markEvaluationRunRunning(evaluationRunId);
 
-    // In a real implementation, we would:
-    // 1. Get the content/problem for this attempt
-    // 2. Extract test cases
-    // 3. Execute the submission code against test cases
-    // 4. Record results
+  // Get test cases from content
+  let testCases: ReturnType<typeof extractTestCasesFromContent>;
 
-    // For now, simulate a simple pass/fail based on whether there's code
-    const hasCode = submission.contentText || submission.contentJson?.code;
-
-    // Simulate test results
-    const testResults = [
-      {
-        testIndex: 0,
-        passed: !!hasCode,
-        isHidden: false,
-        expected: 'expected output',
-        actual: hasCode ? 'expected output' : 'no output',
-        stdout: '',
-        stderr: hasCode ? '' : 'No code provided',
-        durationMs: 10,
-        error: hasCode ? null : 'No code to execute',
-      },
-    ];
-
-    // Write test results
-    await evaluationsRepo.writeCodingTestResults(evaluationRunId, testResults);
-
-    // Mark as completed
-    const passed = testResults.every((r) => r.passed);
-    await evaluationsRepo.markEvaluationRunCompleted(evaluationRunId, {
-      status: 'succeeded',
-      summary: {
-        passed,
-        testsPassed: testResults.filter((r) => r.passed).length,
-        testsTotal: testResults.length,
-      },
-      details: {
-        testResults,
-      },
+  if (trackAttempt) {
+    // New track-based attempt - get content from content bank
+    const contentVersion = await contentBankRepo.getContentVersion(trackAttempt.versionId);
+    if (!contentVersion) {
+      throw new Error('Content version not found for this attempt');
+    }
+    testCases = extractTestCasesFromContent(contentVersion.body);
+  } else if (legacyProblemId) {
+    // Legacy attempt - get problem from content repo
+    const problem = await contentRepo.findById(tenantId, legacyProblemId);
+    if (!problem) {
+      throw new Error('Problem not found for this attempt');
+    }
+    // Convert legacy problem format to content body format
+    testCases = extractTestCasesFromContent({
+      testCases: problem.testCases,
+      largeHiddenTests: problem.largeHiddenTests,
     });
-  } catch (error) {
-    // Mark as failed
-    await evaluationsRepo.markEvaluationRunCompleted(evaluationRunId, {
-      status: 'failed',
-      summary: {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-    });
+  } else {
+    throw new Error('No content source found for this attempt');
   }
+
+  // Run evaluation - real or simulated based on DEV_SIMULATOR env
+  let evaluationOutput: CodingEvaluationOutput;
+
+  if (isSimulatorMode()) {
+    console.log('[evaluate] Running in SIMULATOR mode (DEV_SIMULATOR=true)');
+    evaluationOutput = runSimulatedCodingEvaluation({
+      submission: {
+        contentText: submission.contentText,
+        contentJson: submission.contentJson as Record<string, unknown>,
+        language: submission.language,
+      },
+      testCases: testCases.testCases,
+      hiddenTests: testCases.hiddenTests,
+    });
+  } else {
+    console.log('[evaluate] Running REAL code execution via Piston');
+    evaluationOutput = await runCodingEvaluation(
+      {
+        submission: {
+          contentText: submission.contentText,
+          contentJson: submission.contentJson as Record<string, unknown>,
+          language: submission.language,
+        },
+        testCases: testCases.testCases,
+        hiddenTests: testCases.hiddenTests,
+      },
+      codeExecutor
+    );
+  }
+
+  // Persist test results
+  await evaluationsRepo.writeCodingTestResults(
+    evaluationRunId,
+    evaluationOutput.testResults.map((r) => ({
+      testIndex: r.testIndex,
+      passed: r.passed,
+      isHidden: r.isHidden,
+      expected: r.expected,
+      actual: r.actual,
+      stdout: r.stdout,
+      stderr: r.stderr,
+      durationMs: r.durationMs,
+      error: r.error,
+    }))
+  );
+
+  // Mark as completed
+  await evaluationsRepo.markEvaluationRunCompleted(evaluationRunId, {
+    status: 'succeeded',
+    summary: {
+      passed: evaluationOutput.summary.passed,
+      testsPassed: evaluationOutput.summary.testsPassed,
+      testsTotal: evaluationOutput.summary.testsTotal,
+      visibleTestsPassed: evaluationOutput.summary.visibleTestsPassed,
+      visibleTestsTotal: evaluationOutput.summary.visibleTestsTotal,
+      hiddenTestsPassed: evaluationOutput.summary.hiddenTestsPassed,
+      hiddenTestsTotal: evaluationOutput.summary.hiddenTestsTotal,
+      hasExecutionError: evaluationOutput.summary.hasExecutionError,
+      executionErrorMessage: evaluationOutput.summary.executionErrorMessage,
+      simulatorMode: isSimulatorMode(),
+    },
+    details: {
+      testResults: evaluationOutput.testResults,
+    },
+  });
 }

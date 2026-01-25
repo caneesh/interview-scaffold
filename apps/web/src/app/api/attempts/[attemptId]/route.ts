@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { attemptRepo, contentRepo } from '@/lib/deps';
+import { attemptRepo, contentRepo, contentBankRepo } from '@/lib/deps';
+import { isLegacyAttempt, isTrackAttempt } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID } from '@/lib/constants';
 
 /**
@@ -22,11 +23,21 @@ export async function GET(
       );
     }
 
-    const problem = await contentRepo.findById(tenantId, attempt.problemId);
+    // For legacy attempts, fetch the problem from contentRepo
+    // For track attempts, fetch the content item from contentBankRepo
+    let problem = null;
+    let contentItem = null;
+
+    if (isLegacyAttempt(attempt)) {
+      problem = await contentRepo.findById(tenantId, attempt.problemId);
+    } else if (isTrackAttempt(attempt)) {
+      contentItem = await contentBankRepo.getContentItem(attempt.contentItemId);
+    }
 
     return NextResponse.json({
       attempt,
       problem,
+      contentItem,
     });
   } catch (error) {
     console.error('Unexpected error:', error);

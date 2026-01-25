@@ -354,6 +354,218 @@ interview-scaffold/
 
 ---
 
+## Unified Attempt Model and Evaluation System
+
+### Current Dual-System Architecture
+
+**[Inferred from code analysis as of 2026-01-24]**
+
+The codebase currently operates TWO parallel attempt systems that are NOT unified:
+
+#### 1. Legacy Attempt System (In-Memory, Active)
+
+**Used By**: Original coding interview practice flow (`/api/attempts/start`, `/api/attempts/[id]/submit`)
+
+**Data Model**:
+```typescript
+// packages/core/src/entities/attempt.ts
+interface Attempt {
+  id: string;
+  tenantId: string;
+  userId: string;
+  problemId: string;          // Links to problems table
+  pattern: PatternId;
+  rung: RungLevel;
+  state: AttemptState;        // 'thinking' | 'coding' | 'reflecting' | 'completed'
+  hintsUsed: HintLevel[];
+  codeSubmissions: number;
+  score: AttemptScore | null;
+  startedAt: Date;
+  completedAt: Date | null;
+}
+```
+
+**Characteristics**:
+- Stateful multi-gate workflow (thinking → coding → reflecting)
+- Submissions stored inline in `steps` table
+- Score computed and stored in attempt entity
+- Track-agnostic (implicitly coding_interview)
+
+#### 2. Track-Based Attempt System (In-Memory Only)
+
+**Used By**: Debug Lab, Bug Hunt, Evaluate endpoint (`/api/attempts/[id]/evaluate`)
+
+**Data Model**:
+```typescript
+// apps/web/src/lib/in-memory-track-repos.ts
+interface TrackAttempt {
+  id: string;
+  tenantId: string;
+  userId: string;
+  track: Track;               // 'coding_interview' | 'debug_lab' | 'system_design'
+  contentItemId: string;      // Links to content_items table
+  versionId: string;          // Links to content_versions table
+  status: 'active' | 'completed' | 'abandoned';
+  startedAt: Date;
+  completedAt?: Date | null;
+}
+```
+
+**Characteristics**:
+- Simple status-based lifecycle (no multi-step gates)
+- Submissions stored in separate `submissions` table
+- Evaluation results stored in separate `evaluation_runs` table
+- Explicit track support for multi-track system
+- **Database schema exists but NOT wired** (in-memory only)
+
+### Evaluation System Architecture
+
+#### Unified Evaluation Model (Schema Defined, Not Fully Implemented)
+
+**Database Tables**:
+
+1. **`submissions`** - User-submitted content for any attempt type
+   - Supports: code, text, diagrams, gate answers, triage responses
+   - References: `attemptId` (legacy or track-based)
+   - Content stored as: `contentText` (plain text) + `contentJson` (structured)
+
+2. **`evaluation_runs`** - Asynchronous evaluation execution tracking
+   - Types: `coding_tests`, `debug_gate`, `rubric`, `ai_review`
+   - Status: `queued` → `running` → `succeeded`/`failed`/`canceled`
+   - Summary: High-level results (e.g., `{ passed: true, testsPassed: 5, testsTotal: 5 }`)
+   - Details: Full evidence and diagnostic data
+
+3. **`coding_test_results`** - Individual test case results
+   - Per-test granularity: `testIndex`, `passed`, `expected`, `actual`, `stdout`, `stderr`, `error`
+   - Hidden tests supported: `isHidden` flag prevents disclosure
+
+4. **`rubric_scores`** - Multi-dimensional grading
+   - Criterion-based: pattern_recognition, implementation_quality, edge_cases, efficiency
+   - Evidence-based: rationale + evidence JSON
+
+5. **`ai_feedback`** - AI-generated coaching responses
+   - Types: hint, explanation, review, guidance
+   - Deduplication: `inputHash` prevents redundant LLM calls
+   - Evidence tracking: Stores references to test results, code snippets
+
+6. **`socratic_turns`** - Conversational coaching dialogue
+   - Turn-indexed conversation history
+   - Question/validation structured data
+   - Supports multi-turn Socratic method
+
+**[Evidence: packages/adapter-db/src/schema.ts lines 389-580]**
+
+#### Evaluation Flow (Current Stub Implementation)
+
+**File**: `apps/web/src/app/api/attempts/[attemptId]/evaluate/route.ts`
+
+```
+POST /api/attempts/[attemptId]/evaluate
+  │
+  ├─> Check both attemptRepo AND trackAttemptRepo (line 32-42)
+  │
+  ├─> Create evaluation_run with status 'queued' (line 89-96)
+  │
+  ├─> [STUB] Run inline simulation (line 105-124)
+  │     │
+  │     ├─> SHOULD: Fetch test cases from problem/content
+  │     ├─> SHOULD: Execute code via codeExecutor
+  │     ├─> SHOULD: Compare actual vs expected outputs
+  │     │
+  │     └─> CURRENTLY: Returns fake results (line 238-254)
+  │           - hasCode = !!submission.contentText
+  │           - passed = hasCode (no actual execution)
+  │           - expected = 'expected output' (hardcoded)
+  │           - actual = hasCode ? 'expected output' : 'no output'
+  │
+  ├─> Write test results to coding_test_results (line 257)
+  │
+  └─> Mark evaluation_run as completed (line 260-271)
+```
+
+**[Evidence: apps/web/src/app/api/attempts/[attemptId]/evaluate/route.ts lines 14-282]**
+
+#### Real Execution (Submit Endpoint)
+
+**File**: `apps/web/src/app/api/attempts/[attemptId]/submit/route.ts`
+
+The `/submit` endpoint DOES execute real tests via `submitCode` use-case:
+- Uses `codeExecutor` (Piston API) to run code
+- Compares actual outputs with expected outputs from problem test cases
+- Runs LLM validation if `ANTHROPIC_API_KEY` is set
+- Returns actual test results with pass/fail status
+
+**[Evidence: apps/web/src/app/api/attempts/[attemptId]/submit/route.ts lines 44-62]**
+
+**Inconsistency**: Legacy `/submit` has real execution, track-based `/evaluate` has stub execution.
+
+### AI Evidence Gating Rules
+
+When LLM validation is enabled (`ANTHROPIC_API_KEY` set):
+
+1. **Heuristic Pre-Screening** (`packages/core/src/validation/heuristics/`)
+   - Pattern-specific validators check for common errors
+   - Examples: loop-missing-increment, off-by-one-index, unnecessary-extra-loop
+   - Fast, deterministic, no LLM cost
+
+2. **LLM Rubric Grading** (`packages/adapter-llm/src/index.ts` lines 156-216)
+   - Criteria:
+     - PASS: All tests pass AND correct pattern AND no critical errors
+     - PARTIAL: Most tests pass OR correct pattern with minor issues
+     - FAIL: Many tests fail OR wrong pattern OR critical errors
+   - Returns: `grade`, `confidence`, `patternRecognized`, `errors[]`, `feedback`, `suggestedMicroLesson`
+
+3. **Gating Decision Engine** (`packages/core/src/validation/gating.ts`)
+   - 40+ priority-based gating rules
+   - Actions:
+     - `PROCEED`: Tests passed, code quality acceptable
+     - `BLOCK_SUBMISSION`: Critical errors detected
+     - `REQUIRE_REFLECTION`: Pattern misuse or wrong approach
+     - `SHOW_MICRO_LESSON`: Specific concept deficit identified
+     - `PROCEED_WITH_REFLECTION`: Passed but with teaching opportunity
+   - Evidence-based: All decisions include references to test results or heuristic findings
+
+4. **Socratic Coaching** (`packages/adapter-llm/src/socratic-coach-adapter.ts`)
+   - Two-pass prompting: Analyzer → Verifier
+   - Evidence requirement: All questions must cite specific test failures or code issues
+   - Safety constraints: No answer revelation, no code blocks in questions
+   - **Current Status**: Adapter exists but NOT wired (line 123 of deps.ts hardcoded to null)
+
+**[Evidence: packages/core/src/validation/gating.ts lines 1-1000+, packages/adapter-llm/src/socratic-coach-adapter.ts lines 1-581]**
+
+### Unified Attempt Model Migration Strategy
+
+**Goal**: Single `attempts` table supporting all tracks and content types
+
+**Proposed Schema**:
+```sql
+-- Extend existing attempts table
+ALTER TABLE attempts
+  ADD COLUMN track TEXT DEFAULT 'coding_interview',
+  ADD COLUMN content_item_id UUID REFERENCES content_items(id),
+  ADD COLUMN version_id UUID REFERENCES content_versions(id),
+  ALTER COLUMN problem_id DROP NOT NULL;
+
+-- Constraint: must reference either problemId OR contentItemId
+ALTER TABLE attempts
+  ADD CONSTRAINT attempts_content_check
+  CHECK (
+    (problem_id IS NOT NULL AND content_item_id IS NULL) OR
+    (problem_id IS NULL AND content_item_id IS NOT NULL)
+  );
+```
+
+**Migration Path**:
+1. Add columns to `attempts` table
+2. Migrate existing `problems` to `content_items` with `track: 'coding_interview'`
+3. Update `AttemptRepo` port to support both reference types
+4. Gradually migrate API endpoints to use unified model
+5. Deprecate `TrackAttempt` type and in-memory track repos
+
+**[Inferred from schema analysis and code review]**
+
+---
+
 ## Core Architectural Patterns
 
 ### 1. Hexagonal Architecture (Ports & Adapters)

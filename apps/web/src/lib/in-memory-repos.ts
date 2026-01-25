@@ -3,8 +3,20 @@
  * Uses seed data from @scaffold/core for local development without PostgreSQL
  */
 
-import type { AttemptRepo, SkillRepo, ContentRepo, IdempotentUpdateResult } from '@scaffold/core/ports';
-import type { Attempt, PatternId, RungLevel, Problem, SkillState, SkillMatrix } from '@scaffold/core/entities';
+import { randomUUID } from 'crypto';
+import type { AttemptRepo, SkillRepo, ContentRepo, IdempotentUpdateResult, CreateTrackAttemptParams } from '@scaffold/core/ports';
+import type {
+  Attempt,
+  LegacyAttempt,
+  TrackAttempt,
+  PatternId,
+  RungLevel,
+  Problem,
+  SkillState,
+  SkillMatrix,
+  Track,
+  ContentItemId,
+} from '@scaffold/core/entities';
 import { ALL_SEED_PROBLEMS, type SeedProblem } from '@scaffold/core/data';
 
 // Convert seed problem to Problem entity
@@ -91,6 +103,13 @@ export const inMemoryContentRepo: ContentRepo = {
 };
 
 /**
+ * Type guard to check if an attempt is a track attempt
+ */
+function isTrackAttempt(attempt: Attempt): attempt is TrackAttempt {
+  return 'contentItemId' in attempt && attempt.contentItemId !== undefined;
+}
+
+/**
  * In-Memory Attempt Repository
  */
 export const inMemoryAttemptRepo: AttemptRepo = {
@@ -155,8 +174,76 @@ export const inMemoryAttemptRepo: AttemptRepo = {
     return active ?? null;
   },
 
-  async save(attempt: Attempt): Promise<Attempt> {
+  async findActiveByContent(
+    tenantId: string,
+    userId: string,
+    contentItemId: ContentItemId
+  ): Promise<TrackAttempt | null> {
+    const active = Array.from(attempts.values())
+      .find(a =>
+        a.tenantId === tenantId &&
+        a.userId === userId &&
+        isTrackAttempt(a) &&
+        a.contentItemId === contentItemId &&
+        a.state !== 'COMPLETED' &&
+        a.state !== 'ABANDONED'
+      );
+    return active as TrackAttempt | undefined ?? null;
+  },
+
+  async findByTrack(
+    tenantId: string,
+    track: Track,
+    options?: { userId?: string; limit?: number }
+  ): Promise<readonly TrackAttempt[]> {
+    let result = Array.from(attempts.values())
+      .filter(a =>
+        a.tenantId === tenantId &&
+        isTrackAttempt(a) &&
+        a.track === track
+      ) as TrackAttempt[];
+
+    if (options?.userId) {
+      result = result.filter(a => a.userId === options.userId);
+    }
+
+    result.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+
+    if (options?.limit) {
+      result = result.slice(0, options.limit);
+    }
+
+    return result;
+  },
+
+  async save(attempt: LegacyAttempt): Promise<LegacyAttempt> {
     attempts.set(attempt.id, { ...attempt });
+    return attempt;
+  },
+
+  async createTrackAttempt(params: CreateTrackAttemptParams): Promise<TrackAttempt> {
+    const id = randomUUID();
+    const now = new Date();
+
+    const attempt: TrackAttempt = {
+      id,
+      tenantId: params.tenantId,
+      userId: params.userId,
+      track: params.track,
+      contentItemId: params.contentItemId,
+      contentVersionId: params.contentVersionId ?? null,
+      pattern: params.pattern,
+      rung: params.rung,
+      state: 'THINKING_GATE',
+      steps: [],
+      hintsUsed: [],
+      codeSubmissions: 0,
+      score: null,
+      startedAt: now,
+      completedAt: null,
+    };
+
+    attempts.set(id, attempt);
     return attempt;
   },
 

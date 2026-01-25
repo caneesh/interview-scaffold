@@ -1,4 +1,5 @@
-import type { Attempt, AttemptScore } from '../entities/attempt.js';
+import type { Attempt, AttemptScore, LegacyAttempt } from '../entities/attempt.js';
+import { isLegacyAttempt } from '../entities/attempt.js';
 import type { Problem } from '../entities/problem.js';
 import type { RungLevel, RUNG_LEVELS } from '../entities/rung.js';
 import { RUNG_DEFINITIONS } from '../entities/rung.js';
@@ -28,7 +29,7 @@ export interface ProgressionDecision {
 }
 
 export interface DecideProgressionInput {
-  readonly attempt: Attempt; // The just-completed attempt
+  readonly attempt: LegacyAttempt; // The just-completed attempt (legacy only - has problemId)
   readonly recentAttempts: readonly Attempt[]; // Last N attempts for same pattern+rung (including current)
   readonly availableSiblings: readonly Problem[]; // Other problems at same pattern+rung
 }

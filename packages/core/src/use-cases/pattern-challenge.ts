@@ -9,7 +9,8 @@
  */
 
 import type { TenantId } from '../entities/tenant.js';
-import type { AttemptId, Attempt } from '../entities/attempt.js';
+import type { AttemptId, Attempt, LegacyAttempt } from '../entities/attempt.js';
+import { isLegacyAttempt } from '../entities/attempt.js';
 import type { Step, PatternChallengeData } from '../entities/step.js';
 import type { PatternId } from '../entities/pattern.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
@@ -77,10 +78,19 @@ export async function checkPatternChallenge(
   const llmPort = deps.llmPort ?? createNullPatternChallengeLLM();
 
   // Get attempt and problem
-  const attempt = await attemptRepo.findById(tenantId, attemptId);
-  if (!attempt) {
+  const attemptRaw = await attemptRepo.findById(tenantId, attemptId);
+  if (!attemptRaw) {
     throw new PatternChallengeError('Attempt not found', 'ATTEMPT_NOT_FOUND');
   }
+
+  // Pattern challenge only works with legacy problem-based attempts
+  if (!isLegacyAttempt(attemptRaw)) {
+    throw new PatternChallengeError(
+      'Pattern challenge only supports legacy problem-based attempts',
+      'TRACK_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+  const attempt: LegacyAttempt = attemptRaw;
 
   if (attempt.userId !== userId) {
     throw new PatternChallengeError('Unauthorized', 'UNAUTHORIZED');

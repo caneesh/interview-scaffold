@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StartTrackAttemptRequestSchema } from '@scaffold/contracts';
-import { contentBankRepo, trackAttemptRepo, clock, idGenerator } from '@/lib/deps';
+import { contentBankRepo, attemptRepo, clock } from '@/lib/deps';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
+import type { PatternId, RungLevel } from '@scaffold/core/entities';
 
 /**
  * POST /api/track-attempts/start
  *
- * Starts a new track-based attempt using the content bank system.
+ * Starts a new track-based attempt using the unified attempts table.
  * For legacy problem-based attempts, use /api/attempts/start instead.
  *
  * Request body:
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { track, contentItemId, versionId } = parsed.data;
 
     // Check for existing active track attempt for this content
-    const existingAttempt = await trackAttemptRepo.findActiveByContent(
+    const existingAttempt = await attemptRepo.findActiveByContent(
       tenantId,
       userId,
       contentItemId
@@ -96,22 +97,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the track attempt
-    const now = clock.now();
-    const attemptId = idGenerator.generate();
+    // Create the track attempt using unified repo
+    // Derive pattern and rung from content item metadata (with defaults)
+    const pattern = (item.pattern ?? 'SLIDING_WINDOW') as PatternId;
+    const rung = (item.rung ?? 1) as RungLevel;
 
-    const attempt = await trackAttemptRepo.create({
-      id: attemptId,
+    const attempt = await attemptRepo.createTrackAttempt({
       tenantId,
       userId,
       track,
       contentItemId,
-      versionId: version.id,
-      status: 'active',
-      startedAt: now,
+      contentVersionId: version.id,
+      pattern,
+      rung,
     });
 
     // Log the track attempt start
+    const now = clock.now();
     console.log('[track-attempt] Started:', {
       attemptId: attempt.id,
       track,

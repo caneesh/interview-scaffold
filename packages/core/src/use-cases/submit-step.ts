@@ -1,5 +1,5 @@
 import type { TenantId } from '../entities/tenant.js';
-import type { AttemptId, Attempt, AttemptState } from '../entities/attempt.js';
+import type { AttemptId, Attempt, AttemptState, LegacyAttempt } from '../entities/attempt.js';
 import type { Step, StepType, StepResult, StepData } from '../entities/step.js';
 import type { Problem } from '../entities/problem.js';
 import type { PatternId, PATTERNS } from '../entities/pattern.js';
@@ -8,7 +8,7 @@ import type { ContentRepo } from '../ports/content-repo.js';
 import type { EventSink } from '../ports/event-sink.js';
 import type { Clock } from '../ports/clock.js';
 import type { IdGenerator } from '../ports/id-generator.js';
-import { hasPassedThinkingGate } from '../entities/attempt.js';
+import { hasPassedThinkingGate, isLegacyAttempt } from '../entities/attempt.js';
 import {
   validateThinkingGate,
   type ThinkingGateValidationResult,
@@ -61,10 +61,19 @@ export async function submitStep(
   const { attemptRepo, contentRepo, eventSink, clock, idGenerator } = deps;
   const thinkingGateLLM = deps.thinkingGateLLM ?? createNullThinkingGateLLM();
 
-  const attempt = await attemptRepo.findById(tenantId, attemptId);
-  if (!attempt) {
+  const attemptRaw = await attemptRepo.findById(tenantId, attemptId);
+  if (!attemptRaw) {
     throw new StepError('Attempt not found', 'ATTEMPT_NOT_FOUND');
   }
+
+  // Step submission only works with legacy problem-based attempts
+  if (!isLegacyAttempt(attemptRaw)) {
+    throw new StepError(
+      'Step submission only supports legacy problem-based attempts',
+      'TRACK_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+  const attempt: LegacyAttempt = attemptRaw;
 
   if (attempt.userId !== userId) {
     throw new StepError('Unauthorized', 'UNAUTHORIZED');

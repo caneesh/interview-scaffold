@@ -57,6 +57,14 @@ interface TestCaseJson {
 
 // ============ Attempts ============
 
+/**
+ * Unified attempts table supporting both legacy problem-based attempts
+ * and new track-based content bank attempts.
+ *
+ * Invariant: exactly one of (problemId) OR (contentItemId) must be set.
+ * - Legacy attempts: problemId is set, track/contentItemId are null
+ * - Track attempts: contentItemId is set, track is set, problemId is null
+ */
 export const attempts = pgTable(
   'attempts',
   {
@@ -65,9 +73,13 @@ export const attempts = pgTable(
       .notNull()
       .references(() => tenants.id),
     userId: text('user_id').notNull(),
-    problemId: uuid('problem_id')
-      .notNull()
-      .references(() => problems.id),
+    // Legacy problem-based attempts (nullable for track attempts)
+    problemId: uuid('problem_id').references(() => problems.id),
+    // Track-based content bank attempts (nullable for legacy attempts)
+    track: text('track'), // 'coding_interview' | 'debug_lab' | 'system_design'
+    contentItemId: uuid('content_item_id').references(() => contentItems.id),
+    contentVersionId: uuid('content_version_id').references(() => contentVersions.id),
+    // Common fields
     pattern: text('pattern').notNull(),
     rung: integer('rung').notNull(),
     state: text('state').notNull(),
@@ -86,6 +98,17 @@ export const attempts = pgTable(
       table.tenantId,
       table.userId,
       table.state
+    ),
+    // Track-based queries: find attempts by user+track sorted by recent
+    userTrackStartedIdx: index('attempts_user_track_started_idx').on(
+      table.userId,
+      table.track,
+      table.startedAt
+    ),
+    // Content-based queries: find attempts for a specific content item
+    contentItemStartedIdx: index('attempts_content_item_started_idx').on(
+      table.contentItemId,
+      table.startedAt
     ),
   })
 );
