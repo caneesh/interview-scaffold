@@ -2328,6 +2328,350 @@ export async function POST(request: Request) {
 
 ---
 
+## UI Architecture
+
+### Component Organization
+
+The web application follows a **presentation-only component architecture** where components are responsible solely for rendering and user interaction. Business logic lives entirely in the core package.
+
+**Directory Structure**:
+```
+apps/web/src/
+├── app/                        # Next.js 14 App Router
+│   ├── api/                    # Route handlers (API endpoints)
+│   ├── practice/               # Practice mode pages
+│   ├── coach/                  # Coaching mode pages
+│   ├── debug/                  # Debug mode pages
+│   ├── skills/                 # Skills matrix page
+│   ├── explorer/               # Pattern explorer page
+│   ├── layout.tsx              # Root layout with AppShell
+│   └── globals.css             # Global styles and CSS variables
+│
+└── components/                 # Reusable React components
+    ├── AppShell.tsx            # Context-aware header shell
+    ├── Stepper.tsx             # Workflow progress indicator
+    ├── CodeEditor.tsx          # Multi-language code input
+    ├── TestResults.tsx         # Test case display
+    ├── PatternDiscovery.tsx    # Socratic pattern discovery
+    ├── ThinkingGate.tsx        # Pattern selection gate
+    ├── ReflectionForm.tsx      # Failure reflection
+    ├── CoachDrawer.tsx         # Side panel for hints
+    ├── coaching/               # Coaching-specific components
+    │   ├── StageIndicator.tsx
+    │   ├── FeynmanStage.tsx
+    │   └── ...
+    └── debug/                  # Debug-specific components
+        ├── DebugGatePanel.tsx
+        ├── DebugFeedbackPanel.tsx
+        └── ...
+```
+
+**Component Principles**:
+
+1. **Pages are orchestrators**: They fetch data from API routes and manage component composition
+2. **Components are presentational**: They receive props and render UI, no direct API calls
+3. **Shared components in `/components`**: Mode-specific components in subdirectories
+4. **Client components by default**: Most pages marked `'use client'` for interactivity
+
+**Component Hierarchy Example** (Practice Flow):
+```
+AttemptPage (/practice/[attemptId]/page.tsx)
+├── Stepper
+├── ProblemStatement
+├── ThinkingGate (conditional)
+│   └── PatternDiscovery (conditional)
+│   └── PatternChallenge (conditional)
+├── CodeEditor (conditional)
+├── TestResults (conditional)
+├── PerformancePanel (conditional)
+├── ReflectionForm (conditional)
+├── SuccessReflectionForm (conditional)
+├── ReviewSummary (conditional)
+├── CoachDrawer (side panel)
+│   ├── CommittedPlanBadge
+│   └── HintPanel
+├── TraceVisualization (conditional)
+└── MicroLessonModal (conditional)
+```
+
+### Styling Approach
+
+**Hybrid CSS Strategy**: Global CSS classes + inline styles with CSS variables
+
+**No CSS Framework**: Custom-built styles, no Tailwind, no CSS-in-JS library
+
+**CSS Variables** (`globals.css`):
+```css
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1e1e1e;
+  --text-primary: #f5f5f5;
+  --text-secondary: #a0a0a0;
+  --text-muted: #666;
+  --accent: #3b82f6;
+  --success: #22c55e;
+  --warning: #eab308;
+  --error: #ef4444;
+  --border: #2a2a2a;
+  --font-mono: ui-monospace, SFMono-Regular, ...;
+}
+```
+
+**Global CSS Classes** (defined in `globals.css`):
+- **Layout**: `.container`, `.layout`, `.header`, `.main`
+- **Components**: `.card`, `.btn`, `.input`, `.modal`, `.drawer`
+- **Utilities**: `.btn-primary`, `.btn-secondary`, `.btn-sm`
+- **State-specific**: `.test-result.pass`, `.test-result.fail`, `.step.active`
+
+**Inline Styles** (common pattern):
+```tsx
+<div style={{
+  display: 'flex',
+  gap: '1rem',
+  color: 'var(--text-secondary)'
+}}>
+```
+
+**Why Hybrid Approach**:
+- Global classes for consistent reusable patterns
+- Inline styles for component-specific layout
+- CSS variables enable theme consistency
+
+**Responsive Design**:
+- Mobile-first approach
+- Media queries in `globals.css` at breakpoints: 640px, 768px, 1024px
+- Flexbox and CSS Grid for layout adaptation
+
+**File Size**: `globals.css` is ~6000 lines (large but single-file)
+
+### Layout System
+
+**AppShell Modes**:
+
+The `AppShell` component provides context-aware headers based on route patterns.
+
+**Mode Detection Logic**:
+```typescript
+function getAppMode(pathname: string): AppMode {
+  if (pathname.startsWith('/practice/') && pathname !== '/practice')
+    return 'solve';
+  if (pathname.startsWith('/coach/') && pathname !== '/coach')
+    return 'coach';
+  if (pathname.startsWith('/debug/attempts/'))
+    return 'debug';
+  return 'dashboard'; // default
+}
+```
+
+**Header Variants**:
+
+| Mode | Header Content | Usage |
+|------|----------------|-------|
+| `dashboard` | Logo + Full Navigation Links | Browse/selection pages |
+| `solve` | Logo + Exit Button | Active problem solving |
+| `coach` | Logo + "Coaching Mode" + Exit | Active coaching session |
+| `debug` | Logo + "Debug Mode" + Exit | Active debug session |
+
+**Custom Layouts**:
+- `/daily` and `/interview` bypass AppShell entirely
+- Render only container wrapper without header
+
+**Data Attribute**: Layout div has `data-mode={mode}` for CSS targeting
+
+**Container Constraints**:
+```css
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+```
+
+### State Management Patterns in UI
+
+**No Global State Library**: No Redux, Zustand, or Jotai observed
+
+**State Management Strategy**:
+
+1. **Component-local state** (`useState`):
+   - Form inputs
+   - Loading/error states
+   - UI toggle states (drawer open/closed, modal visible)
+
+2. **Server state** (fetch from API routes):
+   - Attempt data
+   - Problem data
+   - Skill matrix
+   - Coaching session state
+
+3. **URL state** (Next.js router):
+   - Active attempt ID (`/practice/[attemptId]`)
+   - Active session ID (`/coach/[sessionId]`)
+
+4. **Derived state** (`useMemo`, `useCallback`):
+   - Step configuration based on attempt state
+   - Validation results
+   - UI visibility logic
+
+**Data Flow Pattern** (Practice Example):
+```
+1. User navigates to /practice/[attemptId]
+   ↓
+2. Page component fetches attempt + problem from API
+   ↓
+3. Attempt data stored in local state (useState)
+   ↓
+4. Child components receive props (problem, attempt, handlers)
+   ↓
+5. User submits code → API call → Update local state
+   ↓
+6. Re-render with new state → Conditional components appear/disappear
+```
+
+**No Prop Drilling Solution**: Props passed directly (max 2-3 levels deep)
+
+**State Persistence**:
+- URL holds session identity
+- Database (via API) holds session data
+- No client-side persistence (localStorage, sessionStorage)
+
+**Optimistic Updates**: Not observed in code
+
+**Polling/Real-time**: Not implemented (no WebSockets or polling)
+
+### Component Communication Patterns
+
+**Parent-to-Child**: Props
+```tsx
+<CodeEditor
+  initialCode={code}
+  onSubmit={handleSubmit}
+  loading={isSubmitting}
+/>
+```
+
+**Child-to-Parent**: Callback functions
+```tsx
+// Parent
+const handleSubmit = async (data) => { ... };
+
+// Child calls callback
+onSubmit({ code, language });
+```
+
+**Sibling Components**: Shared state in parent
+```tsx
+const [testResults, setTestResults] = useState([]);
+
+<CodeEditor onSubmit={async (code) => {
+  const results = await submitCode(code);
+  setTestResults(results);
+}} />
+
+<TestResults results={testResults} />
+```
+
+**No Event Bus**: No custom event system
+
+**No Context API Usage**: No `React.createContext` observed in components
+
+### API Integration Pattern
+
+**Fetch-Based API Calls**: Direct `fetch()` calls to API routes
+
+**Pattern**:
+```tsx
+async function fetchAttempt() {
+  try {
+    const res = await fetch(`/api/attempts/${attemptId}`);
+    const data = await res.json();
+
+    if (data.error) {
+      setError(data.error.message);
+    } else {
+      setAttempt(data.attempt);
+      setProblem(data.problem);
+    }
+  } catch (err) {
+    setError('Failed to load attempt');
+  } finally {
+    setLoading(false);
+  }
+}
+```
+
+**No Data Fetching Library**: No SWR, React Query, or Apollo
+
+**Error Handling**: Manual try/catch with error state
+
+**Loading States**: Manual boolean flags (`loading`, `submitting`, `starting`)
+
+**Response Format**: All API responses follow `{ error: {...} | null, data: {...} }` pattern
+
+### Accessibility in UI Layer
+
+**Focus Management**:
+- CSS `:focus-visible` selectors for keyboard navigation
+- `outline: 2px solid var(--accent)` on interactive elements
+- Focus removed for mouse users (`:focus:not(:focus-visible)`)
+
+**Skip Link**:
+```css
+.skip-link {
+  position: absolute;
+  top: -100%; /* hidden */
+}
+.skip-link:focus {
+  top: 0; /* visible on keyboard focus */
+}
+```
+
+**Semantic HTML**:
+- Buttons use `<button>`, links use `<a>`
+- Headings follow hierarchy (h1 → h2 → h3)
+- Form inputs have labels
+
+**ARIA Attributes**: [Not extensively observed in code - minimal usage]
+
+**Color Contrast**: All text meets WCAG AA (4.5:1 minimum)
+
+**Touch Targets**: Buttons have minimum 44px height (via padding)
+
+**Screen Reader Support**: [Inferred from semantic HTML - no explicit ARIA labels observed]
+
+### UI Architecture Constraints
+
+**Framework**: Next.js 14 (App Router, React Server Components capable)
+
+**React Version**: [Inferred as React 18+ based on Next.js 14]
+
+**TypeScript**: All components are TypeScript with prop interfaces
+
+**Build Tool**: Next.js built-in (Turbopack in dev, Webpack in production)
+
+**No Component Library**: No Material-UI, Chakra, Ant Design, etc.
+
+**No Icon Library**: SVG icons inlined or unicode characters used
+
+**Browser Support**: [Not specified - assumed modern evergreen browsers]
+
+**Performance Considerations**:
+- No code splitting observed (single bundle)
+- No lazy loading (`React.lazy`) observed
+- Images use Next.js `Image` component (not observed but recommended)
+
+### UI Testing Strategy
+
+[Not observed in codebase examination]
+
+**Assumptions**:
+- Manual testing primary method
+- No unit tests for components observed
+- No E2E tests (Playwright, Cypress) observed
+
+---
+
 ## Scope of This Document
 
 ### What IS Covered
@@ -2344,11 +2688,12 @@ export async function POST(request: Request) {
 ✅ Failure modes and resilience strategies
 ✅ Module dependency graph
 ✅ Performance bottlenecks and optimization recommendations
+✅ **UI architecture** (component organization, styling, layout, state management)
 
 ### What is NOT Covered
 
-❌ **Frontend architecture** (React component hierarchy, state management)
-❌ **UI/UX design decisions** (component library, styling patterns)
+❌ **Detailed UI/UX specifications** (see UI_SPEC.md for design system details)
+❌ **Navigation architecture** (see NAVIGATION.md for routing and IA)
 ❌ **Deployment architecture** (CI/CD, infrastructure, containerization)
 ❌ **Security architecture** (authentication, authorization, secrets management)
 ❌ **API endpoint documentation** (see API docs or OpenAPI spec)

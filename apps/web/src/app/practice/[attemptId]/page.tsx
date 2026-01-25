@@ -904,11 +904,11 @@ export default function AttemptPage() {
 
       {/* ============ CODING PHASE ============ */}
       {isCodingPhase && (
-        <div className="solve-coding-phase">
-          {/* Top bar with problem title and coach button */}
-          <div className="solve-coding-topbar">
-            <div className="solve-coding-topbar-left">
-              <h2 className="solve-coding-title">{problem.title}</h2>
+        <div className="workbench">
+          {/* Workbench Header */}
+          <div className="workbench-header">
+            <div className="workbench-header-left">
+              <h2 className="workbench-title">{problem.title}</h2>
               {committedPlan && (
                 <CommittedPlanBadge
                   pattern={committedPlan.pattern}
@@ -917,7 +917,7 @@ export default function AttemptPage() {
                 />
               )}
             </div>
-            <div className="solve-coding-topbar-right">
+            <div className="workbench-header-right">
               {/* Trace Mode Toggle */}
               <label className="trace-toggle">
                 <input
@@ -959,63 +959,90 @@ export default function AttemptPage() {
             </div>
           </div>
 
-          {/* Problem statement - collapsed by default */}
-          <ProblemStatement
-            problem={problem}
-            collapsed={problemCollapsed}
-            onToggle={() => setProblemCollapsed(!problemCollapsed)}
-          />
-
-          {/* Main coding area */}
-          <div className="solve-coding-main">
-            <CodeEditor
-              onSubmit={handleCodeSubmit}
-              loading={stepLoading}
-              onCodeChange={handleCodeChange}
-            />
-
-            {/* Inline feedback area */}
-            <div className="solve-feedback-area">
-              {testResults.length > 0 && (
-                <>
-                  <TestResults results={testResults} />
-                  <PerformancePanel
-                    correctness={{
-                      passed: testResults.filter(r => r.passed).length,
-                      total: testResults.length,
-                      allPassed: testResults.every(r => r.passed),
-                    }}
-                    timeBudget={validation?.timeBudgetResult ? {
-                      exceeded: validation.timeBudgetResult.exceeded,
-                      budgetMs: validation.timeBudgetResult.budgetMs,
-                      suggestion: validation.complexitySuggestion,
-                    } : undefined}
-                    nextAction={validation?.gatingAction ? {
-                      type: validation.gatingAction,
-                      message: validation.gatingReason ?? '',
-                    } : undefined}
+          {/* Split Pane Layout */}
+          <div className={`workbench-split ${problemCollapsed ? 'workbench-split--collapsed' : ''}`}>
+            {/* Left Panel - Problem Statement */}
+            <aside className={`workbench-panel workbench-panel--problem ${problemCollapsed ? 'workbench-panel--collapsed' : ''}`}>
+              <div className="workbench-panel-header">
+                <span className="workbench-panel-title">Problem</span>
+                <button
+                  className="workbench-panel-toggle"
+                  onClick={() => setProblemCollapsed(!problemCollapsed)}
+                  aria-label={problemCollapsed ? 'Expand problem panel' : 'Collapse problem panel'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {problemCollapsed ? (
+                      <path d="M9 18l6-6-6-6" />
+                    ) : (
+                      <path d="M15 18l-6-6 6-6" />
+                    )}
+                  </svg>
+                </button>
+              </div>
+              {!problemCollapsed && (
+                <div className="workbench-panel-content">
+                  <ProblemStatement
+                    problem={problem}
+                    collapsed={false}
+                    onToggle={() => setProblemCollapsed(true)}
                   />
-                </>
+                </div>
               )}
+            </aside>
 
-              {validation?.llmFeedback && validation.llmConfidence !== undefined && (
-                <LLMFeedback
-                  feedback={validation.llmFeedback}
-                  confidence={validation.llmConfidence}
-                  grade={validation.rubricGrade}
-                  microLessonId={validation.microLessonId}
+            {/* Right Panel - Code Editor & Results */}
+            <main className="workbench-panel workbench-panel--editor">
+              <div className="workbench-editor-area">
+                <CodeEditor
+                  onSubmit={handleCodeSubmit}
+                  loading={stepLoading}
+                  onCodeChange={handleCodeChange}
                 />
-              )}
+              </div>
 
-              {/* Trace Visualization Panel */}
-              {traceEnabled && (
-                <TraceVisualization
-                  trace={traceData}
-                  loading={traceLoading}
-                  insertionHint={traceHint}
-                />
-              )}
-            </div>
+              {/* Results Panel */}
+              <div className="workbench-results">
+                {testResults.length > 0 && (
+                  <>
+                    <TestResults results={testResults} />
+                    <PerformancePanel
+                      correctness={{
+                        passed: testResults.filter(r => r.passed).length,
+                        total: testResults.length,
+                        allPassed: testResults.every(r => r.passed),
+                      }}
+                      timeBudget={validation?.timeBudgetResult ? {
+                        exceeded: validation.timeBudgetResult.exceeded,
+                        budgetMs: validation.timeBudgetResult.budgetMs,
+                        suggestion: validation.complexitySuggestion,
+                      } : undefined}
+                      nextAction={validation?.gatingAction ? {
+                        type: validation.gatingAction,
+                        message: validation.gatingReason ?? '',
+                      } : undefined}
+                    />
+                  </>
+                )}
+
+                {validation?.llmFeedback && validation.llmConfidence !== undefined && (
+                  <LLMFeedback
+                    feedback={validation.llmFeedback}
+                    confidence={validation.llmConfidence}
+                    grade={validation.rubricGrade}
+                    microLessonId={validation.microLessonId}
+                  />
+                )}
+
+                {/* Trace Visualization Panel */}
+                {traceEnabled && (
+                  <TraceVisualization
+                    trace={traceData}
+                    loading={traceLoading}
+                    insertionHint={traceHint}
+                  />
+                )}
+              </div>
+            </main>
           </div>
         </div>
       )}

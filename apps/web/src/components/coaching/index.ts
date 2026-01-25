@@ -6,3 +6,12 @@ export { FeynmanStage } from './FeynmanStage';
 export { StrategyStage } from './StrategyStage';
 export { CodingStage } from './CodingStage';
 export { ReflectionStage } from './ReflectionStage';
+export {
+  EvidenceDisplay,
+  EvidenceList,
+  EvidenceItem,
+  NeedsMoreInfo,
+  InlineEvidence,
+  type EvidenceRef,
+  type EvidenceSource,
+} from './EvidenceDisplay';

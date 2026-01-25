@@ -357,9 +357,41 @@ export default function DebugAttemptPage() {
     );
   }
 
+  // Calculate progress percentage
+  const completedCount = getCompletedGates().length;
+  const totalGates = DEBUG_GATES.length;
+  const progressPercent = Math.round((completedCount / totalGates) * 100);
+  const currentGateIndex = DEBUG_GATES.indexOf(attempt.currentGate);
+
   // Active attempt - three panel layout
   return (
-    <div className="debug-attempt-layout">
+    <div className="debug-workbench">
+      {/* Header with Progress */}
+      <div className="debug-workbench-header">
+        <div className="debug-workbench-header-left">
+          <h1 className="debug-workbench-title">
+            {getCategoryDisplayName(attempt.scenario.category)}
+          </h1>
+          <span className="debug-workbench-difficulty">
+            {getDifficultyDisplayName(attempt.scenario.difficulty)}
+          </span>
+        </div>
+        <div className="debug-workbench-header-right">
+          <div className="debug-progress-summary">
+            <span className="debug-progress-text">
+              Gate {currentGateIndex + 1} of {totalGates}
+            </span>
+            <div className="debug-progress-bar">
+              <div
+                className="debug-progress-bar-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <span className="debug-progress-percent">{progressPercent}%</span>
+          </div>
+        </div>
+      </div>
+
       {/* Progress indicator */}
       <div className="debug-attempt-progress">
         <DebugProgressIndicator
@@ -372,6 +404,11 @@ export default function DebugAttemptPage() {
       {/* Error banner */}
       {error && (
         <div className="debug-error-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
           <p>{error}</p>
           <button
             className="btn btn-ghost btn-sm"
@@ -394,7 +431,14 @@ export default function DebugAttemptPage() {
 
           {/* Symptom description */}
           <div className="debug-context-section">
-            <h3>Symptom</h3>
+            <div className="debug-section-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <h3>Symptom</h3>
+            </div>
             <p className="debug-symptom-text">
               {attempt.scenario.symptomDescription}
             </p>
@@ -402,7 +446,13 @@ export default function DebugAttemptPage() {
 
           {/* Code artifacts */}
           <div className="debug-context-section">
-            <h3>Code</h3>
+            <div className="debug-section-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+              <h3>Code</h3>
+            </div>
             <CodeArtifactViewer artifacts={attempt.scenario.codeArtifacts} />
           </div>
         </div>
@@ -410,10 +460,18 @@ export default function DebugAttemptPage() {
         {/* Center Panel - Gate Flow */}
         <div className="debug-panel debug-panel-center">
           <div className="debug-panel-header">
-            <h2>{getGateDisplayName(attempt.currentGate)}</h2>
-            <span className="debug-panel-gate-number">
-              Gate {DEBUG_GATES.indexOf(attempt.currentGate) + 1} of {DEBUG_GATES.length}
-            </span>
+            <div className="debug-gate-header">
+              <span className="debug-gate-number">
+                Step {currentGateIndex + 1}
+              </span>
+              <h2>{getGateDisplayName(attempt.currentGate)}</h2>
+            </div>
+            {submitting && (
+              <div className="debug-submitting">
+                <div className="spinner" style={{ width: '16px', height: '16px' }} />
+                <span>Evaluating...</span>
+              </div>
+            )}
           </div>
 
           {/* Gate input */}
@@ -440,7 +498,17 @@ export default function DebugAttemptPage() {
         {/* Right Panel - Help */}
         <div className="debug-panel debug-panel-right">
           <div className="debug-panel-header">
-            <h2>Help</h2>
+            <div className="debug-help-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <h2>Help</h2>
+            </div>
+            <span className="debug-hints-remaining">
+              {5 - attempt.hintsUsed} hints left
+            </span>
           </div>
 
           <DebugHintPanel
