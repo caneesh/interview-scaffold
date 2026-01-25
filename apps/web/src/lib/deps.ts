@@ -104,13 +104,18 @@ function initializeRepositories() {
     const adapterDb = require('@scaffold/adapter-db');
     const db = getDbClient();
 
+    // HYBRID MODE: Legacy repos use in-memory (seed problems have string IDs, not UUIDs)
+    // Track-based repos use database (content_items use proper UUIDs)
+    console.log('[deps] Hybrid mode: Legacy repos (in-memory) + Track repos (PostgreSQL)');
+
     return {
-      // Unified attempt repo - now handles both legacy and track attempts
-      attemptRepo: adapterDb.createAttemptRepo(db) as AttemptRepo,
+      // Legacy repos - ALWAYS in-memory because seed problems have string IDs
+      // The database schema expects UUIDs for problem_id foreign key
+      attemptRepo: inMemoryAttemptRepo as AttemptRepo,
       skillRepo: inMemorySkillRepo as SkillRepo,
       contentRepo: inMemoryContentRepo as ContentRepo,
 
-      // TrackC unified content bank repos - use DB when available
+      // TrackC unified content bank repos - use DB (content_items use proper UUIDs)
       contentBankRepo: adapterDb.createContentBankRepo(db) as ContentBankRepoPort,
       submissionsRepo: adapterDb.createSubmissionsRepo(db) as SubmissionsRepoPort,
       evaluationsRepo: adapterDb.createEvaluationsRepo(db) as EvaluationsRepoPort,
