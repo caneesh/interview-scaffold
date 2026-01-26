@@ -6,8 +6,9 @@
  */
 
 import { randomUUID } from 'crypto';
-import type { GeneratorRepoPort, IdGenerator } from '@scaffold/core/ports';
+import type { GeneratorRepoPort, IdGenerator, ContentBankRepoPort } from '@scaffold/core/ports';
 import { createInMemoryGeneratorRepo } from './in-memory-generator-repos';
+import { createInMemoryContentBankRepo } from './in-memory-content-bank-repo';
 
 // ============ Database Mode Detection ============
 
@@ -35,9 +36,25 @@ function initializeGeneratorRepo(): GeneratorRepoPort {
   return _generatorRepo;
 }
 
+// ============ Content Bank Repository ============
+
+let _contentBankRepo: ContentBankRepoPort | null = null;
+
+function initializeContentBankRepo(): ContentBankRepoPort {
+  if (_contentBankRepo) {
+    return _contentBankRepo;
+  }
+
+  // For now, always use in-memory content bank repo
+  _contentBankRepo = createInMemoryContentBankRepo();
+
+  return _contentBankRepo;
+}
+
 // ============ Exported Dependencies ============
 
 export const generatorRepo: GeneratorRepoPort = initializeGeneratorRepo();
+export const contentBankRepo: ContentBankRepoPort = initializeContentBankRepo();
 
 export const idGenerator: IdGenerator = {
   generate: () => randomUUID(),

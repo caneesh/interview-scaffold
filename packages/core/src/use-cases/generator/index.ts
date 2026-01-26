@@ -46,3 +46,12 @@ export {
   type PublishCandidatesOutput,
   type ApproveAndPublishDeps,
 } from './approve-and-publish.js';
+
+export {
+  bulkGeneratePatterns,
+  type BulkGenerateInput,
+  type BulkGenerateSummary,
+  type PatternResult,
+  type BulkGenerateOutput,
+  type BulkGenerateDeps,
+} from './bulk-generate-patterns.js';

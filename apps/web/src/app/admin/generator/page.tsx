@@ -25,6 +25,8 @@ const PATTERNS = [
   'TOPOLOGICAL_SORT',
 ];
 
+type TabType = 'single' | 'bulk';
+
 interface GenerationRun {
   id: string;
   patternId: string;
@@ -67,7 +69,36 @@ interface RunDetails {
   };
 }
 
+// Bulk generate types
+interface BulkGenerateSummary {
+  totalPatterns: number;
+  succeeded: number;
+  failed: number;
+  skipped: number;
+  totalCandidatesProposed: number;
+  totalApproved: number;
+  totalPublished: number;
+  durationMs: number;
+}
+
+interface PatternResult {
+  patternId: string;
+  runId?: string;
+  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'skipped';
+  proposed: number;
+  approved: number;
+  published: number;
+  error?: string;
+  durationMs?: number;
+}
+
+interface BulkGenerateResult {
+  summary: BulkGenerateSummary;
+  perPattern: PatternResult[];
+}
+
 export default function GeneratorAdminPage() {
+  const [activeTab, setActiveTab] = useState<TabType>('single');
   const [selectedPattern, setSelectedPattern] = useState<string>(PATTERNS[0] ?? '');
   const [targetCount, setTargetCount] = useState<number>(10);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -75,6 +106,18 @@ export default function GeneratorAdminPage() {
   const [selectedRun, setSelectedRun] = useState<RunDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+
+  // Bulk generate state
+  const [selectedPatterns, setSelectedPatterns] = useState<string[]>([]);
+  const [bulkTargetCount, setBulkTargetCount] = useState<number>(10);
+  const [seedStrategy, setSeedStrategy] = useState<'fixed' | 'increment' | 'timeboxed'>('increment');
+  const [concurrency, setConcurrency] = useState<number>(3);
+  const [autoApprove, setAutoApprove] = useState<boolean>(false);
+  const [publishAfterApprove, setPublishAfterApprove] = useState<boolean>(false);
+  const [dryRun, setDryRun] = useState<boolean>(false);
+  const [forceRegen, setForceRegen] = useState<boolean>(false);
+  const [isBulkGenerating, setIsBulkGenerating] = useState(false);
+  const [bulkResult, setBulkResult] = useState<BulkGenerateResult | null>(null);
 
   // Fetch runs on mount
   useEffect(() => {
@@ -229,6 +272,73 @@ export default function GeneratorAdminPage() {
 
   const approvedCount = selectedRun?.candidates.filter(c => c.status === 'approved').length ?? 0;
 
+  const handleBulkGenerate = async () => {
+    if (selectedPatterns.length === 0) {
+      setError('Please select at least one pattern');
+      return;
+    }
+
+    setIsBulkGenerating(true);
+    setError(null);
+    setBulkResult(null);
+
+    try {
+      const res = await fetch('/api/admin/generator/bulk-run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-email': 'admin@example.com',
+        },
+        body: JSON.stringify({
+          track: 'coding_interview',
+          patternIds: selectedPatterns,
+          targetCountPerPattern: bulkTargetCount,
+          promptVersion: 'v1',
+          seedStrategy,
+          concurrency,
+          autoApprove,
+          publishAfterApprove,
+          dryRun,
+          force: forceRegen,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error?.message ?? 'Bulk generation failed');
+      }
+
+      const data = await res.json();
+      setBulkResult({
+        summary: data.summary,
+        perPattern: data.perPattern,
+      });
+
+      // Refresh runs list
+      await fetchRuns();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Bulk generation failed');
+    } finally {
+      setIsBulkGenerating(false);
+    }
+  };
+
+  const togglePatternSelection = (patternId: string) => {
+    setSelectedPatterns((prev) =>
+      prev.includes(patternId)
+        ? prev.filter((p) => p !== patternId)
+        : [...prev, patternId]
+    );
+  };
+
+  const selectAllPatterns = () => {
+    setSelectedPatterns([...PATTERNS]);
+  };
+
+  const clearPatternSelection = () => {
+    setSelectedPatterns([]);
+  };
+
   return (
     <div className="admin-generator">
       <header className="admin-generator__header">
@@ -236,8 +346,23 @@ export default function GeneratorAdminPage() {
         <p className="admin-generator__subtitle">
           Generate original coding problems for difficulty ladders
         </p>
+        <div className="admin-generator__tabs">
+          <button
+            className={`admin-generator__tab ${activeTab === 'single' ? 'admin-generator__tab--active' : ''}`}
+            onClick={() => setActiveTab('single')}
+          >
+            Single Pattern
+          </button>
+          <button
+            className={`admin-generator__tab ${activeTab === 'bulk' ? 'admin-generator__tab--active' : ''}`}
+            onClick={() => setActiveTab('bulk')}
+          >
+            Bulk Generate
+          </button>
+        </div>
       </header>
 
+      {activeTab === 'single' && (
       <div className="admin-generator__content">
         {/* Generator Controls */}
         <Card className="admin-generator__controls">
@@ -373,6 +498,208 @@ export default function GeneratorAdminPage() {
           </Card>
         )}
       </div>
+      )}
+
+      {activeTab === 'bulk' && (
+        <div className="admin-generator__bulk">
+          <Card className="admin-generator__bulk-controls">
+            <Card.Header title="Bulk Generate" />
+            <Card.Body>
+              <div className="admin-generator__bulk-form">
+                {/* Pattern Selection */}
+                <div className="admin-generator__bulk-section">
+                  <div className="admin-generator__bulk-section-header">
+                    <label>Select Patterns</label>
+                    <div className="admin-generator__bulk-actions">
+                      <Button variant="ghost" size="sm" onClick={selectAllPatterns}>
+                        Select All
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={clearPatternSelection}>
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="admin-generator__pattern-grid">
+                    {PATTERNS.map((p) => (
+                      <label key={p} className="admin-generator__pattern-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={selectedPatterns.includes(p)}
+                          onChange={() => togglePatternSelection(p)}
+                        />
+                        <span>{p.replace(/_/g, ' ')}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Options Row */}
+                <div className="admin-generator__bulk-options">
+                  <div className="admin-generator__field">
+                    <label htmlFor="bulk-count">Problems Per Pattern</label>
+                    <input
+                      id="bulk-count"
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={bulkTargetCount}
+                      onChange={(e) => setBulkTargetCount(parseInt(e.target.value, 10) || 10)}
+                      className="admin-generator__input"
+                    />
+                  </div>
+
+                  <div className="admin-generator__field">
+                    <label htmlFor="seed-strategy">Seed Strategy</label>
+                    <select
+                      id="seed-strategy"
+                      value={seedStrategy}
+                      onChange={(e) => setSeedStrategy(e.target.value as 'fixed' | 'increment' | 'timeboxed')}
+                      className="admin-generator__select"
+                    >
+                      <option value="fixed">Fixed (same seed)</option>
+                      <option value="increment">Increment (unique per pattern)</option>
+                      <option value="timeboxed">Timeboxed (hourly)</option>
+                    </select>
+                  </div>
+
+                  <div className="admin-generator__field">
+                    <label htmlFor="concurrency">Concurrency</label>
+                    <input
+                      id="concurrency"
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={concurrency}
+                      onChange={(e) => setConcurrency(parseInt(e.target.value, 10) || 3)}
+                      className="admin-generator__input"
+                    />
+                  </div>
+                </div>
+
+                {/* Toggles */}
+                <div className="admin-generator__bulk-toggles">
+                  <label className="admin-generator__toggle">
+                    <input
+                      type="checkbox"
+                      checked={autoApprove}
+                      onChange={(e) => setAutoApprove(e.target.checked)}
+                    />
+                    <span>Auto-approve passing candidates</span>
+                  </label>
+                  <label className="admin-generator__toggle">
+                    <input
+                      type="checkbox"
+                      checked={publishAfterApprove}
+                      onChange={(e) => setPublishAfterApprove(e.target.checked)}
+                      disabled={!autoApprove}
+                    />
+                    <span>Publish after approve</span>
+                  </label>
+                  <label className="admin-generator__toggle">
+                    <input
+                      type="checkbox"
+                      checked={dryRun}
+                      onChange={(e) => setDryRun(e.target.checked)}
+                    />
+                    <span>Dry run (no actual generation)</span>
+                  </label>
+                  <label className="admin-generator__toggle">
+                    <input
+                      type="checkbox"
+                      checked={forceRegen}
+                      onChange={(e) => setForceRegen(e.target.checked)}
+                    />
+                    <span>Force regeneration (skip idempotency)</span>
+                  </label>
+                </div>
+
+                <div className="admin-generator__bulk-submit">
+                  <Button
+                    variant="primary"
+                    onClick={handleBulkGenerate}
+                    loading={isBulkGenerating}
+                    disabled={isBulkGenerating || selectedPatterns.length === 0}
+                  >
+                    {isBulkGenerating
+                      ? 'Generating...'
+                      : `Generate for ${selectedPatterns.length} Pattern${selectedPatterns.length === 1 ? '' : 's'}`}
+                  </Button>
+                  {error && <p className="admin-generator__error">{error}</p>}
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+
+          {/* Bulk Results */}
+          {bulkResult && (
+            <Card className="admin-generator__bulk-results">
+              <Card.Header
+                title="Bulk Generation Results"
+                subtitle={`Completed in ${(bulkResult.summary.durationMs / 1000).toFixed(1)}s`}
+              />
+              <Card.Body>
+                <div className="admin-generator__bulk-summary">
+                  <div className="admin-generator__stat">
+                    <span className="admin-generator__stat-value">{bulkResult.summary.totalPatterns}</span>
+                    <span className="admin-generator__stat-label">Total</span>
+                  </div>
+                  <div className="admin-generator__stat admin-generator__stat--success">
+                    <span className="admin-generator__stat-value">{bulkResult.summary.succeeded}</span>
+                    <span className="admin-generator__stat-label">Succeeded</span>
+                  </div>
+                  <div className="admin-generator__stat admin-generator__stat--warning">
+                    <span className="admin-generator__stat-value">{bulkResult.summary.skipped}</span>
+                    <span className="admin-generator__stat-label">Skipped</span>
+                  </div>
+                  <div className="admin-generator__stat admin-generator__stat--error">
+                    <span className="admin-generator__stat-value">{bulkResult.summary.failed}</span>
+                    <span className="admin-generator__stat-label">Failed</span>
+                  </div>
+                  <div className="admin-generator__stat">
+                    <span className="admin-generator__stat-value">{bulkResult.summary.totalCandidatesProposed}</span>
+                    <span className="admin-generator__stat-label">Proposed</span>
+                  </div>
+                  <div className="admin-generator__stat">
+                    <span className="admin-generator__stat-value">{bulkResult.summary.totalApproved}</span>
+                    <span className="admin-generator__stat-label">Approved</span>
+                  </div>
+                  <div className="admin-generator__stat">
+                    <span className="admin-generator__stat-value">{bulkResult.summary.totalPublished}</span>
+                    <span className="admin-generator__stat-label">Published</span>
+                  </div>
+                </div>
+
+                <div className="admin-generator__bulk-details">
+                  <h4>Per-Pattern Results</h4>
+                  <div className="admin-generator__pattern-results">
+                    {bulkResult.perPattern.map((result) => (
+                      <div key={result.patternId} className="admin-generator__pattern-result">
+                        <div className="admin-generator__pattern-result-header">
+                          <span className="admin-generator__pattern-result-name">
+                            {result.patternId.replace(/_/g, ' ')}
+                          </span>
+                          <StatusBadge status={result.status} />
+                        </div>
+                        <div className="admin-generator__pattern-result-stats">
+                          <span>{result.proposed} proposed</span>
+                          <span>{result.approved} approved</span>
+                          <span>{result.published} published</span>
+                          {result.durationMs !== undefined && (
+                            <span>{(result.durationMs / 1000).toFixed(1)}s</span>
+                          )}
+                        </div>
+                        {result.error && (
+                          <p className="admin-generator__pattern-result-error">{result.error}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
+        </div>
+      )}
 
       <style jsx>{`
         .admin-generator {
@@ -395,6 +722,34 @@ export default function GeneratorAdminPage() {
         .admin-generator__subtitle {
           color: var(--gray-600);
           margin-top: 0.5rem;
+        }
+
+        .admin-generator__tabs {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 1rem;
+        }
+
+        .admin-generator__tab {
+          padding: 0.5rem 1rem;
+          border: 1px solid var(--gray-300);
+          border-radius: 6px;
+          background: white;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--gray-700);
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+
+        .admin-generator__tab:hover {
+          background: var(--gray-50);
+        }
+
+        .admin-generator__tab--active {
+          background: var(--blue-50);
+          border-color: var(--blue-500);
+          color: var(--blue-700);
         }
 
         .admin-generator__content {
@@ -535,6 +890,195 @@ export default function GeneratorAdminPage() {
           .admin-generator__candidates {
             grid-column: 1;
           }
+        }
+
+        /* Bulk Generate Styles */
+        .admin-generator__bulk {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .admin-generator__bulk-form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .admin-generator__bulk-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .admin-generator__bulk-section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .admin-generator__bulk-section-header label {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--gray-700);
+        }
+
+        .admin-generator__bulk-actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .admin-generator__pattern-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 0.5rem;
+        }
+
+        .admin-generator__pattern-checkbox {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem;
+          border: 1px solid var(--gray-200);
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.15s;
+          font-size: 0.8125rem;
+        }
+
+        .admin-generator__pattern-checkbox:hover {
+          background: var(--gray-50);
+        }
+
+        .admin-generator__pattern-checkbox:has(input:checked) {
+          background: var(--blue-50);
+          border-color: var(--blue-300);
+        }
+
+        .admin-generator__pattern-checkbox input {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        .admin-generator__bulk-options {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .admin-generator__bulk-toggles {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .admin-generator__toggle {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.875rem;
+          color: var(--gray-700);
+          cursor: pointer;
+        }
+
+        .admin-generator__toggle input {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        .admin-generator__toggle input:disabled + span {
+          opacity: 0.5;
+        }
+
+        .admin-generator__bulk-submit {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .admin-generator__bulk-summary {
+          display: flex;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+          padding: 1rem;
+          background: var(--gray-50);
+          border-radius: 8px;
+          margin-bottom: 1rem;
+        }
+
+        .admin-generator__stat {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          min-width: 60px;
+        }
+
+        .admin-generator__stat-value {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: var(--gray-900);
+        }
+
+        .admin-generator__stat-label {
+          font-size: 0.75rem;
+          color: var(--gray-600);
+        }
+
+        .admin-generator__stat--success .admin-generator__stat-value {
+          color: var(--green-600);
+        }
+
+        .admin-generator__stat--warning .admin-generator__stat-value {
+          color: var(--yellow-600);
+        }
+
+        .admin-generator__stat--error .admin-generator__stat-value {
+          color: var(--red-600);
+        }
+
+        .admin-generator__bulk-details h4 {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: var(--gray-700);
+          margin: 0 0 0.75rem 0;
+        }
+
+        .admin-generator__pattern-results {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .admin-generator__pattern-result {
+          padding: 0.75rem;
+          border: 1px solid var(--gray-200);
+          border-radius: 6px;
+          background: white;
+        }
+
+        .admin-generator__pattern-result-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.25rem;
+        }
+
+        .admin-generator__pattern-result-name {
+          font-weight: 500;
+          font-size: 0.875rem;
+        }
+
+        .admin-generator__pattern-result-stats {
+          display: flex;
+          gap: 1rem;
+          font-size: 0.75rem;
+          color: var(--gray-500);
+        }
+
+        .admin-generator__pattern-result-error {
+          margin: 0.5rem 0 0 0;
+          font-size: 0.75rem;
+          color: var(--red-600);
         }
       `}</style>
     </div>
