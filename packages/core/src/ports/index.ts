@@ -21,3 +21,7 @@ export * from './ai-coach-repo.js';
 
 // Progress aggregation port (TrackE)
 export * from './progress-repo.js';
+
+// Pattern Ladder Generator ports
+export * from './llm-generator-port.js';
+export * from './generator-repo.js';

@@ -704,3 +704,167 @@ export const userContentProgress = pgTable(
     ),
   })
 );
+
+// ============ Pattern Ladders ============
+
+/**
+ * Pattern Ladders - organized difficulty progressions for a pattern.
+ * Each ladder represents a sequence of problems teaching a specific pattern.
+ */
+export const patternLadders = pgTable(
+  'pattern_ladders',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    track: text('track').notNull().default('coding_interview'),
+    patternId: text('pattern_id').notNull(),
+    name: text('name').notNull(),
+    description: text('description'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    trackPatternIdx: index('pattern_ladders_track_pattern_idx').on(
+      table.track,
+      table.patternId
+    ),
+    uniqueTrackPattern: unique('pattern_ladders_track_pattern_unique').on(
+      table.track,
+      table.patternId
+    ),
+  })
+);
+
+// ============ Ladder Nodes ============
+
+/**
+ * Ladder Nodes - problems within a ladder.
+ * Each node represents a problem at a specific difficulty level in the ladder.
+ */
+export const patternLadderNodes = pgTable(
+  'pattern_ladder_nodes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ladderId: uuid('ladder_id')
+      .notNull()
+      .references(() => patternLadders.id),
+    contentItemId: uuid('content_item_id')
+      .notNull()
+      .references(() => contentItems.id),
+    level: integer('level').notNull(), // 0-4 difficulty progression
+    position: integer('position').notNull(), // ordering within level
+    variantTag: text('variant_tag'), // e.g., 'array', 'string', 'tree'
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    ladderLevelPosIdx: index('pattern_ladder_nodes_ladder_level_pos_idx').on(
+      table.ladderId,
+      table.level,
+      table.position
+    ),
+    uniqueLadderContent: unique('pattern_ladder_nodes_ladder_content_unique').on(
+      table.ladderId,
+      table.contentItemId
+    ),
+  })
+);
+
+// ============ Content Item Edges ============
+
+/**
+ * Content Item Edges - prerequisites and relationships between content items.
+ * Used to build a DAG of content dependencies.
+ */
+export const contentItemEdges = pgTable(
+  'content_item_edges',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    fromContentItemId: uuid('from_content_item_id')
+      .notNull()
+      .references(() => contentItems.id),
+    toContentItemId: uuid('to_content_item_id')
+      .notNull()
+      .references(() => contentItems.id),
+    edgeType: text('edge_type').notNull(), // 'prereq' | 'recommended' | 'remediation'
+    reason: text('reason'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    fromIdx: index('content_item_edges_from_idx').on(table.fromContentItemId),
+    toIdx: index('content_item_edges_to_idx').on(table.toContentItemId),
+    uniqueEdge: unique('content_item_edges_unique').on(
+      table.fromContentItemId,
+      table.toContentItemId,
+      table.edgeType
+    ),
+  })
+);
+
+// ============ Generation Runs ============
+
+/**
+ * Generation Runs - tracks generation jobs for content creation.
+ * Supports idempotency via inputHash and auditing via model/promptVersion.
+ */
+export const generationRuns = pgTable(
+  'generation_runs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    track: text('track').notNull(),
+    patternId: text('pattern_id').notNull(),
+    ladderId: uuid('ladder_id').references(() => patternLadders.id),
+    targetCount: integer('target_count').notNull(),
+    promptVersion: text('prompt_version').notNull(),
+    model: text('model').notNull(),
+    inputHash: text('input_hash').notNull(),
+    status: text('status').notNull(), // 'queued' | 'running' | 'succeeded' | 'failed'
+    metrics: jsonb('metrics').$type<GenerationMetricsJson | null>(),
+    createdBy: text('created_by'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+  },
+  (table) => ({
+    inputHashIdx: unique('generation_runs_input_hash_unique').on(table.inputHash),
+    trackPatternIdx: index('generation_runs_track_pattern_idx').on(
+      table.track,
+      table.patternId
+    ),
+    statusIdx: index('generation_runs_status_idx').on(table.status),
+  })
+);
+
+interface GenerationMetricsJson {
+  totalGenerated: number;
+  validCount: number;
+  duplicatesRemoved: number;
+  tokensUsed?: number;
+  durationMs?: number;
+}
+
+// ============ Generated Candidates ============
+
+/**
+ * Generated Candidates - individual problems from a generation run.
+ * Problems are proposed by LLM, then approved/rejected by admin before publishing.
+ */
+export const generatedCandidates = pgTable(
+  'generated_candidates',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    runId: uuid('run_id')
+      .notNull()
+      .references(() => generationRuns.id),
+    level: integer('level').notNull(),
+    candidate: jsonb('candidate').notNull().$type<Record<string, unknown>>(), // ProblemSpecV1
+    validation: jsonb('validation').$type<Record<string, unknown> | null>(),
+    status: text('status').notNull(), // 'proposed' | 'approved' | 'rejected' | 'published'
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    runIdx: index('generated_candidates_run_idx').on(table.runId),
+    runLevelIdx: index('generated_candidates_run_level_idx').on(
+      table.runId,
+      table.level
+    ),
+    statusIdx: index('generated_candidates_status_idx').on(table.status),
+  })
+);

@@ -4,3 +4,4 @@ export * from './claude-schemas.js';
 export * from './enhanced-problem-schemas.js';
 export * from './debug-track-schemas.js';
 export * from './socratic-coach-schemas.js';
+export * from './generator/index.js';

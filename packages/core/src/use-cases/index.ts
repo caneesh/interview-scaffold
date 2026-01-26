@@ -14,3 +14,6 @@ export * from './postmortem-generator.js';
 export * from './generate-socratic-question.js';
 export * from './validate-socratic-response.js';
 export * from './aggregate-progress.js';
+
+// Pattern Ladder Generator use cases
+export * from './generator/index.js';

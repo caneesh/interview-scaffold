@@ -167,6 +167,10 @@ importers:
         version: 1.6.1(@types/node@20.19.27)
 
   packages/core:
+    dependencies:
+      '@scaffold/contracts':
+        specifier: workspace:*
+        version: link:../contracts
     devDependencies:
       typescript:
         specifier: ^5.4.0
