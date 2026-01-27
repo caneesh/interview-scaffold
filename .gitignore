@@ -34,3 +34,5 @@ coverage/
 
 # Drizzle
 drizzle/
+.vercel
+.env*.local
