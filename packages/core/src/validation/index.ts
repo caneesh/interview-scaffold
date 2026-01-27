@@ -119,3 +119,14 @@ export type {
   SocraticRepairEvent,
   ValidationOutcome,
 } from './socratic-repair.js';
+
+// Attempt V2 State Machine
+export {
+  assertCanTransition,
+  canTransition,
+  getValidNextSteps,
+  isTerminalState,
+  InvalidTransitionError,
+} from './attempt-v2-state-machine.js';
+
+export type { V2TransitionResult } from './attempt-v2-state-machine.js';

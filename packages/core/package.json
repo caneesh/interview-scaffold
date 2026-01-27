@@ -47,6 +47,10 @@
     "./adapters/mock-llm-generator": {
       "types": "./dist/adapters/mock-llm-generator.d.ts",
       "import": "./dist/adapters/mock-llm-generator.js"
+    },
+    "./prompts": {
+      "types": "./dist/prompts/index.d.ts",
+      "import": "./dist/prompts/index.js"
     }
   },
   "scripts": {

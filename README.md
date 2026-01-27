@@ -16,6 +16,49 @@ Traditional interview prep teaches problems in isolation. This platform teaches 
 6. **Skill Update**: Score computed and persisted using exponential moving average
 7. **Progression**: MEP engine decides next problem (retry, sibling, promote rung)
 
+## Practice Flow V2 (NEW)
+
+The V2 flow introduces a structured 5-step learning process with beginner/expert modes:
+
+```
+UNDERSTAND → PLAN → IMPLEMENT → VERIFY → REFLECT → COMPLETE
+```
+
+### Steps
+
+1. **UNDERSTAND** (Feynman Gate): Explain the problem "like I'm 12" with structured fields. AI validates comprehension without revealing the solution.
+
+2. **PLAN** (Pattern + Invariant): AI suggests 2-3 candidate patterns. Select one, rate confidence, and define your loop invariant (template-based for beginners).
+
+3. **IMPLEMENT** (Coding): Write code with a hint budget that decreases with skill level. Socratic hints guide without giving answers.
+
+4. **VERIFY** (Test + Debug): Run tests. On failure, explain what went wrong; AI provides debugging guidance (never solution code).
+
+5. **REFLECT** (Generalize): Capture key takeaways and invariant summary for future reference.
+
+### Modes
+
+| Mode | UNDERSTAND | PLAN | Hints | Skip Rules |
+|------|------------|------|-------|------------|
+| **BEGINNER** | Required, AI validates | Template-based invariant builder | 6 (rung 1) to 2 (rung 5) | No skipping |
+| **EXPERT** | Required but lighter | Free-text invariant | Fewer hints | Can skip steps |
+
+### API Routes (V2)
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/attempts/[id]/mode` | POST | Set BEGINNER or EXPERT mode |
+| `/api/attempts/[id]/understand/submit` | POST | Submit understanding explanation |
+| `/api/attempts/[id]/plan/suggest` | POST | Get AI pattern suggestions |
+| `/api/attempts/[id]/plan/choose` | POST | Select pattern and invariant |
+| `/api/attempts/[id]/verify/explain-failure` | POST | Get AI debugging guidance |
+| `/api/attempts/[id]/reflect/submit` | POST | Submit reflection |
+
+### Documentation
+
+- [Architecture](./docs/attempt-v2-architecture.md) - State machine, data model, API contracts
+- [Security Review](./docs/attempt-v2-security-review.md) - Security findings and recommendations
+
 ## Design Principles Enforced in Code
 
 - **Pure Domain Core**: `packages/core` has zero framework dependencies; all I/O via ports

@@ -88,6 +88,20 @@ export const attempts = pgTable(
     score: jsonb('score').$type<AttemptScoreJson | null>(),
     startedAt: timestamp('started_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
+
+    // ============ V2 Flow Fields ============
+    // mode: BEGINNER (more scaffolding) or EXPERT (lighter guidance)
+    mode: text('mode').notNull().default('BEGINNER'),
+    // v2Step: null for legacy attempts, otherwise tracks current V2 step
+    v2Step: text('v2_step'), // 'UNDERSTAND' | 'PLAN' | 'IMPLEMENT' | 'VERIFY' | 'REFLECT' | 'COMPLETE'
+    // Step payloads stored as JSON
+    understandPayload: jsonb('understand_payload').$type<UnderstandPayloadJson | null>(),
+    planPayload: jsonb('plan_payload').$type<PlanPayloadJson | null>(),
+    verifyPayload: jsonb('verify_payload').$type<VerifyPayloadJson | null>(),
+    reflectPayload: jsonb('reflect_payload').$type<ReflectPayloadJson | null>(),
+    // Hint tracking for V2
+    hintBudget: integer('hint_budget').notNull().default(3),
+    hintsUsedCount: integer('hints_used_count').notNull().default(0),
   },
   (table) => ({
     tenantUserIdx: index('attempts_tenant_user_idx').on(
@@ -120,6 +134,71 @@ interface AttemptScoreJson {
   edgeCases: number;
   efficiency: number;
   bonus: number;
+}
+
+// ============ V2 Payload JSON Types ============
+
+interface UnderstandPayloadJson {
+  explanation: string;
+  inputOutputDescription: string;
+  constraintsDescription: string;
+  exampleWalkthrough: string;
+  wrongApproach: string;
+  aiAssessment: {
+    status: 'PASS' | 'NEEDS_WORK';
+    strengths: string[];
+    gaps: string[];
+    followupQuestions: string[];
+  } | null;
+  followups: Array<{
+    question: string;
+    answer: string;
+    timestamp: string; // ISO date string
+  }>;
+}
+
+interface PlanPayloadJson {
+  suggestedPatterns: Array<{
+    patternId: string;
+    name: string;
+    reason: string;
+    aiConfidence: number;
+  }>;
+  chosenPattern: string | null;
+  userConfidence: number | null;
+  invariant: {
+    text: string;
+    builderUsed: boolean;
+    templateId?: string;
+    templateChoices?: Record<string, number>;
+  } | null;
+  complexity: string | null;
+  discoveryTriggered: boolean;
+}
+
+interface VerifyPayloadJson {
+  testResults: Array<{
+    testIndex: number;
+    passed: boolean;
+    input: string;
+    expected: string;
+    actual: string;
+    isHidden: boolean;
+  }>;
+  failureExplanations: Array<{
+    testIndex: number;
+    userExplanation: string;
+    aiGuidance: string;
+    timestamp: string; // ISO date string
+  }>;
+  traceNotes: string | null;
+}
+
+interface ReflectPayloadJson {
+  cuesNextTime: string[];
+  invariantSummary: string;
+  microLessonId: string | null;
+  adversaryChallengeCompleted: boolean;
 }
 
 // ============ Steps ============

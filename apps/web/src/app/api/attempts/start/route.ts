@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { startAttempt } from '@scaffold/core/use-cases';
 import { StartAttemptRequestSchema } from '@scaffold/contracts';
 import { attemptRepo, contentRepo, skillRepo, eventSink, clock, idGenerator } from '@/lib/deps';
-import { isLegacyAttempt } from '@scaffold/core/entities';
+import { isLegacyAttempt, ATTEMPT_V2_MODES, type AttemptV2Mode } from '@scaffold/core/entities';
 import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
 
 /**
@@ -10,6 +10,10 @@ import { DEMO_TENANT_ID, DEMO_USER_ID } from '@/lib/constants';
  *
  * Starts a new coding problem attempt using the legacy problem-based system.
  * For track-based attempts using the content bank, use /api/track-attempts/start instead.
+ *
+ * Optional V2 flow parameters:
+ * - useV2Flow: boolean - Enable the 5-step V2 flow (UNDERSTAND -> PLAN -> IMPLEMENT -> VERIFY -> REFLECT)
+ * - mode: 'BEGINNER' | 'EXPERT' - Scaffolding level (default: BEGINNER)
  *
  * NO business logic here - only orchestration
  */
@@ -74,12 +78,23 @@ async function handleLegacyAttempt(
     );
   }
 
+  // Check for V2 flow options
+  // These are optional and not part of the standard schema
+  const useV2Flow = Boolean((body as Record<string, unknown>).useV2Flow);
+  const rawMode = (body as Record<string, unknown>).mode as string | undefined;
+  const mode: AttemptV2Mode =
+    rawMode && ATTEMPT_V2_MODES.includes(rawMode as AttemptV2Mode)
+      ? (rawMode as AttemptV2Mode)
+      : 'BEGINNER';
+
   // Call core use-case
   const result = await startAttempt(
     {
       tenantId,
       userId,
       problemId: parsed.data.problemId,
+      useV2Flow,
+      mode,
     },
     {
       attemptRepo,
@@ -95,5 +110,6 @@ async function handleLegacyAttempt(
   return NextResponse.json({
     attempt: result.attempt,
     problem: result.problem,
+    isV2: useV2Flow,
   });
 }

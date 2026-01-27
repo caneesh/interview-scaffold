@@ -209,6 +209,15 @@ export function createAttemptRepo(db: DbClient): AttemptRepo {
         score: attempt.score,
         startedAt: attempt.startedAt,
         completedAt: attempt.completedAt,
+        // V2 fields - cast to mutable types for DB
+        mode: attempt.mode ?? 'BEGINNER',
+        v2Step: attempt.v2Step ?? null,
+        understandPayload: attempt.understandPayload ? JSON.parse(JSON.stringify(attempt.understandPayload)) : null,
+        planPayload: attempt.planPayload ? JSON.parse(JSON.stringify(attempt.planPayload)) : null,
+        verifyPayload: attempt.verifyPayload ? JSON.parse(JSON.stringify(attempt.verifyPayload)) : null,
+        reflectPayload: attempt.reflectPayload ? JSON.parse(JSON.stringify(attempt.reflectPayload)) : null,
+        hintBudget: attempt.hintBudget ?? 3,
+        hintsUsedCount: attempt.hintsUsedCount ?? 0,
       });
 
       return attempt;
@@ -254,6 +263,15 @@ export function createAttemptRepo(db: DbClient): AttemptRepo {
         score: null,
         startedAt: now,
         completedAt: null,
+        // V2 fields
+        mode: 'BEGINNER' as const,
+        v2Step: null,
+        understandPayload: null,
+        planPayload: null,
+        verifyPayload: null,
+        reflectPayload: null,
+        hintBudget: 3,
+        hintsUsedCount: 0,
       };
     },
 
@@ -266,6 +284,15 @@ export function createAttemptRepo(db: DbClient): AttemptRepo {
           codeSubmissions: attempt.codeSubmissions,
           score: attempt.score,
           completedAt: attempt.completedAt,
+          // V2 fields - cast to mutable types for DB
+          mode: attempt.mode,
+          v2Step: attempt.v2Step,
+          understandPayload: attempt.understandPayload ? JSON.parse(JSON.stringify(attempt.understandPayload)) : null,
+          planPayload: attempt.planPayload ? JSON.parse(JSON.stringify(attempt.planPayload)) : null,
+          verifyPayload: attempt.verifyPayload ? JSON.parse(JSON.stringify(attempt.verifyPayload)) : null,
+          reflectPayload: attempt.reflectPayload ? JSON.parse(JSON.stringify(attempt.reflectPayload)) : null,
+          hintBudget: attempt.hintBudget,
+          hintsUsedCount: attempt.hintsUsedCount,
         })
         .where(eq(attempts.id, attempt.id));
 
@@ -322,6 +349,15 @@ function mapToAttempt(
     score: row.score as Attempt['score'],
     startedAt: row.startedAt,
     completedAt: row.completedAt,
+    // V2 fields
+    mode: (row.mode ?? 'BEGINNER') as 'BEGINNER' | 'EXPERT',
+    v2Step: row.v2Step as Attempt['v2Step'],
+    understandPayload: row.understandPayload as Attempt['understandPayload'],
+    planPayload: row.planPayload as Attempt['planPayload'],
+    verifyPayload: row.verifyPayload as Attempt['verifyPayload'],
+    reflectPayload: row.reflectPayload as Attempt['reflectPayload'],
+    hintBudget: row.hintBudget ?? 3,
+    hintsUsedCount: row.hintsUsedCount ?? 0,
   };
 
   // Determine if this is a track attempt or legacy attempt
@@ -374,5 +410,14 @@ function mapToTrackAttempt(
     score: row.score as Attempt['score'],
     startedAt: row.startedAt,
     completedAt: row.completedAt,
+    // V2 fields
+    mode: (row.mode ?? 'BEGINNER') as 'BEGINNER' | 'EXPERT',
+    v2Step: row.v2Step as TrackAttempt['v2Step'],
+    understandPayload: row.understandPayload as TrackAttempt['understandPayload'],
+    planPayload: row.planPayload as TrackAttempt['planPayload'],
+    verifyPayload: row.verifyPayload as TrackAttempt['verifyPayload'],
+    reflectPayload: row.reflectPayload as TrackAttempt['reflectPayload'],
+    hintBudget: row.hintBudget ?? 3,
+    hintsUsedCount: row.hintsUsedCount ?? 0,
   };
 }

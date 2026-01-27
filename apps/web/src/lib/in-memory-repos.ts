@@ -225,6 +225,10 @@ export const inMemoryAttemptRepo: AttemptRepo = {
     const id = randomUUID();
     const now = new Date();
 
+    // Calculate hint budget based on rung (lower rungs get more hints)
+    const hintBudgetByRung: Record<number, number> = { 1: 6, 2: 5, 3: 4, 4: 3, 5: 2 };
+    const hintBudget = hintBudgetByRung[params.rung] ?? 3;
+
     const attempt: TrackAttempt = {
       id,
       tenantId: params.tenantId,
@@ -241,6 +245,15 @@ export const inMemoryAttemptRepo: AttemptRepo = {
       score: null,
       startedAt: now,
       completedAt: null,
+      // V2 fields - defaults for track attempts
+      mode: 'BEGINNER',
+      v2Step: null, // null means legacy flow by default
+      understandPayload: null,
+      planPayload: null,
+      verifyPayload: null,
+      reflectPayload: null,
+      hintBudget,
+      hintsUsedCount: 0,
     };
 
     attempts.set(id, attempt);

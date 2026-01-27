@@ -19,6 +19,24 @@ import { CoachDrawer, CoachButton } from '@/components/CoachDrawer';
 import { CommittedPlanBadge } from '@/components/CommittedPlanBadge';
 import { TraceVisualization } from '@/components/TraceVisualization';
 
+// V2 Flow Components
+import {
+  V2Workbench,
+  type V2Step,
+  type AttemptMode,
+  type AttemptV2,
+  type TestResultData,
+  type SubmitUnderstandRequest,
+  type SubmitUnderstandResponse,
+  type SubmitFollowupRequest,
+  type SuggestPatternsResponse,
+  type ChoosePatternRequest,
+  type ChoosePatternResponse,
+  type ExplainFailureRequest,
+  type ExplainFailureResponse,
+  type SubmitReflectRequest,
+} from '@/components/attempt-v2';
+
 interface Problem {
   id: string;
   title: string;
@@ -73,6 +91,15 @@ interface Attempt {
     edgeCases: number;
     efficiency: number;
   } | null;
+  // V2 fields (optional for backwards compatibility)
+  v2Step?: V2Step | null;
+  mode?: AttemptMode;
+  understandPayload?: AttemptV2['understandPayload'];
+  planPayload?: AttemptV2['planPayload'];
+  verifyPayload?: AttemptV2['verifyPayload'];
+  reflectPayload?: AttemptV2['reflectPayload'];
+  hintBudget?: number;
+  hintsUsedCount?: number;
 }
 
 const DEMO_REFLECTION_OPTIONS = [
@@ -192,6 +219,10 @@ export default function AttemptPage() {
     completed: boolean;
   } | null>(null);
   const [adversaryLoading, setAdversaryLoading] = useState(false);
+
+  // V2 Flow state
+  const [v2TestResults, setV2TestResults] = useState<TestResultData[]>([]);
+  const [v2Hints, setV2Hints] = useState<Array<{ level: string; text: string }>>([]);
 
   useEffect(() => {
     fetchAttempt();
@@ -788,6 +819,182 @@ export default function AttemptPage() {
     }
   }
 
+  // ============ V2 Flow Handlers ============
+
+  async function handleV2ModeChange(mode: AttemptMode) {
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode }),
+      });
+      const result = await res.json();
+      if (!result.error && result.attempt) {
+        setAttempt(result.attempt);
+      }
+    } catch (err) {
+      console.error('Failed to change mode:', err);
+    }
+  }
+
+  function handleV2StepChange(step: V2Step) {
+    if (attempt) {
+      setAttempt({ ...attempt, v2Step: step });
+    }
+  }
+
+  async function handleV2SubmitUnderstand(
+    data: SubmitUnderstandRequest
+  ): Promise<SubmitUnderstandResponse> {
+    const res = await fetch(`/api/attempts/${attemptId}/understand/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.error) throw new Error(result.error.message);
+    if (result.attempt) setAttempt(result.attempt);
+    return result;
+  }
+
+  async function handleV2FollowupAnswer(data: SubmitFollowupRequest): Promise<void> {
+    const res = await fetch(`/api/attempts/${attemptId}/understand/followup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.error) throw new Error(result.error.message);
+    if (result.attempt) setAttempt(result.attempt);
+  }
+
+  async function handleV2SuggestPatterns(): Promise<SuggestPatternsResponse> {
+    const res = await fetch(`/api/attempts/${attemptId}/plan/suggest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        explanation: attempt?.understandPayload?.explanation ?? '',
+      }),
+    });
+    const result = await res.json();
+    if (result.error) throw new Error(result.error.message);
+    if (result.attempt) setAttempt(result.attempt);
+    return result;
+  }
+
+  async function handleV2ChoosePattern(
+    data: ChoosePatternRequest
+  ): Promise<ChoosePatternResponse> {
+    const res = await fetch(`/api/attempts/${attemptId}/plan/choose`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.error) throw new Error(result.error.message);
+    if (result.attempt) setAttempt(result.attempt);
+    return result;
+  }
+
+  async function handleV2SubmitCode(data: { code: string; language: string }): Promise<void> {
+    setStepLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (result.error) throw new Error(result.error.message);
+      if (result.attempt) setAttempt(result.attempt);
+      if (result.testResults) {
+        setV2TestResults(result.testResults);
+        // If tests submitted, move to VERIFY step
+        if (attempt?.v2Step === 'IMPLEMENT') {
+          setAttempt((prev) => prev ? { ...prev, v2Step: 'VERIFY' } : null);
+        }
+      }
+    } finally {
+      setStepLoading(false);
+    }
+  }
+
+  async function handleV2RequestHint(): Promise<void> {
+    setHintLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/hint`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const result = await res.json();
+      if (result.error) {
+        if (result.error.code !== 'NO_MORE_HINTS') {
+          throw new Error(result.error.message);
+        }
+      } else {
+        if (result.attempt) setAttempt(result.attempt);
+        if (result.hint) {
+          setV2Hints((prev) => [...prev, result.hint]);
+        }
+      }
+    } finally {
+      setHintLoading(false);
+    }
+  }
+
+  async function handleV2ExplainFailure(
+    data: ExplainFailureRequest
+  ): Promise<ExplainFailureResponse> {
+    const res = await fetch(`/api/attempts/${attemptId}/verify/explain-failure`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.error) throw new Error(result.error.message);
+    return result;
+  }
+
+  function handleV2Retry() {
+    // Go back to implement step
+    if (attempt) {
+      setAttempt({ ...attempt, v2Step: 'IMPLEMENT' });
+    }
+  }
+
+  function handleV2GiveUp() {
+    // Mark attempt as incomplete and go to reflect
+    if (attempt) {
+      setAttempt({ ...attempt, v2Step: 'REFLECT' });
+    }
+  }
+
+  async function handleV2SubmitReflect(data: SubmitReflectRequest): Promise<void> {
+    setStepLoading(true);
+    try {
+      const res = await fetch(`/api/attempts/${attemptId}/reflect/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (result.error) throw new Error(result.error.message);
+      if (result.attempt) setAttempt(result.attempt);
+    } finally {
+      setStepLoading(false);
+    }
+  }
+
+  function handleV2Complete() {
+    // Navigate to complete state
+    if (attempt) {
+      setAttempt({ ...attempt, v2Step: 'COMPLETE' });
+    }
+  }
+
+  // Helper to check if this is a V2 attempt
+  const isV2Attempt = attempt?.v2Step !== null && attempt?.v2Step !== undefined;
+
   if (loading) {
     return (
       <div className="loading-state">
@@ -845,6 +1052,54 @@ export default function AttemptPage() {
     );
   }
 
+  // ============ V2 FLOW ============
+  // If this is a V2 attempt (v2Step is set), render the V2 workbench
+  if (isV2Attempt && attempt.v2Step) {
+    // Convert legacy attempt to V2 attempt format
+    const v2Attempt: AttemptV2 = {
+      id: attempt.id,
+      mode: attempt.mode ?? 'BEGINNER',
+      v2Step: attempt.v2Step,
+      understandPayload: attempt.understandPayload ?? null,
+      planPayload: attempt.planPayload ?? null,
+      verifyPayload: attempt.verifyPayload ?? null,
+      reflectPayload: attempt.reflectPayload ?? null,
+      hintBudget: attempt.hintBudget ?? 5,
+      hintsUsedCount: attempt.hintsUsedCount ?? 0,
+      state: attempt.state,
+      pattern: attempt.pattern,
+      rung: attempt.rung,
+      hintsUsed: attempt.hintsUsed,
+      codeSubmissions: attempt.codeSubmissions,
+      score: attempt.score,
+    };
+
+    return (
+      <V2Workbench
+        attempt={v2Attempt}
+        problem={problem}
+        onModeChange={handleV2ModeChange}
+        onStepChange={handleV2StepChange}
+        onSubmitUnderstand={handleV2SubmitUnderstand}
+        onFollowupAnswer={handleV2FollowupAnswer}
+        onSuggestPatterns={handleV2SuggestPatterns}
+        onChoosePattern={handleV2ChoosePattern}
+        onSubmitCode={handleV2SubmitCode}
+        onRequestHint={handleV2RequestHint}
+        testResults={v2TestResults}
+        onExplainFailure={handleV2ExplainFailure}
+        onRetry={handleV2Retry}
+        onGiveUp={handleV2GiveUp}
+        onSubmitReflect={handleV2SubmitReflect}
+        onComplete={handleV2Complete}
+        loading={stepLoading}
+        hintLoading={hintLoading}
+        hints={v2Hints}
+      />
+    );
+  }
+
+  // ============ LEGACY FLOW ============
   // Determine if we're in coding phase (editor should be primary)
   const isCodingPhase = attempt.state === 'CODING' || attempt.state === 'HINT';
   const isThinkingPhase = attempt.state === 'THINKING_GATE';

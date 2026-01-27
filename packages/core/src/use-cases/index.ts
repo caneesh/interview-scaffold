@@ -17,3 +17,9 @@ export * from './aggregate-progress.js';
 
 // Pattern Ladder Generator use cases
 export * from './generator/index.js';
+
+// Hint Budget System
+export * from './hint-budget.js';
+
+// Attempt V2 use cases
+export * from './attempt-v2/index.js';
