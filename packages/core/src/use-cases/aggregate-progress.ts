@@ -13,6 +13,9 @@ import type { IdGenerator } from '../ports/id-generator.js';
 
 /**
  * Input for aggregating progress after a coding attempt completes.
+ *
+ * Either problemId (for legacy attempts) or contentItemId (for track-based attempts)
+ * must be provided to identify the content.
  */
 export interface AggregateProgressInput {
   readonly tenantId: TenantId;
@@ -21,8 +24,8 @@ export interface AggregateProgressInput {
   readonly attempt: Attempt;
   readonly score: AttemptScore;
   readonly track: Track;
-  readonly problemId: string;
-  readonly contentItemId?: string; // Optional: for unified content items
+  readonly problemId?: string; // Required for legacy attempts
+  readonly contentItemId?: string; // Required for track-based attempts
 }
 
 /**
@@ -80,6 +83,11 @@ export async function aggregateProgress(
   const { tenantId, userId, attemptId, score, track, problemId, contentItemId } = input;
   const { progressRepo, clock, idGenerator } = deps;
 
+  // Validate that at least one content identifier is provided
+  if (!problemId && !contentItemId) {
+    throw new Error('Either problemId or contentItemId must be provided');
+  }
+
   const now = clock.now();
 
   // ============ Update Content Progress ============
@@ -92,7 +100,7 @@ export async function aggregateProgress(
       userId,
       contentItemId
     );
-  } else {
+  } else if (problemId) {
     existingContentProgress = await progressRepo.findContentProgressByProblem(
       tenantId,
       userId,
@@ -107,7 +115,7 @@ export async function aggregateProgress(
     tenantId,
     userId,
     contentItemId: contentItemId ?? null,
-    problemId,
+    problemId: problemId ?? null,
     track,
     attemptsCount: (existingContentProgress?.attemptsCount ?? 0) + 1,
     bestScore: Math.max(existingContentProgress?.bestScore ?? 0, score.overall),

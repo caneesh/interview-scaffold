@@ -1,5 +1,5 @@
 import type { TenantId } from '../entities/tenant.js';
-import type { AttemptId, Attempt, AttemptScore, LegacyAttempt } from '../entities/attempt.js';
+import type { AttemptId, Attempt, AttemptScore, LegacyAttempt, TrackAttempt } from '../entities/attempt.js';
 import type { TestResultData, CodingData, CodingValidationData } from '../entities/step.js';
 import type { AttemptRepo } from '../ports/attempt-repo.js';
 import type { ContentRepo } from '../ports/content-repo.js';
@@ -515,6 +515,419 @@ export async function submitCode(
 
   // passed is true when all tests pass and gating allows progress
   // Both PROCEED and PROCEED_WITH_REFLECTION indicate success
+  const passed = allTestsPassed && (
+    gatingDecision.action === 'PROCEED' ||
+    gatingDecision.action === 'PROCEED_WITH_REFLECTION'
+  );
+
+  return {
+    attempt: updatedAttempt,
+    testResults,
+    passed,
+    validation,
+    gatingDecision,
+    score: attemptScore,
+  };
+}
+
+// ============ Track-based Attempt Submission ============
+
+export interface SubmitCodeForTrackInput extends SubmitCodeInput {
+  /** The problem data (converted from content item) */
+  readonly problem: import('../entities/problem.js').Problem;
+}
+
+export interface SubmitCodeForTrackDeps {
+  readonly attemptRepo: AttemptRepo;
+  readonly skillRepo: SkillRepo;
+  readonly eventSink: EventSink;
+  readonly clock: Clock;
+  readonly idGenerator: IdGenerator;
+  readonly codeExecutor: CodeExecutor;
+  readonly llmValidation?: LLMValidationPort;
+  readonly progressRepo?: ProgressRepo;
+}
+
+/**
+ * Submit code for a track-based attempt.
+ *
+ * This is similar to submitCode but works with track-based attempts
+ * (contentItemId instead of problemId). The problem data is passed
+ * directly instead of being looked up from contentRepo.
+ */
+export async function submitCodeForTrackAttempt(
+  input: SubmitCodeForTrackInput,
+  deps: SubmitCodeForTrackDeps
+): Promise<SubmitCodeOutput> {
+  const { tenantId, userId, attemptId, code, language, problem } = input;
+  const { attemptRepo, skillRepo, eventSink, clock, idGenerator, codeExecutor } = deps;
+
+  const attempt = await attemptRepo.findById(tenantId, attemptId);
+  if (!attempt) {
+    throw new CodeSubmitError('Attempt not found', 'ATTEMPT_NOT_FOUND');
+  }
+
+  // This use-case is for track-based attempts only
+  if (isLegacyAttempt(attempt)) {
+    throw new CodeSubmitError(
+      'This function only supports track-based attempts',
+      'LEGACY_ATTEMPT_NOT_SUPPORTED'
+    );
+  }
+
+  if (attempt.userId !== userId) {
+    throw new CodeSubmitError('Unauthorized', 'UNAUTHORIZED');
+  }
+
+  // Gate checks
+  if (!hasPassedThinkingGate(attempt)) {
+    throw new CodeSubmitError(
+      'Must pass thinking gate before submitting code',
+      'THINKING_GATE_REQUIRED'
+    );
+  }
+
+  if (needsReflection(attempt) && !hasPassedReflection(attempt)) {
+    throw new CodeSubmitError(
+      'Must pass reflection gate before resubmitting',
+      'REFLECTION_REQUIRED'
+    );
+  }
+
+  if (attempt.state !== 'CODING') {
+    throw new CodeSubmitError(
+      'Cannot submit code in current state',
+      'INVALID_STATE'
+    );
+  }
+
+  // Execute code against test cases
+  const testResults = await codeExecutor.execute(
+    code,
+    language,
+    problem.testCases.map((tc) => ({
+      input: tc.input,
+      expectedOutput: tc.expectedOutput,
+    }))
+  );
+
+  // ============ Budget Tests (Large Hidden Tests) ============
+  let timeBudgetExceeded = false;
+  let timeBudgetResult: CodingValidationData['timeBudgetResult'] = undefined;
+  let complexitySuggestion: string | undefined;
+
+  if (
+    problem.largeHiddenTests &&
+    problem.largeHiddenTests.length > 0 &&
+    problem.timeoutBudgetMs &&
+    codeExecutor.executeWithTimeout
+  ) {
+    const budgetTimeout = problem.timeoutBudgetMs;
+
+    const budgetTestResults = await codeExecutor.executeWithTimeout(
+      code,
+      language,
+      problem.largeHiddenTests.map((tc) => ({
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
+      })),
+      budgetTimeout
+    );
+
+    const timedOutTests = budgetTestResults.filter(
+      (r) => !r.passed && r.error?.includes('Time Limit Exceeded')
+    );
+    timeBudgetExceeded = timedOutTests.length > 0;
+
+    timeBudgetResult = {
+      exceeded: timeBudgetExceeded,
+      budgetMs: budgetTimeout,
+      testsRun: budgetTestResults.length,
+      testsFailed: budgetTestResults.filter((r) => !r.passed).length,
+    };
+
+    if (timeBudgetExceeded) {
+      complexitySuggestion = generateBudgetFeedback(
+        attempt.pattern,
+        problem.targetComplexity
+      );
+    }
+  }
+
+  const now = clock.now();
+  const stepId = idGenerator.generate();
+
+  // ============ Validation Engine ============
+
+  const testsPassed = testResults.filter((t) => t.passed).length;
+  const testsTotal = testResults.length;
+
+  const rubricResult = gradeSubmission({
+    pattern: attempt.pattern,
+    rung: attempt.rung,
+    context: {
+      code,
+      language,
+      testsPassed,
+      testsTotal,
+      patternDetected: attempt.pattern,
+    },
+  });
+
+  const heuristicResults = runHeuristics(attempt.pattern, code, language);
+  const heuristicErrors: ErrorEvent[] = heuristicResults
+    .filter((r) => !r.passed && r.errorType)
+    .map((r) => ({
+      type: r.errorType!,
+      severity: 'ERROR' as const,
+      message: r.suggestion ?? 'Heuristic check failed',
+      evidence: r.evidence,
+    }));
+
+  if (timeBudgetExceeded && complexitySuggestion) {
+    heuristicErrors.push({
+      type: 'TIME_BUDGET_EXCEEDED',
+      severity: 'ERROR',
+      message: complexitySuggestion,
+      evidence: ['Large input test exceeded time budget'],
+    });
+  }
+
+  const additionalForbidden = getForbiddenForPattern(attempt.pattern);
+  const forbiddenResult = detectForbiddenConcepts(code, attempt.pattern, additionalForbidden);
+
+  let llmResult: LLMValidationResponse | null = null;
+  if (deps.llmValidation?.isEnabled()) {
+    llmResult = await deps.llmValidation.validateCode({
+      code,
+      language,
+      expectedPattern: attempt.pattern,
+      testResults: testResults.map((t) => ({
+        input: t.input,
+        expected: t.expected,
+        actual: t.actual,
+        passed: t.passed,
+      })),
+      heuristicErrors: heuristicErrors,
+    });
+
+    if (llmResult?.errors) {
+      for (const error of llmResult.errors) {
+        const isDuplicate = heuristicErrors.some(
+          (e) => e.type === error.type && e.message === error.message
+        );
+        if (!isDuplicate) {
+          const errorType: ErrorType = ERROR_TYPES.includes(error.type as ErrorType)
+            ? (error.type as ErrorType)
+            : 'UNKNOWN';
+          heuristicErrors.push({
+            type: errorType,
+            severity: error.severity,
+            message: error.message,
+            evidence: error.lineNumber ? [`Line ${error.lineNumber}`] : undefined,
+          });
+        }
+      }
+    }
+  }
+
+  const previousCodingSteps = attempt.steps.filter(
+    (s) => s.type === 'CODING' && s.result === 'FAIL'
+  );
+  const previousFailures = previousCodingSteps
+    .flatMap((s) => {
+      const data = s.data as CodingData;
+      return data.validation?.heuristicErrors ?? [];
+    })
+    .filter((e): e is string => typeof e === 'string');
+
+  const allErrors: ErrorEvent[] = [...heuristicErrors, ...forbiddenResult.errors];
+
+  let gatingDecision = makeGatingDecision({
+    pattern: attempt.pattern,
+    rung: attempt.rung,
+    rubric: rubricResult,
+    errors: allErrors,
+    attemptCount: attempt.codeSubmissions + 1,
+    hintsUsed: attempt.hintsUsed.length,
+    previousFailures: previousFailures.map((e) => e as any),
+  });
+
+  const LLM_CONFIDENCE_THRESHOLD = 0.8;
+  if (
+    llmResult &&
+    llmResult.confidence >= LLM_CONFIDENCE_THRESHOLD &&
+    llmResult.grade === 'FAIL' &&
+    gatingDecision.action === 'PROCEED'
+  ) {
+    gatingDecision = {
+      action: 'REQUIRE_REFLECTION',
+      reason: `LLM detected code issues: ${llmResult.feedback?.slice(0, 100)}...`,
+      microLessonId: llmResult.suggestedMicroLesson ?? undefined,
+    };
+  } else if (
+    llmResult &&
+    llmResult.confidence >= LLM_CONFIDENCE_THRESHOLD &&
+    llmResult.grade === 'PARTIAL' &&
+    gatingDecision.action === 'PROCEED'
+  ) {
+    gatingDecision = {
+      action: 'SHOW_MICRO_LESSON',
+      reason: `LLM suggests improvement: ${llmResult.feedback?.slice(0, 100)}...`,
+      microLessonId: llmResult.suggestedMicroLesson ?? undefined,
+    };
+  }
+
+  const validation: CodingValidationData = {
+    rubricGrade: llmResult?.grade ?? rubricResult.grade,
+    rubricScore: rubricResult.score,
+    heuristicErrors: heuristicErrors.map((e) => e.type),
+    forbiddenConcepts: forbiddenResult.detected.map((d) => d.concept.id),
+    gatingAction: gatingDecision.action,
+    gatingReason: gatingDecision.reason,
+    microLessonId: llmResult?.suggestedMicroLesson ?? gatingDecision.microLessonId,
+    llmFeedback: llmResult?.feedback,
+    llmConfidence: llmResult?.confidence,
+    successReflectionPrompt: gatingDecision.successReflectionPrompt,
+    timeBudgetResult,
+    complexitySuggestion,
+  };
+
+  const allTestsPassed = testResults.every((t) => t.passed);
+  let nextState: Attempt['state'];
+
+  if (gatingDecision.action === 'BLOCK_SUBMISSION') {
+    nextState = 'CODING';
+  } else if (gatingDecision.action === 'PROCEED_WITH_REFLECTION' && allTestsPassed) {
+    nextState = 'SUCCESS_REFLECTION';
+  } else if (gatingDecision.action === 'PROCEED' && allTestsPassed) {
+    nextState = 'COMPLETED';
+  } else if (gatingDecision.action === 'SHOW_MICRO_LESSON') {
+    nextState = 'CODING';
+  } else if (gatingDecision.action === 'REQUIRE_REFLECTION') {
+    nextState = 'REFLECTION';
+  } else {
+    nextState = allTestsPassed ? 'COMPLETED' : 'REFLECTION';
+  }
+
+  const codingData: CodingData = {
+    type: 'CODING',
+    code,
+    language,
+    testResults,
+    validation,
+  };
+
+  const newStep = {
+    id: stepId,
+    attemptId,
+    type: 'CODING' as const,
+    result: allTestsPassed ? ('PASS' as const) : ('FAIL' as const),
+    data: codingData,
+    startedAt: now,
+    completedAt: now,
+  };
+
+  const updatedAttempt: Attempt = {
+    ...attempt,
+    state: nextState,
+    steps: [...attempt.steps, newStep],
+    codeSubmissions: gatingDecision.action === 'BLOCK_SUBMISSION'
+      ? attempt.codeSubmissions
+      : attempt.codeSubmissions + 1,
+    completedAt: nextState === 'COMPLETED' ? now : null,
+  };
+
+  await attemptRepo.update(updatedAttempt);
+
+  // ============ Persist Skill Score on Completion ============
+  let attemptScore: AttemptScore | undefined;
+
+  if (nextState === 'COMPLETED' || nextState === 'SUCCESS_REFLECTION') {
+    const scoreResult = computeAttemptScore({ attempt: updatedAttempt });
+    attemptScore = scoreResult.score;
+
+    const existingSkill = await skillRepo.findByUserAndPattern(
+      tenantId,
+      userId,
+      attempt.pattern,
+      attempt.rung
+    );
+
+    if (existingSkill) {
+      const newScore = computeNewScore(
+        existingSkill.score,
+        existingSkill.attemptsCount,
+        attemptScore.overall
+      );
+
+      await skillRepo.updateIfNotApplied(
+        {
+          ...existingSkill,
+          score: newScore,
+          attemptsCount: existingSkill.attemptsCount + 1,
+          lastAttemptAt: now,
+          updatedAt: now,
+          unlockedAt:
+            newScore >= RUNG_UNLOCK_THRESHOLD && !existingSkill.unlockedAt
+              ? now
+              : existingSkill.unlockedAt,
+        },
+        attemptId
+      );
+    } else {
+      await skillRepo.save({
+        id: idGenerator.generate(),
+        tenantId,
+        userId,
+        pattern: attempt.pattern,
+        rung: attempt.rung,
+        score: attemptScore.overall,
+        attemptsCount: 1,
+        lastAttemptAt: now,
+        unlockedAt: attemptScore.overall >= RUNG_UNLOCK_THRESHOLD ? now : null,
+        updatedAt: now,
+        lastAppliedAttemptId: attemptId,
+      });
+    }
+
+    // ============ Aggregate Progress (TrackE) ============
+    if (deps.progressRepo) {
+      await aggregateProgress(
+        {
+          tenantId,
+          userId,
+          attemptId,
+          attempt: updatedAttempt,
+          score: attemptScore,
+          track: attempt.track,
+          contentItemId: attempt.contentItemId,
+        },
+        {
+          progressRepo: deps.progressRepo,
+          clock,
+          idGenerator,
+        }
+      );
+    }
+  }
+
+  const startedAt = attempt.steps.length > 0
+    ? attempt.steps[attempt.steps.length - 1]?.completedAt ?? attempt.startedAt
+    : attempt.startedAt;
+  const durationMs = now.getTime() - startedAt.getTime();
+
+  await eventSink.emit({
+    type: 'STEP_COMPLETED',
+    tenantId,
+    userId,
+    attemptId,
+    stepType: 'CODING',
+    result: allTestsPassed ? 'PASS' : 'FAIL',
+    durationMs,
+    timestamp: now,
+  });
+
   const passed = allTestsPassed && (
     gatingDecision.action === 'PROCEED' ||
     gatingDecision.action === 'PROCEED_WITH_REFLECTION'
