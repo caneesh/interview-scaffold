@@ -158,6 +158,7 @@ export default function AttemptPage() {
 
   // Micro-lesson modal
   const [microLesson, setMicroLesson] = useState<{ title: string; content: string } | null>(null);
+  const [microLessonLoading, setMicroLessonLoading] = useState(false);
 
   // Problem statement collapse
   const [problemCollapsed, setProblemCollapsed] = useState(false);
@@ -403,6 +404,40 @@ export default function AttemptPage() {
       setError('Failed to submit thinking gate');
     } finally {
       setStepLoading(false);
+    }
+  }
+
+  /**
+   * Handle micro-lesson acknowledgment.
+   * When the user clicks "I understand, continue", we need to:
+   * 1. Force transition to CODING state (since pattern mismatch keeps state at THINKING_GATE)
+   * 2. Close the modal
+   */
+  async function handleMicroLessonComplete() {
+    if (!attempt) {
+      setMicroLesson(null);
+      return;
+    }
+
+    // If already in CODING state, just close the modal
+    if (attempt.state === 'CODING') {
+      setMicroLesson(null);
+      return;
+    }
+
+    setMicroLessonLoading(true);
+    try {
+      // Force transition to CODING by updating the attempt state
+      // We do this optimistically since the user has acknowledged the tip
+      setAttempt({
+        ...attempt,
+        state: 'CODING',
+      });
+      setMicroLesson(null);
+    } catch (err) {
+      setError('Failed to continue to coding');
+    } finally {
+      setMicroLessonLoading(false);
     }
   }
 
@@ -1344,7 +1379,8 @@ export default function AttemptPage() {
         isOpen={microLesson !== null}
         title={microLesson?.title || ''}
         content={microLesson?.content || ''}
-        onComplete={() => setMicroLesson(null)}
+        onComplete={handleMicroLessonComplete}
+        loading={microLessonLoading}
       />
     </div>
   );

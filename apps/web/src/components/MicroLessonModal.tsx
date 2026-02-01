@@ -5,14 +5,15 @@ interface MicroLessonModalProps {
   title: string;
   content: string;
   onComplete: () => void;
+  loading?: boolean;
 }
 
-export function MicroLessonModal({ isOpen, title, content, onComplete }: MicroLessonModalProps) {
+export function MicroLessonModal({ isOpen, title, content, onComplete, loading = false }: MicroLessonModalProps) {
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
-      <div className="modal">
+      <div className="modal" data-testid="tips-modal">
         <div className="modal-header">
           <h3 className="modal-title">{title}</h3>
         </div>
@@ -28,8 +29,20 @@ export function MicroLessonModal({ isOpen, title, content, onComplete }: MicroLe
           </div>
         </div>
         <div className="modal-footer">
-          <button className="btn btn-primary" onClick={onComplete}>
-            I understand, continue
+          <button
+            className="btn btn-primary"
+            onClick={onComplete}
+            disabled={loading}
+            data-testid="tips-continue"
+          >
+            {loading ? (
+              <>
+                <span className="spinner" />
+                Continuing...
+              </>
+            ) : (
+              'I understand, continue'
+            )}
           </button>
         </div>
       </div>

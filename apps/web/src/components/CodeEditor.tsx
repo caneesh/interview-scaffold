@@ -84,7 +84,7 @@ export function CodeEditor({
   };
 
   return (
-    <div className="code-editor-wrapper">
+    <div className="code-editor-wrapper" data-testid="code-editor">
       <div className="code-editor">
         <div className="code-editor-header">
           <select

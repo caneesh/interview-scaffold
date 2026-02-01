@@ -268,6 +268,7 @@ export function ThinkingGate({ onSubmit, onStartDiscovery, discoveredPattern, lo
           type="submit"
           className="btn btn-primary thinking-gate-submit"
           disabled={!canSubmit || loading}
+          data-testid="start-coding"
         >
           {loading ? (
             <>
